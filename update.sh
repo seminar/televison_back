@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-find $1 >temp
+
 i=0
 
 cat temp | while read line
