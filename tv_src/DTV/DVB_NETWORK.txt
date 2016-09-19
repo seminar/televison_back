@@ -1,0 +1,13 @@
+DVB-T码流的SI中获取Original Network ID :
+A Network is defined as a “collection of MPEG 2 Transport Stream (TS) multiplexes transmitted on a single delivery system, e.g. All digital channels on a specific cable system.” In the specific case of a terrestrial network, a specific Network_ID is associated with each major transmission point.Network_IDs are unique within the geographical region defined by the “country_code”. For satellite networks, this is a region spanning many countries. For a cable network, this is a single country. For terrestrial networks, this is a single country also, but it’s important that two adjacent countries NOT have the same block of Network_IDs, hence the concept of colour coding.
+这看上去就很清楚了。网页上还有一张表，表里指出：
+0x0000是保留的ID0x0001 to 0x2000给Satellite Networks0x2001 to 0x3000给Terrestrial Networks
+但是，从这个网页的“allocation table”标签页里看到（网站也提供了下载这张表），0x2000之前也有ID分配给了Terrestrial Network，譬如0x0090。再看Original Network ID的解释。
+An Original_Network_ID (ONID) is defined as the “unique identifier of a network”. Its main use is in the unique identification of a service through the path Original_Network_ID, Transport_Stream_ID. Originally linked to Network_IDs, ONIDs should mainly be used for network operators, broadcasters and content producers.
+下载Original Network ID分配表，可以看出Original Network ID定义的是内容运行商。0x0000也是保留ID。
+
+但是，从igorfuna网站看到，有一些DVB-T网络的Network ID也在0x2000之前，譬如意大利的Mediaset，Original Network ID是0x0110，Network ID也是0x0110。这是怎么回事？
+
+在西班牙的马德里，有一些节目的Transport Stream ID是0x1458，Original Network ID是0x0163，表里查不到这个ID值。这又是怎么回事？
+
+还是在马德里，另一些节目的Transport Stream ID是0x3138，Original Network ID是0x0000，这是偷懒偷一半么？

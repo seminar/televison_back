@@ -1,0 +1,16 @@
+分类：
+    现行模拟电视，有PAL\NTSC\SECAM 三种制式，而数字电视标准，主要是美国的ATSC（Advanced television system committee）和欧洲的 DVB。在信源编码方面，这两大标准对视频信号都是以 MPEG-2 为核心尽心压缩编码，但是对音频，ACTS 选用杜比 AC-3 数字音频压缩标准，而 DVB 采用 ISO/IEC MPEG 的 MUSICAM 声音标准。 ACTS 除了 MPEG-2 定义的节目专用信息 PSI 外，还提供了节目及系统信息协议 PSIP，用于描述系统及节目层中一个传送流中所有的虚拟频道所包含的信息，但只适合数字电视地面广播。而 DVB 还提供了业务信息 SI,另外 DVB 支持条件接收， ATSC 不支持。
+    DVB 已经制定并颁布了以下各种标准与规范：
+
+ 
+MEPG-2 与 DVB
+MEPG-2 提供过来节目专用信息，同时，DVB 扩展这些技术，提供了完整的业务信息（SI），使接收机自动的适应特别的业务，解码各种业务，包括电视、音频和数据。因此在DVB 与 MPEG-2 的系统中，DVB 系统中的 SI 是基于 MPEG-2 PSI。
+    无论DVB 还是 ATSC 或其他的数字电视广播标准，它们都是基于 MPEG-2 的传送流机制，而标准只是定义了如何在各种不同的传输通道上进行 TS 包传送。数字广播标准就是规定了用 TS 来传送面向多种应用数据的方法。
+    DVB 对数据广播定义了 6 种协议：
+数据管道（Data piping）
+异步数据报（Asynchronous Datagram）
+同步数据报（Synchronous Streaming Data）
+被同步数据流（Synchronized Streaming Data）
+多协议封装（Multi-protocol Encapsulation）
+循环数据（Data Carousel）
+循环对象（Object Carousel）
