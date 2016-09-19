@@ -9,9 +9,9 @@ do
 	if [ -f "$line" ];
 		then
 
-		i=%[$i+1]
+		i=$[$i+1]
 		
-
+		echo $i
 		tar cpf - "${line}" | tar xpf - -C ./
         if [ "$i" = "20" ];
         	then
