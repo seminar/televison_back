@@ -6,6 +6,7 @@ i=0
 
 cat temp | while read line
 do	
+	echo "$line"
 	if [ -f "$line" ];
 		then
 
