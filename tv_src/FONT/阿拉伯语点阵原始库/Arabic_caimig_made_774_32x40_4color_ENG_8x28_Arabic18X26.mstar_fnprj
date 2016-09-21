@@ -1,0 +1,372 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mstar_fnprj version="1.0" width="32" height="32" grayscale="4" fonttype="0">
+  <fonts>
+    <font>
+      <glyph-offset>0 0</glyph-offset>
+      <align-to-right-while-with-negx>1</align-to-right-while-with-negx>
+      <size-info point="false">0.000000 28.000000</size-info>
+      <weight>90</weight>
+      <style>90</style>
+      <facename>Arial Narrow</facename>
+    </font>
+    <font>
+      <glyph-offset>0 0</glyph-offset>
+      <align-to-right-while-with-negx>1</align-to-right-while-with-negx>
+      <size-info point="false">30.000000 36.000000</size-info>
+      <weight>90</weight>
+      <style>90</style>
+      <facename>B Nazanin</facename>
+    </font>
+    <font>
+      <glyph-offset>0 0</glyph-offset>
+      <align-to-right-while-with-negx>1</align-to-right-while-with-negx>
+      <size-info point="false">30.000000 36.000000</size-info>
+      <weight>90</weight>
+      <style>90</style>
+      <facename>Arial</facename>
+    </font>
+    <font>
+      <glyph-offset>0 0</glyph-offset>
+      <align-to-right-while-with-negx>1</align-to-right-while-with-negx>
+      <size-info point="false">12.000000 36.000000</size-info>
+      <weight>90</weight>
+      <style>90</style>
+      <facename>Arial Narrow</facename>
+    </font>
+    <font>
+      <glyph-offset>0 0</glyph-offset>
+      <align-to-right-while-with-negx>1</align-to-right-while-with-negx>
+      <size-info point="false">26.000000 34.000000</size-info>
+      <weight>90</weight>
+      <style>90</style>
+      <facename>B Nazanin</facename>
+    </font>
+    <font>
+      <glyph-offset>0 0</glyph-offset>
+      <align-to-right-while-with-negx>1</align-to-right-while-with-negx>
+      <size-info point="false">26.000000 34.000000</size-info>
+      <weight>92</weight>
+      <style>90</style>
+      <facename>B Nazanin</facename>
+    </font>
+    <font>
+      <glyph-offset>0 0</glyph-offset>
+      <align-to-right-while-with-negx>1</align-to-right-while-with-negx>
+      <size-info point="false">7.000000 22.000000</size-info>
+      <weight>90</weight>
+      <style>90</style>
+      <facename>Arial Narrow</facename>
+    </font>
+    <font>
+      <glyph-offset>0 0</glyph-offset>
+      <align-to-right-while-with-negx>1</align-to-right-while-with-negx>
+      <size-info point="false">18.000000 26.000000</size-info>
+      <weight>92</weight>
+      <style>90</style>
+      <facename>B Nazanin</facename>
+    </font>
+    <font>
+      <glyph-offset>0 0</glyph-offset>
+      <align-to-right-while-with-negx>1</align-to-right-while-with-negx>
+      <size-info point="true">22.000000</size-info>
+      <weight>90</weight>
+      <style>90</style>
+      <facename>Gulim</facename>
+    </font>
+    <font>
+      <glyph-offset>0 0</glyph-offset>
+      <align-to-right-while-with-negx>1</align-to-right-while-with-negx>
+      <size-info point="true">13.000000</size-info>
+      <weight>90</weight>
+      <style>90</style>
+      <facename>Gulim</facename>
+    </font>
+    <font>
+      <glyph-offset>0 0</glyph-offset>
+      <align-to-right-while-with-negx>1</align-to-right-while-with-negx>
+      <size-info point="true">14.000000</size-info>
+      <weight>90</weight>
+      <style>90</style>
+      <facename>Gulim</facename>
+    </font>
+    <font>
+      <glyph-offset>0 0</glyph-offset>
+      <align-to-right-while-with-negx>1</align-to-right-while-with-negx>
+      <size-info point="true">20.000000</size-info>
+      <weight>90</weight>
+      <style>90</style>
+      <facename>Gulim</facename>
+    </font>
+    <font>
+      <glyph-offset>0 0</glyph-offset>
+      <align-to-right-while-with-negx>1</align-to-right-while-with-negx>
+      <size-info point="false">12.000000 36.000000</size-info>
+      <weight>90</weight>
+      <style>90</style>
+      <facename>Gulim</facename>
+    </font>
+    <font>
+      <glyph-offset>0 0</glyph-offset>
+      <align-to-right-while-with-negx>1</align-to-right-while-with-negx>
+      <size-info point="false">7.000000 22.000000</size-info>
+      <weight>90</weight>
+      <style>90</style>
+      <facename>Gulim</facename>
+    </font>
+    <font>
+      <glyph-offset>0 0</glyph-offset>
+      <align-to-right-while-with-negx>1</align-to-right-while-with-negx>
+      <size-info point="true">12.000000</size-info>
+      <weight>90</weight>
+      <style>90</style>
+      <facename>Arial Narrow</facename>
+    </font>
+    <font>
+      <glyph-offset>0 0</glyph-offset>
+      <align-to-right-while-with-negx>1</align-to-right-while-with-negx>
+      <size-info point="true">15.000000</size-info>
+      <weight>90</weight>
+      <style>90</style>
+      <facename>Arial Narrow</facename>
+    </font>
+    <font>
+      <glyph-offset>0 0</glyph-offset>
+      <align-to-right-while-with-negx>1</align-to-right-while-with-negx>
+      <size-info point="false">9.000000 30.000000</size-info>
+      <weight>90</weight>
+      <style>90</style>
+      <facename>Arial Narrow</facename>
+    </font>
+    <font>
+      <glyph-offset>0 0</glyph-offset>
+      <align-to-right-while-with-negx>1</align-to-right-while-with-negx>
+      <size-info point="false">9.000000 32.000000</size-info>
+      <weight>90</weight>
+      <style>90</style>
+      <facename>Arial Unicode MS</facename>
+    </font>
+    <font>
+      <glyph-offset>0 0</glyph-offset>
+      <align-to-right-while-with-negx>1</align-to-right-while-with-negx>
+      <size-info point="false">9.000000 30.000000</size-info>
+      <weight>90</weight>
+      <style>90</style>
+      <facename>Gulim</facename>
+    </font>
+    <font>
+      <glyph-offset>0 0</glyph-offset>
+      <align-to-right-while-with-negx>1</align-to-right-while-with-negx>
+      <size-info point="false">9.000000 32.000000</size-info>
+      <weight>90</weight>
+      <style>90</style>
+      <facename>Arial Narrow</facename>
+    </font>
+    <font>
+      <glyph-offset>0 0</glyph-offset>
+      <align-to-right-while-with-negx>1</align-to-right-while-with-negx>
+      <size-info point="false">7.000000 28.000000</size-info>
+      <weight>90</weight>
+      <style>90</style>
+      <facename>Arial Unicode MS</facename>
+    </font>
+    <font>
+      <glyph-offset>0 0</glyph-offset>
+      <align-to-right-while-with-negx>1</align-to-right-while-with-negx>
+      <size-info point="false">7.000000 30.000000</size-info>
+      <weight>90</weight>
+      <style>90</style>
+      <facename>Arial Unicode MS</facename>
+    </font>
+    <font>
+      <glyph-offset>0 0</glyph-offset>
+      <align-to-right-while-with-negx>1</align-to-right-while-with-negx>
+      <size-info point="false">7.000000 28.000000</size-info>
+      <weight>90</weight>
+      <style>90</style>
+      <facename>Arial Narrow</facename>
+    </font>
+    <font>
+      <glyph-offset>0 0</glyph-offset>
+      <align-to-right-while-with-negx>1</align-to-right-while-with-negx>
+      <size-info point="false">7.000000 28.000000</size-info>
+      <weight>90</weight>
+      <style>90</style>
+      <facename>Gulim</facename>
+    </font>
+    <font>
+      <glyph-offset>0 0</glyph-offset>
+      <align-to-right-while-with-negx>1</align-to-right-while-with-negx>
+      <size-info point="false">8.000000 28.000000</size-info>
+      <weight>90</weight>
+      <style>90</style>
+      <facename>Arial Narrow</facename>
+    </font>
+    <font>
+      <glyph-offset>0 0</glyph-offset>
+      <align-to-right-while-with-negx>1</align-to-right-while-with-negx>
+      <size-info point="false">8.000000 28.000000</size-info>
+      <weight>90</weight>
+      <style>90</style>
+      <facename>Arial Unicode MS</facename>
+    </font>
+    <font>
+      <glyph-offset>0 0</glyph-offset>
+      <align-to-right-while-with-negx>1</align-to-right-while-with-negx>
+      <size-info point="false">8.000000 28.000000</size-info>
+      <weight>90</weight>
+      <style>90</style>
+      <facename>Gulim</facename>
+    </font>
+    <font>
+      <glyph-offset>0 0</glyph-offset>
+      <align-to-right-while-with-negx>1</align-to-right-while-with-negx>
+      <size-info point="false">6.000000 24.000000</size-info>
+      <weight>90</weight>
+      <style>90</style>
+      <facename>Arial Narrow</facename>
+    </font>
+    <font>
+      <glyph-offset>0 0</glyph-offset>
+      <align-to-right-while-with-negx>1</align-to-right-while-with-negx>
+      <size-info point="false">6.000000 26.000000</size-info>
+      <weight>90</weight>
+      <style>90</style>
+      <facename>Arial Narrow</facename>
+    </font>
+    <font>
+      <glyph-offset>0 0</glyph-offset>
+      <align-to-right-while-with-negx>1</align-to-right-while-with-negx>
+      <size-info point="false">8.000000 27.000000</size-info>
+      <weight>90</weight>
+      <style>90</style>
+      <facename>Arial Narrow</facename>
+    </font>
+    <font>
+      <glyph-offset>0 0</glyph-offset>
+      <align-to-right-while-with-negx>1</align-to-right-while-with-negx>
+      <size-info point="false">8.000000 24.000000</size-info>
+      <weight>90</weight>
+      <style>90</style>
+      <facename>Arial</facename>
+    </font>
+  </fonts>
+  <items>
+    <item value="0x20" fn="30"/>
+    <range>0x21 0x7a</range>
+    <item value="0xc1" up="1"/>
+    <item value="0xc4" up="1"/>
+    <item value="0xcd" up="1"/>
+    <item value="0xd3" up="1"/>
+    <item value="0xd6" up="1"/>
+    <item value="0xd8" up="1"/>
+    <item value="0xe0" up="1"/>
+    <range>0xe1 0xea</range>
+    <item value="0xed" up="1"/>
+    <item value="0xee" up="1"/>
+    <item value="0xf1" up="1"/>
+    <item value="0xf3" up="1"/>
+    <item value="0xf6" up="1"/>
+    <item value="0xfa" up="1"/>
+    <item value="0xfc" up="1"/>
+    <item value="0xfd" up="1"/>
+    <item value="0x101" up="1"/>
+    <range>0x102 0x103</range>
+    <item value="0x107" up="1"/>
+    <item value="0x10c" up="1"/>
+    <item value="0x10d" up="1"/>
+    <item value="0x113" up="1"/>
+    <item value="0x116" up="1"/>
+    <item value="0x117" up="1"/>
+    <item value="0x11b" up="1"/>
+    <item value="0x11f" up="1"/>
+    <item value="0x12e" up="1"/>
+    <item value="0x131" up="1"/>
+    <item value="0x13e" up="1"/>
+    <item value="0x146" up="1"/>
+    <item value="0x148" up="1"/>
+    <item value="0x151" up="1"/>
+    <item value="0x159" up="1"/>
+    <item value="0x15b" up="1"/>
+    <item value="0x160" up="1"/>
+    <item value="0x161" up="1"/>
+    <item value="0x163" up="1"/>
+    <item value="0x165" up="1"/>
+    <item value="0x16b" up="1"/>
+    <item value="0x16f" up="1"/>
+    <item value="0x171" up="1"/>
+    <item value="0x173" up="1"/>
+    <item value="0x17d" up="1"/>
+    <item value="0x17e" up="1"/>
+    <item value="0x391" up="1"/>
+    <item value="0x394" up="1"/>
+    <range>0x395 0x396</range>
+    <item value="0x398" up="1"/>
+    <range>0x399 0x39a</range>
+    <item value="0x39c" up="1"/>
+    <item value="0x39f" up="1"/>
+    <range>0x3a0 0x3a1</range>
+    <item value="0x3a3" up="1"/>
+    <item value="0x3a4" up="1"/>
+    <item value="0x3a6" up="1"/>
+    <range>0x3a7 0x3a8</range>
+    <item value="0x3ac" up="1"/>
+    <range>0x3ad 0x3af</range>
+    <item value="0x3b1" up="1"/>
+    <range>0x3b2 0x3b3</range>
+    <item value="0x3b5" up="1"/>
+    <item value="0x3b7" up="1"/>
+    <range>0x3b8 0x3c9</range>
+    <item value="0x3cc" up="1"/>
+    <range>0x3cd 0x3ce</range>
+    <item value="0x410" up="1"/>
+    <range>0x411 0x413</range>
+    <item value="0x415" up="1"/>
+    <item value="0x417" up="1"/>
+    <item value="0x418" up="1"/>
+    <item value="0x41a" up="1"/>
+    <range>0x41b 0x427</range>
+    <item value="0x42f" up="1"/>
+    <range>0x430 0x443</range>
+    <item value="0x446" up="1"/>
+    <range>0x447 0x448</range>
+    <item value="0x44a" up="1"/>
+    <range>0x44b 0x44f</range>
+    <item value="0x451" up="1"/>
+    <item value="0x600" up="1"/>
+    <range>0x601 0x603</range>
+    <item value="0x60b" up="1"/>
+    <range>0x60c 0x60f</range>
+    <item value="0x61b" up="1"/>
+    <item value="0x61e" up="1"/>
+    <item value="0x61f" up="1"/>
+    <item value="0x621" up="1"/>
+    <range>0x622 0x63a</range>
+    <item value="0x640" up="1"/>
+    <range>0x641 0x652</range>
+    <item value="0x660" up="1"/>
+    <range>0x661 0x66f</range>
+    <item value="0x671" up="1"/>
+    <range>0x672 0x6d5</range>
+    <item value="0x6ee" up="1"/>
+    <range>0x6ef 0x6ff</range>
+    <item value="0x750" up="1"/>
+    <range>0x751 0x76d</range>
+    <item value="0x780" up="1"/>
+    <range>0x781 0x7a5</range>
+    <item value="0x7b1" up="1"/>
+    <item value="0x7d6" up="1"/>
+    <item value="0x7d7" up="1"/>
+    <item value="0xfb50" up="1"/>
+    <range>0xfb51 0xfbb1</range>
+    <item value="0xfbd3" up="1"/>
+    <range>0xfbd4 0xfbe9</range>
+    <item value="0xfbfc" up="1"/>
+    <range>0xfbfd 0xfbff</range>
+    <item value="0xfc60" up="1"/>
+    <range>0xfc61 0xfc62</range>
+    <item value="0xfdf2" up="1"/>
+    <item value="0xfdfc" up="1"/>
+    <item value="0xfe80" up="1"/>
+    <range>0xfe81 0xfefc</range>
+  </items>
+</mstar_fnprj>
