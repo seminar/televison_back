@@ -1,0 +1,4 @@
+16x16.bin为编好的16X16的font bin
+BIG5_ch_18X18_japanok.mstar_fnprj为18x18的含日语的库
+BIG5_ch_16X16_japanok.mstar_fnprj为16x16的含日语的库
+自行安装好软件，按word说明操作即可
