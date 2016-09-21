@@ -1,0 +1,12 @@
+#define IR_LG01H_UPB_L                          ( RIUBASE_IR + 0x8E )  //0x3D8E
+#define IR_LG01H_UPB_H                          ( RIUBASE_IR + 0x8F )  //0x3D8F
+#define IR_LG01H_LOB_L                          ( RIUBASE_IR + 0x90 )  //0x3D90
+#define IR_LG01H_LOB_H                          ( RIUBASE_IR + 0x91 )  //0x3D91
+#define IR_LG0_UPB_L                            ( RIUBASE_IR + 0x92 )  //0x3D92
+#define IR_LG0_UPB_H                            ( RIUBASE_IR + 0x93 )  //0x3D93
+#define IR_LG0_LOB_L                            ( RIUBASE_IR + 0x94 )  //0x3D94
+#define IR_LG0_LOB_H                            ( RIUBASE_IR + 0x95 )  //0x3D95
+#define IR_LG1_UPB_L                            ( RIUBASE_IR + 0x96 )  //0x3D96
+#define IR_LG1_UPB_H                            ( RIUBASE_IR + 0x97 )  //0x3D97
+#define IR_LG1_LOB_L                            ( RIUBASE_IR + 0x98 )  //0x3D98
+#define IR_LG1_LOB_H                            ( RIUBASE_IR + 0x99 )  //0x3D99
