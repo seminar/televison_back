@@ -1,0 +1,84 @@
+/*******************************************************************
+** Unsigned typedefs
+*******************************************************************/
+typedef unsigned char   byte;           // 8-bit
+typedef unsigned int    word;           // 16-bit
+typedef unsigned long   dword;          // 32-bit
+
+/*******************************************************************
+** Unions
+*******************************************************************/
+typedef union _BYTE
+{
+    byte _byte;
+    struct
+    {
+        unsigned b0:1;
+        unsigned b1:1;
+        unsigned b2:1;
+        unsigned b3:1;
+        unsigned b4:1;
+        unsigned b5:1;
+        unsigned b6:1;
+        unsigned b7:1;
+    };
+} BYTE;
+
+typedef union _WORD
+{
+    word _word;
+    struct
+    {
+        byte byte0;
+        byte byte1;
+    };
+    struct
+    {
+        BYTE Byte0;
+        BYTE Byte1;
+    };
+    struct
+    {
+        BYTE LowB;
+        BYTE HighB;
+    };
+    struct
+    {
+        byte v[2];
+    };
+} WORD;
+
+typedef union _DWORD
+{
+    dword _dword;
+    struct
+    {
+        byte byte0;
+        byte byte1;
+        byte byte2;
+        byte byte3;
+    };
+    struct
+    {
+        word word0;
+        word word1;
+    };
+    struct
+    {
+        BYTE Byte0;
+        BYTE Byte1;
+        BYTE Byte2;
+        BYTE Byte3;
+    };
+    struct
+    {
+        WORD Word0;
+        WORD Word1;
+    };
+    struct
+    {
+        byte v[4];
+    };
+} DWORD;
+
+enum { FALSE, TRUE };

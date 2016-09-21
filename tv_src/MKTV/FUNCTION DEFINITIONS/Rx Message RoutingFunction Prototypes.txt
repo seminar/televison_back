@@ -1,0 +1,36 @@
+
+/****PAYLOAD****/
+
+void UpstreamAck( dword msn );
+
+Parameters:
+msn - the Message Sequence Number of the sent message that needs to be acknowledged
+
+When Called:
+This function will be called upon receipt of data in the receive buffers.
+It is used to send an acknowledge and delete the sent message from flash memory
+
+void PadParse( byte *pRxBuffer );
+
+Parameters:
+pRxBuffer - Pointer to the decrypted message
+
+When Called:
+This function will be called after decryption to pass the decrypted message for Tv processing
+
+void payload_security_message(byte *pPayload, byte PayloadLength, byte SeqNum, byte Flags)
+
+Parameters:
+pPayload - Pointer to Security payload 
+PayloadLength - Length of security payload
+SeqNum - Sequence Number of the security message
+Flags - Flag to indicate this is a security message. Used to differentiate between security messages and Tv payload.
+
+When Called:
+This function will be called to build and store a security payload in flash before sending
+The PayloadLength, SeqNum and Flags bytes should be stored together with the actual payload
+
+
+
+
+
