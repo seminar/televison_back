@@ -1,0 +1,462 @@
+//------------------------------------------------------------------------------
+// Table
+//------------------------------------------------------------------------------
+#ifdef SUPPORT_AP_BIN_IN_FLASH_2
+volatile U8 BinaryInfoBlock[] __attribute__((__section__ (".img_info"))) =
+#else
+volatile U8 const BinaryInfoBlock[] __attribute__((__section__ (".img_info"))) =
+#endif
+#if (BLOADER) //Bootloader
+{
+    //--------------------------------------------------------------------------
+    // Binary Package
+    //--------------------------------------------------------------------------
+    // Header ID Code
+    PlaceU32_(BIN_PACKAGE_HEADER_ID0), PlaceU32_(BIN_PACKAGE_HEADER_ID1),
+
+#if 1 // Use flash map define
+    PlaceU32_( (FMAP_TOTAL_USE_BANK_END)*FLASH_BLOCK_SIZE),
+#else
+
+    // Check reserved FLASH SIZE
+#if (EEPROM_DB_STORAGE == EEPROM_SAVE_ALL)
+    PlaceU32_(FLASH_SIZE - 0/*CM_DATABASE_FLASH_SIZE*/),
+
+#elif (EEPROM_DB_STORAGE == EEPROM_SAVE_NONE)
+  #if (HDCP_KEY_TYPE==HDCP_KEY_IN_DB)
+    PlaceU32_(FLASH_SIZE - CM_DATABASE_FLASH_SIZE - 2*FLASH_BLOCK_SIZE), //CM + OAD + HDCP
+  #else
+    PlaceU32_(FLASH_SIZE - CM_DATABASE_FLASH_SIZE - 1*FLASH_BLOCK_SIZE), //CM + OAD
+  #endif
+
+#elif (EEPROM_DB_STORAGE == EEPROM_SAVE_WITHOUT_CH_DB)
+  #if (HDCP_KEY_TYPE==HDCP_KEY_IN_DB)
+    PlaceU32_(FLASH_SIZE - CM_DATABASE_FLASH_SIZE - 1*FLASH_BLOCK_SIZE), //CM + HDCP
+  #else
+    PlaceU32_(FLASH_SIZE - CM_DATABASE_FLASH_SIZE),
+  #endif
+
+#else
+    #error "EEPROM_DB_STORAGE is undefined!\n"
+#endif
+#endif
+
+    // Binary Number: Filled by external tool
+    PlaceU16_(0),
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Bin List
+    ////////////////////////////////////////////////////////////////////////////
+#if(ENABLE_DTV)
+    // DEMUX, ID, Address, Size
+    BinItem(BIN_ID_CODE_DEMUX_BL),
+#endif
+
+
+    // Demod DSP Code
+#if 1 //ENABLE_DTV
+
+  #if (FRONTEND_DEMOD_TYPE == MSTAR_MSB1200_DEMOD)
+    #if (FRONTEND_TUNER_TYPE == MSTAR_MSR1200_TUNER)
+        BinItem(BIN_ID_MSB1200_MSR),
+    #elif  (FRONTEND_TUNER_TYPE == PHILIPS_FQD1216_TUNER)
+        BinItem(BIN_ID_MSB1200_FQD),
+    #else
+        BinItem(BIN_ID_MSB1200_FQD),
+    #endif
+
+  #elif (FRONTEND_DEMOD_TYPE == MSTAR_MSB1210_DEMOD)
+        BinItem(BIN_ID_MSB1210),
+
+  #elif (FRONTEND_DEMOD_TYPE == EMBEDDED_DVBT_DEMOD)
+    #ifndef INTERN_DVBT_LOAD_FW_FROM_CODE_MEMORY
+        BinItem(BIN_ID_INTERN_DVBT),
+    #endif
+
+  #elif (FRONTEND_DEMOD_TYPE == EMBEDDED_DVBC_DEMOD)
+    #ifndef INTERN_DVBC_LOAD_FW_FROM_CODE_MEMORY
+        BinItem(BIN_ID_INTERN_DVBC),
+    #endif
+  #endif
+
+  #if (FRONTEND_DEMOD_TYPE != FRONTEND_SECOND_DEMOD_TYPE)
+    #if (FRONTEND_SECOND_DEMOD_TYPE == MSTAR_MSB1200_DEMOD)
+      #if (FRONTEND_TUNER_TYPE == MSTAR_MSR1200_TUNER)
+        BinItem(BIN_ID_MSB1200_MSR),
+      #elif  (FRONTEND_TUNER_TYPE == PHILIPS_FQD1216_TUNER)
+        BinItem(BIN_ID_MSB1200_FQD),
+      #else
+        BinItem(BIN_ID_MSB1200_FQD),
+      #endif
+
+    #elif (FRONTEND_SECOND_DEMOD_TYPE == MSTAR_MSB1210_DEMOD)
+        BinItem(BIN_ID_MSB1210),
+
+    #elif (FRONTEND_SECOND_DEMOD_TYPE == EMBEDDED_DVBT_DEMOD)
+      #ifndef INTERN_DVBT_LOAD_FW_FROM_CODE_MEMORY
+        BinItem(BIN_ID_INTERN_DVBT),
+      #endif
+
+    #elif (FRONTEND_SECOND_DEMOD_TYPE == EMBEDDED_DVBC_DEMOD)
+      #ifndef INTERN_DVBC_LOAD_FW_FROM_CODE_MEMORY
+        BinItem(BIN_ID_INTERN_DVBC),
+      #endif
+    #endif
+  #endif
+
+#endif // #if 1 //ENABLE_DTV
+
+
+
+#if (BLOADER && ENABLE_BL_UI)
+    BinItem(BIN_ID_FONT_BL_ENG_50),
+#endif //(BLOADER && ENABLE_BL_UI)
+
+    //=====================================================================
+    // Put the following ID 0xF000 at the end of this file.
+    // It will be verified by bootloader for integrity check.
+    BinItem(BIN_ID_MAGIC_55AAABCD)
+};
+#else //(!BLOADER) main AP
+{
+    //--------------------------------------------------------------------------
+    // Binary Package
+    //--------------------------------------------------------------------------
+    // Header ID Code
+    PlaceU32_(BIN_PACKAGE_HEADER_ID0), PlaceU32_(BIN_PACKAGE_HEADER_ID1),
+
+#if 1 // Use flash map define
+    PlaceU32_( (FMAP_TOTAL_USE_BANK_END)*FLASH_BLOCK_SIZE),
+#else
+
+    // Check reserved FLASH SIZE
+#if (EEPROM_DB_STORAGE == EEPROM_SAVE_ALL)
+    PlaceU32_(FLASH_SIZE - 0/*CM_DATABASE_FLASH_SIZE*/),
+#elif (EEPROM_DB_STORAGE == EEPROM_SAVE_NONE)
+  #if (HDCP_KEY_TYPE==HDCP_KEY_IN_DB)
+    PlaceU32_(FLASH_SIZE - CM_DATABASE_FLASH_SIZE - 2*FLASH_BLOCK_SIZE), //CM + OAD + HDCP
+  #else
+    PlaceU32_(FLASH_SIZE - CM_DATABASE_FLASH_SIZE - 1*FLASH_BLOCK_SIZE), //CM + OAD
+  #endif
+#elif (EEPROM_DB_STORAGE == EEPROM_SAVE_WITHOUT_CH_DB)
+  #if (HDCP_KEY_TYPE==HDCP_KEY_IN_DB)
+    PlaceU32_(FLASH_SIZE - CM_DATABASE_FLASH_SIZE - 1*FLASH_BLOCK_SIZE), //CM + HDCP
+  #else
+    PlaceU32_(FLASH_SIZE - CM_DATABASE_FLASH_SIZE),
+  #endif
+#else
+    #error "EEPROM_DB_STORAGE is undefined!\n"
+#endif
+
+#endif
+
+    // Binary Number: Filled by external tool
+    PlaceU16_(0),
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Bin List
+    ////////////////////////////////////////////////////////////////////////////
+
+    // VD, ID, Address, Size
+    //BinItem(BIN_ID_CODE_VD_DSP),
+#if( ENABLE_AUDIO_DSP_BIN )
+    // DEMUX, ID, Address, Size
+    BinItem(BIN_ID_CODE_AUDIO_DSP),
+#endif
+
+#if( ENABLE_AUDIO_DEC_R2_BIN)
+    BinItem(BIN_ID_CODE_AUDIO_DEC_R2),
+    //BinItem(BIN_ID_CODE_AUDIO_DEC_R2_NO_COMP),
+    //BinItem(BIN_ID_CODE_AUDIO_DEC_R2_COMP),
+#endif
+
+ #if (ENABLE_DTV)
+    // DEMUX, ID, Address, Size
+    BinItem(BIN_ID_CODE_DEMUX),
+ #endif
+
+
+    // MVD, ID, Address, Size
+#if (VIDEO_FIRMWARE_CODE == VIDEO_FIRMWARE_CODE_HD)
+    //BinItem(BIN_ID_CODE_MVD_HD_S4E),
+#else
+    //BinItem(BIN_ID_CODE_MVD_SD_S4E),
+#endif
+
+#if (MHEG5_ENABLE)
+    // MHEG5, ID, Address, Size
+  #if (DTV_SYSTEM_SEL != DTV_SYSTEM_DTMB)
+    BinItem(BIN_ID_CODE_MHEG5),
+    BinItem(BIN_ID_CODE_AEON_MVF),
+  #else
+    BinItem(BIN_ID_CODE_MHEG5),
+    BinItem(BIN_ID_CODE_AEON_MVF),
+   #ifdef MHEG5_BIG5_FONT_ENABLE
+    BinItem(BIN_ID_AEON_M5FONT_24LE),
+    BinItem(BIN_ID_AEON_M5FONT_26LE),
+    BinItem(BIN_ID_AEON_M5FONT_31LE),
+    BinItem(BIN_ID_AEON_M5FONT_36LE),
+    BinItem(BIN_ID_AEON_M5FONT_RM),
+   #endif
+  #endif
+#endif
+
+#if 0//ENABLE_DMP
+  #if (ENABLE_CAPE ==1)
+    BinItem(BIN_ID_CODE_AEON_CAPE),
+  #endif
+#endif
+
+
+#if( ENABLE_DMP && VD_PLAYER_IS_IN_CROP_CPU )
+    BinItem(BIN_ID_CODE_VDPLAYER),
+#endif
+
+#if ENABLE_AUTOTEST
+  #ifdef BIN_ID_CODE_AEON_BENCHMARK
+    BinItem(BIN_ID_CODE_AEON_BENCHMARK),
+  #endif
+#endif
+
+    // Code: M4VD
+//    BinItem(BIN_ID_CODE_M4VD),
+//    BinItem(BIN_ID_M4VD_TABLE_MP4),
+//    BinItem(BIN_ID_M4VD_TABLE_RLC),
+//    BinItem(BIN_ID_M4VD_TABLE_263),
+
+    // MVF code, ID, Address, Size
+#if VECTOR_FONT_ENABLE
+    //BinItem(BIN_ID_CODE_AEON_FONT),
+#endif //VECTOR_FONT_ENABLE
+
+
+    // MVF Font, ID, Address, Size
+#if VECTOR_FONT_ENABLE
+    #if 0//(UI_SKIN_SEL==UI_SKIN_960X540X565) //hexing2015-0702 del back font
+    BinItem(BIN_ID_FONT_MSTAR_MVF_Small),
+    #else
+    BinItem(BIN_ID_FONT_MSTAR_MVF),
+    #endif
+    //BinItem(BIN_ID_CODE_AEON_MVF),
+  #if (ENABLE_ARABIC_OSD)
+    BinItem(BIN_ID_FONT_ARABIC_26),//ID:0x0112
+    BinItem(BIN_ID_FONT_ARABIC_30),//ID:0x0113
+    BinItem(BIN_ID_FONT_ARABIC_35),//ID:0x0114
+    //BinItem(BIN_ID_FONT_ARABIC_50),//ID:0x0115
+  #endif
+
+  #if (ENABLE_THAI_OSD)
+    BinItem(BIN_ID_FONT_THAI_26),//ID:0x0116
+   // BinItem(BIN_ID_FONT_THAI_30),//ID:0x0117
+   // BinItem(BIN_ID_FONT_THAI_35),//ID:0x0118
+   // BinItem(BIN_ID_FONT_THAI_50),//ID:0x0119
+  #endif
+
+#else
+
+  #if (ENABLE_DVB_TAIWAN_APP  || ENABLE_SBTVD_BRAZIL_APP ||CHINESE_BIG5_FONT_ENABLE)
+    BinItem(BIN_ID_FONT_BIG5_CH),
+  #elif (ENABLE_DTMB_CHINA_APP || ENABLE_ATV_CHINA_APP || ENABLE_DVBC_PLUS_DTMB_CHINA_APP||CHINESE_SIMP_FONT_ENABLE)
+    BinItem(BIN_ID_FONT_SIMP_CH),
+  #else
+    BinItem(BIN_ID_FONT_SIMP_CH),
+  #endif
+
+#endif // #if VECTOR_FONT_ENABLE
+
+
+#if (ENABLE_TTX)
+#ifdef TTX_USING_MSTAR_FONT_BIN
+    BinItem(BIN_ID_FONT_TTX),
+#endif
+#endif
+
+
+#if (BRAZIL_CC)
+    // CC, ID, Address, Size
+    BinItem(BIN_ID_FONT_DTVCC),
+    BinItem(BIN_ID_FONT_ATVCC),
+    //BinItem(BIN_ID_FONT_CS1 ),
+    //BinItem(BIN_ID_FONT_CS2 ),
+#endif // #if (BRAZIL_CC)
+
+
+#if (ATSC_CC == ATV_CC)
+    BinItem(BIN_ID_FONT_CS0),
+#endif // #if (ATSC_CC == ATV_CC)
+
+#if (DISPLAY_LOGO == 1)
+    BinItem(BIN_ID_JPEG_BOOT_LOGO),
+#endif
+
+#if ((ENABLE_DMP) && (ENABLE_POWERON_MUSIC))
+    BinItem(BIN_ID_MELODY_ON),
+#endif
+#if (((ENABLE_DMP) && (ENABLE_POWERON_VIDEO)))
+	BinItem(BIN_ID_VIDEO_ON),
+#endif
+
+
+    // LZSS, ID, Address, Size
+    //BinItem(BIN_ID_CODE_LZ),
+
+    // BMP, ID, Address, Size
+    BinItem(BIN_ID_OSDCP_BMP),
+
+#if(UI_SKIN_SEL == UI_SKIN_960X540XI8 )
+    BinItem(BIN_ID_OSDCP_PALETTE),
+#endif
+
+    // TEXT, ID, Address, Size
+    BinItem(BIN_ID_OSDCP_TEXT),
+
+
+    // Demod DSP Code
+#if ENABLE_DTV
+
+  #if (FRONTEND_DEMOD_TYPE == MSTAR_MSB1200_DEMOD)
+    #if (FRONTEND_TUNER_TYPE == MSTAR_MSR1200_TUNER)
+        BinItem(BIN_ID_MSB1200_MSR),
+    #elif  (FRONTEND_TUNER_TYPE == PHILIPS_FQD1216_TUNER)
+        BinItem(BIN_ID_MSB1200_FQD),
+    #else
+        BinItem(BIN_ID_MSB1200_FQD),
+    #endif
+
+  #elif (FRONTEND_DEMOD_TYPE == MSTAR_MSB1210_DEMOD)
+        BinItem(BIN_ID_MSB1210),
+
+  #elif (FRONTEND_DEMOD_TYPE == EMBEDDED_DVBT_DEMOD)
+    #ifndef INTERN_DVBT_LOAD_FW_FROM_CODE_MEMORY
+        BinItem(BIN_ID_INTERN_DVBT),
+    #endif
+
+  #elif (FRONTEND_DEMOD_TYPE == EMBEDDED_DVBC_DEMOD)
+    #ifndef INTERN_DVBC_LOAD_FW_FROM_CODE_MEMORY
+        BinItem(BIN_ID_INTERN_DVBC),
+    #endif
+  #endif // #if (FRONTEND_DEMOD_TYPE == MSTAR_MSB1200_DEMOD)
+
+  #if (FRONTEND_DEMOD_TYPE != FRONTEND_SECOND_DEMOD_TYPE)
+    #if (FRONTEND_SECOND_DEMOD_TYPE == MSTAR_MSB1200_DEMOD)
+      #if (FRONTEND_TUNER_TYPE == MSTAR_MSR1200_TUNER)
+        BinItem(BIN_ID_MSB1200_MSR),
+      #elif  (FRONTEND_TUNER_TYPE == PHILIPS_FQD1216_TUNER)
+        BinItem(BIN_ID_MSB1200_FQD),
+      #else
+        BinItem(BIN_ID_MSB1200_FQD),
+      #endif
+
+    #elif (FRONTEND_SECOND_DEMOD_TYPE == MSTAR_MSB1210_DEMOD)
+        BinItem(BIN_ID_MSB1210),
+
+    #elif (FRONTEND_SECOND_DEMOD_TYPE == EMBEDDED_DVBT_DEMOD)
+      #ifndef INTERN_DVBT_LOAD_FW_FROM_CODE_MEMORY
+        BinItem(BIN_ID_INTERN_DVBT),
+      #endif
+
+    #elif (FRONTEND_SECOND_DEMOD_TYPE == EMBEDDED_DVBC_DEMOD)
+      #ifndef INTERN_DVBC_LOAD_FW_FROM_CODE_MEMORY
+        BinItem(BIN_ID_INTERN_DVBC),
+      #endif
+    #endif
+  #endif // #if (FRONTEND_DEMOD_TYPE != FRONTEND_SECOND_DEMOD_TYPE)
+
+#endif // #if ENABLE_DTV
+
+
+#if ENABLE_PQ_BIN
+    BinItem(BIN_ID_PQ_MAIN),
+    BinItem(BIN_ID_PQ_MAIN_TEXT),
+    BinItem(BIN_ID_PQ_MAIN_EX),
+#endif
+
+#if( ENABLE_TCON_2014)
+    BinItem(BIN_ID_TCON),
+#endif
+#if( ENABLE_OVERDRIVE)
+    BinItem(BIN_ID_OVERDRIVE),
+#endif
+
+
+#ifndef ENABLE_ATV_MM
+  #if ENABLE_DYNAMIC_H264_FW_LOADING
+     BinItem(BIN_ID_CODE_AEON_H264),
+     #if (CHIP_FAMILY_TYPE==CHIP_FAMILY_NASA)//IMPLEMENT_DTV_H265
+     BinItem(BIN_ID_CODE_AEON_H265),
+     #endif
+  #endif
+#endif
+
+
+#ifndef ENABLE_ATV_MM
+  #if ENABLE_DYNAMIC_MVD_FW_LOADING
+    #if((CHIP_FAMILY_TYPE == CHIP_FAMILY_EULER) || \
+        (CHIP_FAMILY_TYPE == CHIP_FAMILY_NASA) || \
+        (CHIP_FAMILY_TYPE == CHIP_FAMILY_EDEN) )
+    BinItem(BIN_ID_CODE_AEON_MVD),
+    #endif
+  #endif
+#endif
+
+#if(ENABLE_FRC_R2)
+    BinItem(BIN_ID_CODE_AEON_FRC),
+#endif
+
+#if ( (ENABLE_DMP) && (MEMORY_MAP <= MMAP_32MB) )
+    BinItem(BIN_ID_MM_HVD),
+    BinItem(BIN_ID_MM_HVD_VLC),
+    BinItem(BIN_ID_MM_MVD),
+    BinItem(BIN_ID_MM_EVD),
+#endif
+
+#if ( ENABLE_DMP && ENABLE_HK_LOAD_MM_VDEC && ENABLE_VDEC_2_0  )
+    BinItem(BIN_ID_MM_VPU),
+    BinItem(BIN_ID_MM_VPU_VLC),
+#endif
+
+#if ( ENABLE_INDIA_OSD )
+    BinItem(BIN_ID_FONT_UI_TTF_HINDI),
+#endif
+
+#if (ENABLE_TEST_PATTERN&&ENABLE_BMP_TEST_PATTERN)
+	BinItem(BIN_ID_BMP_TestPattern_0),
+	BinItem(BIN_ID_BMP_TestPattern_1),
+#endif
+
+    //=====================================================================
+    // Put the following ID 0xF000 at the end of this file.
+    // It will be verified by bootloader for integrity check.
+    BinItem(BIN_ID_MAGIC_55AAABCD)
+};
+#endif //(!BLOADER)
+
+such as: font bin load ...
+msAPI_Font_LoadFlashFontToSDRAM(BIN_ID_FONT_ARABIC_35);
+
+
+    BMPfontaddr = GE_ADDR_ALIGNMENT(((FONT_START_MEMORY_TYPE & MIU1) ? (FONT_START_ADR | MIU_INTERVAL) : (FONT_START_ADR))) + GE_ADDR_ALIGNMENT(MVF_MAX_COMMAND_WORDS * 4) + 0x9E000;
+
+先load bin文档， 再把bin文档放到pool解压，最后放到MMP的 font 区；
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
