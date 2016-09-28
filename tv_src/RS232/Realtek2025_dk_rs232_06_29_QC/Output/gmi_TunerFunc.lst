@@ -1,0 +1,119 @@
+C51 COMPILER V8.16   GMI_TUNERFUNC                                                         04/05/2012 11:15:37 PAGE 1   
+
+
+C51 COMPILER V8.16, COMPILATION OF MODULE GMI_TUNERFUNC
+OBJECT MODULE PLACED IN .\Output\gmi_TunerFunc.obj
+COMPILER INVOKED BY: D:\安装文件\keil\C51\BIN\C51.EXE Lib\gmi_TunerFunc.C OPTIMIZE(9,SIZE) BROWSE DEFINE(CMOS_CHIP_TYPE=
+                    -PCB_2025LV13) PRINT(.\Output\gmi_TunerFunc.lst) OBJECT(.\Output\gmi_TunerFunc.obj)
+
+line level    source
+
+   1          ////////////////////////////////////////////////////////////////////////////
+   2          //         Copyright of Vector Co.,Ltd.                                   //
+   3          //                                                                        //
+   4          //                                                                        //
+   5          //                            Tuner function                              //
+   6          //   Ver: 0.00                                                            //
+   7          //   Creat file time: 2006.7.31                                           //
+   8          //   End modify time: 2006.7.31                                           //
+   9          //   For RTD2523B/RTD2553V/RTD2525L                                       //
+  10          ////////////////////////////////////////////////////////////////////////////
+  11          
+  12          #include "Header\Include.h"
+  13          
+  14          
+  15          
+  16          //==========================================================================
+  17          //                      Tuner FUNCTION
+  18          //==========================================================================
+  19          void gmi_Delay5us(void)
+  20          {
+  21   1          _nop_();
+  22   1          _nop_();
+  23   1          _nop_();
+  24   1          _nop_();
+  25   1          _nop_();
+  26   1          _nop_();
+  27   1      }
+  28          
+  29          //==========================================================================
+  30          //
+  31          //==========================================================================
+  32          // For write tuner
+  33          void gmi_CI2CSendByte(BYTE ucSendData)
+  34          {
+  35   1          BYTE m;
+  36   1      
+  37   1          for (m = 0; m < 8; m++)
+  38   1          {
+  39   2              if((bit)(ucSendData & 0x80))
+  40   2                  SETI2CSDA();
+  41   2              else
+  42   2                  CLRI2CSDA();
+  43   2      
+  44   2                  gmi_Delay5us();
+  45   2      
+  46   2              SETI2CSCL();
+  47   2              gmi_Delay5us();
+  48   2      
+  49   2              CLRI2CSCL();
+  50   2      
+  51   2              ucSendData    = ucSendData << 1;
+  52   2          }
+  53   1                
+  54   1          SETI2CSDA();
+C51 COMPILER V8.16   GMI_TUNERFUNC                                                         04/05/2012 11:15:37 PAGE 2   
+
+  55   1          SETI2CSCL();
+  56   1          gmi_Delay5us();
+  57   1      
+  58   1          CLRI2CSCL();
+  59   1          gmi_Delay5us();
+  60   1      } 
+  61          
+  62          //==========================================================================
+  63          //
+  64          //==========================================================================
+  65          BYTE gmi_CRead9886(void)
+  66          {       
+  67   1          CI2cStart(_ADDR_9886 | _I2C_RD);                     
+  68   1          pData[0] = CI2cGetByte();
+  69   1          CI2cStop();
+  70   1                                 
+  71   1          return pData[0];
+  72   1      }  
+  73          
+  74          //==========================================================================
+  75          //
+  76          //==========================================================================
+  77          void gmi_CI2CWriteTuner(BYTE *Array)
+  78          {
+  79   1          BYTE ucTemp = 0;
+  80   1      
+  81   1          SETI2CSCL();
+  82   1          CLRI2CSDA();
+  83   1          gmi_Delay5us();
+  84   1          CLRI2CSCL();
+  85   1      
+  86   1          for(ucTemp = 1; ucTemp < Array[0]; ucTemp++)
+  87   1          {
+  88   2              gmi_CI2CSendByte(Array[ucTemp]);
+  89   2          }
+  90   1      
+  91   1          CI2cStop();
+  92   1      }
+  93          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    143    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       6
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
