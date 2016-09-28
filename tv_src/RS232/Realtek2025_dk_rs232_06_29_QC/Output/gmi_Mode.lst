@@ -1,0 +1,592 @@
+C51 COMPILER V8.16   GMI_MODE                                                              04/05/2012 11:15:35 PAGE 1   
+
+
+C51 COMPILER V8.16, COMPILATION OF MODULE GMI_MODE
+OBJECT MODULE PLACED IN .\Output\gmi_Mode.obj
+COMPILER INVOKED BY: D:\安装文件\keil\C51\BIN\C51.EXE Lib\gmi_Mode.c OPTIMIZE(9,SIZE) BROWSE DEFINE(CMOS_CHIP_TYPE=PCB_2
+                    -025LV13) PRINT(.\Output\gmi_Mode.lst) OBJECT(.\Output\gmi_Mode.obj)
+
+line level    source
+
+   1          //----------------------------------------------------------------------------------------------------
+   2          // ID Code      : Mode.c No.0004
+   3          // Update Note  : 
+   4          //
+   5          //----------------------------------------------------------------------------------------------------
+   6          
+   7          #include "Header\Include.h"
+   8          
+   9          
+  10          
+  11          //----------------------------------------------------------------------------------------------------
+  12          // Measure Functions
+  13          //----------------------------------------------------------------------------------------------------
+  14                 /*
+  15          //--------------------------------------------------
+  16          // Description  : Get measure data and convert into system information
+  17          // Input Value  : None
+  18          // Output Value : Return _TRUE if success, _FALSE if the measurement result is wrong
+  19          //--------------------------------------------------
+  20          bit CModeMeasureData(void)
+  21          {
+  22          
+  23              // Read measurement status bit
+  24              CScalerRead(_MEAS_HS_PERIOD_H_52, 3, &pData[8], _AUTOINC);
+  25          
+  26              if((bit)(pData[8] & _BIT4) || (bit)(pData[10] & _BIT4) || (bit)(pData[10] & _BIT5))
+  27                  return _FALSE;
+  28          
+  29              CScalerSetBit(_MEAS_HS_PERIOD_H_52, ~_BIT6, _BIT6);
+  30          
+  31          #if((_SCALER_TYPE == _RTD2553V) || (_SCALER_TYPE == _RTD2546N)) 
+  32          
+  33              CScalerRead(_MEAS_HS_PERIOD_H_52, 7, &pData[8], _AUTOINC);
+  34              // Calculate measurement result
+  35              ((WORD *)pData)[0] = ((pData[8] & 0x1f) << 8) | pData[9];
+  36              ((WORD *)pData)[1] = ((pData[10] & 0x1f) << 8) | pData[11];
+  37              ((WORD *)pData)[2] = ((pData[12] & 0x0f) << 8) | pData[13];
+  38              ((WORD *)pData)[3] = ((pData[12] & 0xf0) << 4) | pData[14];
+  39          
+  40          #elif(_SCALER_TYPE == _RTD2525L)
+  41          
+  42              CScalerSetBit(_MEAS_VS_HIGH_PERIOD_L_58, ~_BIT0, 0x00); //V305 modify 
+  43              CScalerRead(_MEAS_HS_PERIOD_H_52, 6, &pData[8], _AUTOINC);
+  44              // Calculate measurement result
+  45              ((WORD *)pData)[0] = ((pData[8] & 0x1f) << 8) | pData[9]; //V305 modify 
+  46              ((WORD *)pData)[1] = ((pData[10] & 0x1f) << 8) | pData[11]; //V305 modify 
+  47              ((WORD *)pData)[2] = ((pData[12] & 0xf0) << 4) | pData[13]; //V305 modify 
+  48          
+  49          #else
+  50          
+  51              // Pop up measurement result
+  52              CScalerRead(_MEAS_HS_PERIOD_H_52, 7, &pData[8], _AUTOINC);
+  53          
+  54              // Calculate measurement result
+C51 COMPILER V8.16   GMI_MODE                                                              04/05/2012 11:15:35 PAGE 2   
+
+  55              ((WORD *)pData)[0] = ((pData[8] & 0x1f) << 8) | pData[9];
+  56              ((WORD *)pData)[1] = ((pData[10] & 0x1f) << 8) | pData[11];
+  57              ((WORD *)pData)[2] = ((pData[12] & 0x0f) << 8) | pData[13];
+  58              ((WORD *)pData)[3] = ((pData[12] & 0xf0) << 4) | pData[14];
+  59          
+  60          #endif  // End of #if((_SCALER_TYPE == _RTD2553V) || (_SCALER_TYPE == _RTD2546N))
+  61          
+  62          
+  63              if((((WORD *)pData)[0] >=  0x07ff) || (((WORD *)pData)[1] >= 0x07ff) || (((WORD *)pData)[0] == 0) || (
+             -((WORD *)pData)[1] == 0))
+  64              {
+  65                  // The measurement result is out of range
+  66                  return _FALSE;
+  67              }
+  68              else
+  69              {
+  70                  // Store measurement results in global system variable
+  71                  stModeInfo.Polarity = (pData[10] & 0xc0) >> 6;
+  72                  stModeInfo.IHCount = ((WORD *)pData)[0];
+  73                  stModeInfo.IHFreq = (WORD)((DWORD)_RTD_XTAL * 10 * 2 / stModeInfo.IHCount);
+  74                  stModeInfo.IHFreq = (stModeInfo.IHFreq >> 1) + (stModeInfo.IHFreq & 0x01);
+  75                  stModeInfo.IVTotal = ((WORD *)pData)[1];
+  76                  stModeInfo.IVFreq = (WORD)((DWORD)(stModeInfo.IHFreq) * 1000 * 2 / stModeInfo.IVTotal);
+  77                  stModeInfo.IVFreq = (stModeInfo.IVFreq >> 1) + (stModeInfo.IVFreq & 0x01);
+  78                  stModeInfo.IHSyncPulseCount = ((WORD *)pData)[2];
+  79          
+  80                  return _TRUE;
+  81              }
+  82          }         */
+  83          
+  84          //----------------------------------------------------------------------------------------------------
+  85          // Mode Display Functions
+  86          //----------------------------------------------------------------------------------------------------
+  87          
+  88          //--------------------------------------------------
+  89          // Description  : Setup other setings for display
+  90          // Input Value  : None
+  91          // Output Value : None
+  92          //--------------------------------------------------
+  93          void CModeSetupEtcs(BYTE ucPar)
+  94          {
+  95   1          CMiscEnableDoubleBuffer();
+  96   1      
+  97   1      
+  98   1          //    if((bit)CScalerGetBit(_VDISP_CTRL_28, _BIT3))
+  99   1                   CScalerSetBit(_VDISP_CTRL_28, ~_BIT3, _BIT3);
+ 100   1      
+ 101   1      #if(_SCALER_TYPE == _RTD2525L)
+ 102   1          CAdjustDigitalFilter(_PHASE_ACCESS_PORT, _PHASE_THD_0, _DIV_VALUE_1, ucPar);
+ 103   1      #else
+                  CAdjustDigitalFilter(_PHASE_ACCESS_PORT, _PHASE_THD_0, _DIV_VALUE_2, ucPar);
+              #endif
+ 106   1      
+ 107   1      #if(_SCALER_TYPE != _RTD2547D)
+ 108   1          CAdjustDigitalFilter(_YPBPR_ACCESS_PORT, _YPBPR_ENABLE, _DIV_VALUE_0, ucPar);
+ 109   1      #endif
+ 110   1      
+ 111   1      #if (_SCALER_TYPE == _RTD2553V || _SCALER_TYPE == _RTD2546N || _SCALER_TYPE == _RTD2525L || _SCALER_TYPE =
+             -= _RTD2547D)
+ 112   1          CAdjustDigitalFilter(_NEG_SMEAR_ACCESS_PORT, _SMEAR_RING_THD_4, _DIV_VALUE_1, ucPar); //KEN 2005/09/23
+ 113   1      #endif
+ 114   1          CAdjustDigitalFilter(_MISMATCH_ACCESS_PORT, _MISMATCH_THD_0, _DIV_VALUE_0, ucPar);
+C51 COMPILER V8.16   GMI_MODE                                                              04/05/2012 11:15:35 PAGE 3   
+
+ 115   1      
+ 116   1      #if(_SCALER_TYPE == _RTD2547D)
+                  CAdjustDigitalFilter(_NOISE_REDUCTION_PORT, _NOISE_REDUCTION_THD_7, _DIV_VALUE_0, ucPar);
+                  CAdjustDigitalFilter(_YPBPR_ACCESS_PORT, _YPBPR_ENABLE, _DIV_VALUE_0, ucPar);
+              #endif
+ 120   1      
+ 121   1          CMiscClearStatusRegister();
+ 122   1      }
+ 123          
+ 124          //--------------------------------------------------
+ 125          // Description  : Startup settings for VGA
+ 126          // Input Value  : None
+ 127          // Output Value : None
+ 128          //--------------------------------------------------
+ 129          void CModeStartUpVGA(void)
+ 130          {
+ 131   1          WORD pixelclock;
+ 132   1      
+ 133   1             /*
+ 134   1      #if (_SCALER_TYPE == _RTD2525L)
+ 135   1          CScalerSetByte(_ADC_ACCESS_PORT_DC,0x8e); //V304 modify
+ 136   1          CScalerSetByte(_ADC_DATA_PORT_DD,0x00); //V304 modify
+ 137   1      #endif   */
+ 138   1      
+ 139   1      #if(_SCALER_TYPE == _RTD2547D)
+              
+                  CScalerPageSelect(_PAGE2);
+                  CScalerSetBit(_P2_POWER_ON_OFF_CTRL_A7, ~(_BIT4 | _BIT3 | _BIT2 | _BIT1 | _BIT0), 0x00); //V304 modify
+             - bit4 and V307 modify bit3~bit0
+                  CScalerSetBit(_P2_Z0_CALIBRATION_CTRL_AC, ~_BIT6, 0x00); //V307 modify
+                  
+                  // To imporve the FIFO efficiency only when input data rate is slow, and display data rate is high.
+                  CScalerSetBit(_VGIP_CTRL_10, ~(_BIT3 | _BIT2 | _BIT1 | _BIT0), _BIT0);
+              
+              #else
+ 149   1      
+ 150   1          CScalerSetBit(_POWER_ON_OFF_CTRL_C2, ~_BIT5, 0x00); //V304 modify
+ 151   1          CScalerSetBit(_POWER_ON_OFF_CTRL_C2, ~(_BIT4 | _BIT3 | _BIT2 | _BIT1), 0x00); //V307 modify
+ 152   1          CScalerSetBit(_Z0_CALIBRATION_CTRL_C7, ~_BIT6, 0x00); //V307 modify
+ 153   1      
+ 154   1          CScalerSetBit(_VGIP_CTRL_05, ~(_BIT3 | _BIT2 | _BIT0), _BIT0);
+ 155   1      #endif 
+ 156   1      
+ 157   1          // Calculate pixel clock rate (round to MHz)
+ 158   1          pixelclock  = (((DWORD)stModeInfo.IHFreq * (DWORD)stModeInfo.IHTotal) * 2 / (1000 * 10));
+ 159   1          pixelclock  = (pixelclock >> 1) + (pixelclock & 0x01);
+ 160   1       
+ 161   1      #if(_SCALER_TYPE == _RTD2547D)
+              
+                  // ADC differential mode and Set ADC bandwidth to reduce high frequency noise 
+                  CScalerPageSelect(_PAGE0);
+                  if(pixelclock < 38)
+                      CScalerSetBit(_P0_ADC_CTRL_A1, ~(_BIT2 | _BIT1 | _BIT0), _BIT2);                    //75MHz
+                  else if(pixelclock < 68)
+                      CScalerSetBit(_P0_ADC_CTRL_A1, ~(_BIT2 | _BIT1 | _BIT0), (_BIT2 | _BIT0));          //150MHz
+                  else if(pixelclock < 160)
+                      CScalerSetBit(_P0_ADC_CTRL_A1, ~(_BIT2 | _BIT1 | _BIT0), (_BIT2 | _BIT1));          //300MHz
+                  else
+                      CScalerSetBit(_P0_ADC_CTRL_A1, ~(_BIT2 | _BIT1 | _BIT0), (_BIT2 | _BIT1 | _BIT0));  //500MHz
+              
+                  CScalerPageSelect(_PAGE1);
+                  // Phase interpolation control load modified.   Marvin 0812
+C51 COMPILER V8.16   GMI_MODE                                                              04/05/2012 11:15:35 PAGE 4   
+
+                  if(pixelclock < 50)
+                      CScalerSetBit(_P1_PLL2_PHASE_INTERPOLATION_B6, ~(_BIT7 | _BIT6), 0x00);
+                  else
+                      CScalerSetBit(_P1_PLL2_PHASE_INTERPOLATION_B6, ~(_BIT7 | _BIT6), _BIT6);
+              
+                  // Fine-tune R/G/B delay and enable the ADC frame-modulation
+                  CScalerPageSelect(_PAGE0);
+                      CScalerSetByte(_P0_ADC_RED_CTL_A2, 0x40 | (_ADC_FINE_TUNE_DELAY_RED & 0x07));
+                      CScalerSetByte(_P0_ADC_GREEN_CTL_A3, 0x40 | (_ADC_FINE_TUNE_DELAY_GREEN & 0x07));
+                      CScalerSetByte(_P0_ADC_BLUE_CTL_A4, 0x40 | (_ADC_FINE_TUNE_DELAY_BLUE & 0x07));
+              
+                      CScalerSetByte(_P0_ADC_V_BAIS1_B2, 0x0d);
+                  CScalerSetByte(_YUV2RGB_CTRL_9C, 0x00);
+              
+                  // HSYNC positive/negtive tracking
+                  CScalerPageSelect(_PAGE1);
+                  CScalerSetBit(_P1_PLL_DIV_CTRL_A1, ~_BIT6, 0x00);
+              
+              #else
+ 195   1          // To imporve the FIFO efficiency only when input data rate is slow, and display data rate is high.
+ 196   1          CScalerSetBit(_VGIP_CTRL_05, ~(_BIT3 | _BIT2 | _BIT1), 0x00);
+ 197   1      
+ 198   1          // ADC differential mode and Set ADC bandwidth to reduce high frequency noise 
+ 199   1      #if (_SCALER_TYPE == _RTD2553V || _SCALER_TYPE == _RTD2546N || _SCALER_TYPE == _RTD2525L)
+ 200   1      /*             Realtek
+ 201   1          if(pixelclock < 38)
+ 202   1              CScalerSetDataPortBit(_ADC_ACCESS_PORT_DC, 0x00, ~(_BIT2 | _BIT1 | _BIT0), _BIT2);                
+             -    //75MHz
+ 203   1          else if(pixelclock < 68)
+ 204   1              CScalerSetDataPortBit(_ADC_ACCESS_PORT_DC, 0x00, ~(_BIT2 | _BIT1 | _BIT0), (_BIT2 | _BIT0));      
+             -    //150MHz
+ 205   1          else if(pixelclock < 160)
+ 206   1              CScalerSetDataPortBit(_ADC_ACCESS_PORT_DC, 0x00, ~(_BIT2 | _BIT1 | _BIT0), (_BIT2 | _BIT1));      
+             -    //300MHz
+ 207   1          else
+ 208   1              CScalerSetDataPortBit(_ADC_ACCESS_PORT_DC, 0x00, ~(_BIT2 | _BIT1 | _BIT0), (_BIT2 | _BIT1 | _BIT0)
+             -);  //500MHz
+ 209   1      */
+ 210   1          if(pixelclock < 38)
+ 211   1              CScalerSetDataPortBit(_ADC_ACCESS_PORT_DC, 0x00, ~(_BIT1 | _BIT0), 0x00);
+ 212   1          else if(pixelclock < 68)
+ 213   1              CScalerSetDataPortBit(_ADC_ACCESS_PORT_DC, 0x00, ~(_BIT1 | _BIT0), (_BIT0));
+ 214   1          else if(pixelclock < 160)
+ 215   1              CScalerSetDataPortBit(_ADC_ACCESS_PORT_DC, 0x00, ~(_BIT1 | _BIT0), (_BIT1));          //300MHz
+ 216   1          else
+ 217   1              CScalerSetDataPortBit(_ADC_ACCESS_PORT_DC, 0x00, ~(_BIT1 | _BIT0), (_BIT1 | _BIT0));  //500MHz
+ 218   1              
+ 219   1      #else
+                  if(pixelclock < 34)
+                      CScalerSetBit(_ADC_RGB_CTRL_DC, ~(_BIT1 | _BIT0), 0x00);
+                  else if(pixelclock < 68)
+                      CScalerSetBit(_ADC_RGB_CTRL_DC, ~(_BIT1 | _BIT0), (_BIT0));
+                  else if(pixelclock < 160)
+                      CScalerSetBit(_ADC_RGB_CTRL_DC, ~(_BIT1 | _BIT0), (_BIT1));             //300MHz
+                  else
+                      CScalerSetBit(_ADC_RGB_CTRL_DC, ~(_BIT1 | _BIT0), (_BIT1 | _BIT0));     //500MHz
+              #endif
+ 229   1       
+ 230   1          // Phase interpolation control load modified.   Marvin 0812
+ 231   1          if(pixelclock < 50)
+ 232   1              CScalerSetBit(_PLL2_PHASE_INTERPOLATION_AD, ~(_BIT7 | _BIT6), 0x00);
+ 233   1          else
+C51 COMPILER V8.16   GMI_MODE                                                              04/05/2012 11:15:35 PAGE 5   
+
+ 234   1              CScalerSetBit(_PLL2_PHASE_INTERPOLATION_AD, ~(_BIT7 | _BIT6), _BIT6);
+ 235   1       
+ 236   1          // Fine-tune R/G/B delay and enable the ADC frame-modulation
+ 237   1      #if (_SCALER_TYPE == _RTD2553V || _SCALER_TYPE == _RTD2546N || _SCALER_TYPE == _RTD2525L)
+ 238   1              CScalerSetDataPortByte(_ADC_ACCESS_PORT_DC, 0x01, 0x40 | (_ADC_FINE_TUNE_DELAY_RED & 0x07));
+ 239   1      #if(_SCALER_TYPE == _RTD2525L)  
+ 240   1              CScalerSetDataPortByte(_ADC_ACCESS_PORT_DC, 0x02, 0x20 | (_ADC_FINE_TUNE_DELAY_GREEN & 0x07));
+ 241   1      #else
+                      CScalerSetDataPortByte(_ADC_ACCESS_PORT_DC, 0x02, 0x40 | (_ADC_FINE_TUNE_DELAY_GREEN & 0x07));
+              #endif
+ 244   1              CScalerSetDataPortByte(_ADC_ACCESS_PORT_DC, 0x03, 0x40 | (_ADC_FINE_TUNE_DELAY_BLUE & 0x07));
+ 245   1      
+ 246   1              CScalerSetDataPortByte(_ADC_ACCESS_PORT_DC, 0x11, 0x0d);
+ 247   1      #else
+                  CScalerSetByte(_ADC_RED_CTRL_DD, 0x40 | (_ADC_FINE_TUNE_DELAY_RED & 0x07));
+                  CScalerSetByte(_ADC_GRN_CTRL_DE, 0x40 | (_ADC_FINE_TUNE_DELAY_GREEN & 0x07));
+                  CScalerSetByte(_ADC_BLU_CTRL_DF, 0x40 | (_ADC_FINE_TUNE_DELAY_BLUE & 0x07));
+                  CScalerSetByte(_ADC_VBIAS1_ED, 0x0d);
+              #endif
+ 253   1          CScalerSetByte(_YUV2RGB_CTRL_89, 0x00);
+ 254   1      
+ 255   1          // HSYNC positive/negtive tracking
+ 256   1          CScalerSetBit(_PLL_DIV_CTRL_98, ~_BIT6, 0x00);
+ 257   1      
+ 258   1      #endif // #if(_SCALER_TYPE == _RTD2547D)
+ 259   1      }
+ 260          
+ 261          //--------------------------------------------------
+ 262          // Description  : Set scaling factor settings
+ 263          // Input Value  : Scaling information
+ 264          // Output Value : None
+ 265          //--------------------------------------------------
+ 266          void CModeSetScaling(BYTE ucOption)
+ 267          {
+ 268   1      #if(_SCALER_TYPE == _RTD2547D)
+              
+                #if(_FIELD_MERGE_SUPPORT == _ON)
+                  if(GET_FIELDMERGE_MODE())
+                      stModeInfo.IVHeight = stModeInfo.IVHeight * 2;
+                #endif
+              
+              #endif
+ 276   1      
+ 277   1          // Set window size before scale up
+ 278   1          if(ucOption & _BIT3)
+ 279   1          {
+ 280   2              // H scale-down
+ 281   2              pData[0] = (BYTE)((stDisplayInfo.DHWidth >> 4) & 0x70);
+ 282   2              pData[1] = LOBYTE(stDisplayInfo.DHWidth);
+ 283   2          }
+ 284   1          else
+ 285   1          {
+ 286   2              // No H scale-down
+ 287   2              pData[0] = (BYTE)((stModeInfo.IHWidth >> 4) & 0x70);
+ 288   2              pData[1] = LOBYTE(stModeInfo.IHWidth);
+ 289   2          }
+ 290   1      
+ 291   1          if(ucOption & _BIT1)
+ 292   1          {
+ 293   2              // V scale-down
+ 294   2              pData[0] = pData[0] | (HIBYTE(stDisplayInfo.DVHeight) & 0x07);
+ 295   2              pData[2] = LOBYTE(stDisplayInfo.DVHeight);
+C51 COMPILER V8.16   GMI_MODE                                                              04/05/2012 11:15:35 PAGE 6   
+
+ 296   2          }
+ 297   1          else
+ 298   1          {
+ 299   2              // No V scale-down
+ 300   2              pData[0] = pData[0] | (HIBYTE(stModeInfo.IVHeight) & 0x07);
+ 301   2              pData[2] = LOBYTE(stModeInfo.IVHeight);
+ 302   2          }
+ 303   1      
+ 304   1      #if(_SCALER_TYPE != _RTD2547D)
+ 305   1          CScalerWrite(_DWRWL_H_BSU_14, 3, pData, _AUTOINC);
+ 306   1      #endif
+ 307   1      
+ 308   1      #if (_SCALER_TYPE == _RTD2553V || _SCALER_TYPE == _RTD2546N || _SCALER_TYPE == _RTD2525L)
+ 309   1          // Set FIFO Frequency (For RTD2553V)
+ 310   1          CScalerSetByte(_FIFO_FREQUENCY_22, 0x00);
+ 311   1      #endif
+ 312   1      
+ 313   1      #if(_SCALER_TYPE == _RTD2547D)
+                 
+                  CScalerSetByte(_FIFO_ACCESS_PORT_30, _FIFO_DWRWL_H_BSU_00);
+                  CScalerWrite(_FIFO_DATA_PORT_31, 3, pData, _NON_AUTOINC);
+              
+                #if(_FRC_SUPPORT == _ON)
+                  ((WORD *)pData)[2] = ((pData[0] & 0x70) << 4) | pData[1];
+                  ((WORD *)pData)[3] = ((pData[0] & 0x07) << 8) | pData[2];
+              
+                  if(GET_FRCTATUS())
+                  {
+                #if(_FIELD_MERGE_SUPPORT == _ON)
+                      if(GET_FIELDMERGE_MODE())
+                      {
+                          CMemoryControlForFRC(((WORD *)pData)[2], ((WORD *)pData)[3] / 2);
+                      }
+                      else
+                      CMemoryControlForFRC(((WORD *)pData)[2], ((WORD *)pData)[3]);
+                #else
+                      CMemoryControlForFRC(((WORD *)pData)[2], ((WORD *)pData)[3]);
+                #endif // #if(_FIELD_MERGE_SUPPORT == _ON)
+                  }
+                  else
+                  {
+                      CScalerPageSelect(_PAGE5);
+                      CScalerSetByte(_P5_SDRF_MN_PRERD_VST_H_BC, 0x00);
+                      CScalerSetByte(_P5_SDRF_MN_PRERD_VST_L_BD, 0x00);
+                  }
+                #endif  // #if(_FRC_SUPPORT == _ON)
+              
+              #endif //    #if(_SCALER_TYPE == _RTD2547D)
+ 344   1      
+ 345   1          // Write coefficient for sharpness
+ 346   1          CAdjustSharpness();
+ 347   1      
+ 348   1          // Config scaling
+ 349   1      #if (_SCALER_TYPE == _RTD2553V || _SCALER_TYPE == _RTD2546N || _SCALER_TYPE == _RTD2525L || _SCALER_TYPE =
+             -= _RTD2547D)
+ 350   1          if(ucOption & _BIT1)
+ 351   1              CScalerSetBit(_SCALE_DOWN_CTRL_23, ~_BIT0, _BIT0);          // Turn on V scale-down
+ 352   1          else
+ 353   1              CScalerSetBit(_SCALE_DOWN_CTRL_23, ~_BIT0, 0x00);           // Turn off V scale-down
+ 354   1      
+ 355   1          if(ucOption & _BIT3)
+ 356   1              CScalerSetBit(_SCALE_DOWN_CTRL_23, ~_BIT1, _BIT1);          // Turn on H scale-down
+C51 COMPILER V8.16   GMI_MODE                                                              04/05/2012 11:15:35 PAGE 7   
+
+ 357   1          else
+ 358   1              CScalerSetBit(_SCALE_DOWN_CTRL_23, ~_BIT1, 0x00);           // Turn off H scale-down
+ 359   1      #else
+                  if(ucOption & _BIT1)
+                      CScalerSetBit(_SCALE_DOWN_CTRL_22, ~_BIT0, _BIT0);          // Turn on V scale-down
+                  else
+                      CScalerSetBit(_SCALE_DOWN_CTRL_22, ~_BIT0, 0x00);           // Turn off V scale-down
+              
+                  if(ucOption & _BIT3)
+                      CScalerSetBit(_SCALE_DOWN_CTRL_22, ~_BIT1, _BIT1);          // Turn on H scale-down
+                  else
+                      CScalerSetBit(_SCALE_DOWN_CTRL_22, ~_BIT1, 0x00);           // Turn off H scale-down
+              #endif
+ 370   1      
+ 371   1      #if(_SCALER_TYPE == _RTD2547D)
+                  if(ucOption & _BIT0)
+                      CScalerSetBit(_SCALE_CTRL_32, ~_BIT1, _BIT1);               // Turn on V scale-up
+                  else
+                      CScalerSetBit(_SCALE_CTRL_32, ~_BIT1, 0x00);                // Turn off V scale-up
+              
+                  if(ucOption & _BIT2)
+                      CScalerSetBit(_SCALE_CTRL_32, ~_BIT0, _BIT0);               // Turn on H scale-up
+                  else
+                      CScalerSetBit(_SCALE_CTRL_32, ~_BIT0, 0x00);                // Turn off H scale-up
+              #else
+ 382   1          if(ucOption & _BIT0)
+ 383   1              CScalerSetBit(_SCALE_CTRL_19, ~_BIT1, _BIT1);               // Turn on V scale-up
+ 384   1          else
+ 385   1              CScalerSetBit(_SCALE_CTRL_19, ~_BIT1, 0x00);                // Turn off V scale-up
+ 386   1      
+ 387   1          if(ucOption & _BIT2)
+ 388   1              CScalerSetBit(_SCALE_CTRL_19, ~_BIT0, _BIT0);               // Turn on H scale-up
+ 389   1          else
+ 390   1              CScalerSetBit(_SCALE_CTRL_19, ~_BIT0, 0x00);                // Turn off H scale-up
+ 391   1      #endif
+ 392   1      
+ 393   1          // Set scale-down coefficient
+ 394   1      #if (_SCALER_TYPE == _RTD2553V || _SCALER_TYPE == _RTD2546N || _SCALER_TYPE == _RTD2525L || _SCALER_TYPE =
+             -= _RTD2547D)
+ 395   1          if(ucOption & _BIT3)    // H scale-down
+ 396   1          {
+ 397   2              // Data[12~15]
+ 398   2              ((DWORD *)pData)[3] = (DWORD)1 * 1048576 * stModeInfo.IHWidth;
+ 399   2              ((DWORD *)pData)[3] = (((DWORD *)pData)[3] % stDisplayInfo.DHWidth) ? ((((DWORD *)pData)[3] / stDi
+             -splayInfo.DHWidth) + 1) : (((DWORD *)pData)[3] / stDisplayInfo.DHWidth);
+ 400   2      
+ 401   2              // H scale-down factor
+ 402   2              pData[4] = ((((DWORD *)pData)[3] * 16 / 1048576 - 16) & 0x3f);
+ 403   2              pData[5] = ((((DWORD *)pData)[3] >> 16) & 0xff);
+ 404   2              pData[6] = ((((DWORD *)pData)[3] >> 8) & 0xff);
+ 405   2              pData[7] = ((((DWORD *)pData)[3]) & 0xff);
+ 406   2      
+ 407   2          }
+ 408   1          else
+ 409   1          {
+ 410   2              pData[4] = 0x00;
+ 411   2              pData[5] = 0x10;
+ 412   2              pData[6] = 0x00;
+ 413   2              pData[7] = 0x00;
+ 414   2          }
+ 415   1      
+ 416   1          if(ucOption & _BIT1)    // V scale-down
+C51 COMPILER V8.16   GMI_MODE                                                              04/05/2012 11:15:35 PAGE 8   
+
+ 417   1          {
+ 418   2              // Data[12~15]
+ 419   2              ((DWORD *)pData)[3] = (DWORD)2 * 131072 * stModeInfo.IVHeight / stDisplayInfo.DVHeight;
+ 420   2              ((DWORD *)pData)[3] = (((DWORD *)pData)[3] >> 1) + (((DWORD *)pData)[3] & 0x01);
+ 421   2      
+ 422   2              // V scale-down factor
+ 423   2              pData[0] = ((((DWORD *)pData)[3] * 16 / 131072 - 16) & 0x3f);
+ 424   2              pData[1] = ((((DWORD *)pData)[3] >> 16) & 0x07);
+ 425   2              pData[2] = ((((DWORD *)pData)[3] >> 8) & 0xff);
+ 426   2              pData[3] = ((((DWORD *)pData)[3]) & 0xff);
+ 427   2      
+ 428   2              CScalerSetBit(_SCALE_DOWN_CTRL_23, ~_BIT2, 0x00);    // Diable V scale-down compensation
+ 429   2          }
+ 430   1          else
+ 431   1          {
+ 432   2              pData[0] = 0x00;
+ 433   2              pData[1] = 0x02;
+ 434   2              pData[2] = 0x00;
+ 435   2              pData[3] = 0x00;
+ 436   2      
+ 437   2              CScalerSetBit(_SCALE_DOWN_CTRL_23, ~_BIT2, 0x00);    // Diable V scale-down compensation
+ 438   2          }
+ 439   1      
+ 440   1          CScalerSetByte(_SD_ACCESS_PORT_24, 0x80);
+ 441   1          CScalerWrite(_SD_DATA_PORT_25, 8, pData, _NON_AUTOINC);
+ 442   1          CScalerSetByte(_SD_ACCESS_PORT_24, 0x00);
+ 443   1      
+ 444   1      #else
+              
+                  if(ucOption & _BIT3)    // H scale-down
+                  {
+                      // Data[12~15]
+                      ((DWORD *)pData)[3] = (DWORD)131072 * stModeInfo.IHWidth;
+                      ((DWORD *)pData)[3] = (((DWORD *)pData)[3] % stDisplayInfo.DHWidth) ? ((((DWORD *)pData)[3] / stDi
+             -splayInfo.DHWidth) + 1) : (((DWORD *)pData)[3] / stDisplayInfo.DHWidth);
+              
+              
+                      // H scale-down factor
+                      pData[0] = ((((DWORD *)pData)[3] >> 16) & 0x07);
+                      pData[0] |= ((((DWORD *)pData)[3] * 16 / 131072 - 16) << 3);
+                      pData[1] = ((((DWORD *)pData)[3] >> 8) & 0xff);
+                      pData[2] = ((((DWORD *)pData)[3]) & 0xff);
+              
+                      //CScalerSetBit(_VGIP_CTRL_04, 0xff, 0x40);    // Enable H scale-down compensation
+                  }
+                  else
+                  {
+                      pData[0] = 0x02;
+                      pData[1] = 0x00;
+                      pData[2] = 0x00;
+              
+                      //CScalerSetBit(_VGIP_CTRL_04, 0xbf, 0x00);    // Diable H scale-down compensation
+                  }
+              
+                  if(ucOption & _BIT1)    // V scale-down
+                  {
+                      // Data[12~15]
+                      ((DWORD *)pData)[3] = (DWORD)2 * 4096 * stModeInfo.IVHeight / stDisplayInfo.DVHeight;
+                      ((DWORD *)pData)[3] = (((DWORD *)pData)[3] >> 1) + (((DWORD *)pData)[3] & 0x01);
+              
+                      // V scale-down factor
+                      pData[3] = ((((DWORD *)pData)[3] >> 8) & 0xff);
+C51 COMPILER V8.16   GMI_MODE                                                              04/05/2012 11:15:35 PAGE 9   
+
+                      pData[4] = ((((DWORD *)pData)[3]) & 0xff);
+              
+                      CScalerSetBit(_SCALE_DOWN_CTRL_22, ~_BIT2, 0x00);    // Diable V scale-down compensation
+                  }
+                  else
+                  {
+                      pData[3] = 0x10;
+                      pData[4] = 0x00;
+              
+                      CScalerSetBit(_SCALE_DOWN_CTRL_22, ~_BIT2, 0x00);    // Diable V scale-down compensation
+                  }
+              
+                  CScalerWrite(_H_SCALE_DOWN_H_23, 5, pData, _AUTOINC);
+              #endif
+ 492   1      
+ 493   1          // Set scale-up coefficient
+ 494   1          if(ucOption & _BIT2)    // H scale-up
+ 495   1          {
+ 496   2              // Data[12~15]
+ 497   2              ((DWORD *)pData)[3] = (DWORD)2 * 1048576 * stModeInfo.IHWidth / stDisplayInfo.DHWidth;
+ 498   2              ((DWORD *)pData)[3] = (((DWORD *)pData)[3] >> 1) + (((DWORD *)pData)[3] & 0x01);
+ 499   2      
+ 500   2              pData[0] = ((((DWORD *)pData)[3] >> 16) & 0x0f);
+ 501   2              pData[1] = ((((DWORD *)pData)[3] >> 8) & 0xff);
+ 502   2              pData[2] = ((((DWORD *)pData)[3]) & 0xff);
+ 503   2          }
+ 504   1          else
+ 505   1          {
+ 506   2              pData[0] = 0x0f;
+ 507   2              pData[1] = 0xff;
+ 508   2              pData[2] = 0xff;
+ 509   2          }
+ 510   1      
+ 511   1          if(ucOption & _BIT0)    // V scale-up
+ 512   1          {
+ 513   2              // Data[12~15]
+ 514   2              ((DWORD *)pData)[3] = (DWORD)2 * 1048576 * stModeInfo.IVHeight / stDisplayInfo.DVHeight;
+ 515   2              ((DWORD *)pData)[3] = (((DWORD *)pData)[3] >> 1) + (((DWORD *)pData)[3] & 0x01);
+ 516   2      
+ 517   2              pData[3] = ((((DWORD *)pData)[3] >> 16) & 0x0f);
+ 518   2              pData[4] = ((((DWORD *)pData)[3] >> 8) & 0xff);
+ 519   2              pData[5] = ((((DWORD *)pData)[3]) & 0xff);
+ 520   2          }
+ 521   1          else
+ 522   1          {
+ 523   2              pData[3] = 0x0f;
+ 524   2              pData[4] = 0xff;
+ 525   2              pData[5] = 0xff;
+ 526   2          }
+ 527   1      
+ 528   1      #if(_SCALER_TYPE == _RTD2547D)
+                  CScalerSetByte(_SU_ACCESS_PORT_33, 0x80);
+                  CScalerWrite(_SU_DATA_PORT_34, 6, pData, _NON_AUTOINC);
+                  CScalerSetByte(_SU_ACCESS_PORT_33, 0x00);
+              #else
+ 533   1          CScalerSetByte(_SF_ACCESS_PORT_1A, 0x80);
+ 534   1          CScalerWrite(_SF_DATA_PORT_1B, 6, pData, _NON_AUTOINC);
+ 535   1          CScalerSetByte(_SF_ACCESS_PORT_1A, 0x00);
+ 536   1      #endif
+ 537   1      }
+ 538          
+ 539          
+C51 COMPILER V8.16   GMI_MODE                                                              04/05/2012 11:15:35 PAGE 10  
+
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1074    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       4
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
