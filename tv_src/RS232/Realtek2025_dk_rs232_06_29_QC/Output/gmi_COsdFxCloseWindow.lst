@@ -1,0 +1,50 @@
+C51 COMPILER V8.16   GMI_COSDFXCLOSEWINDOW                                                 04/05/2012 11:15:33 PAGE 1   
+
+
+C51 COMPILER V8.16, COMPILATION OF MODULE GMI_COSDFXCLOSEWINDOW
+OBJECT MODULE PLACED IN .\Output\gmi_COsdFxCloseWindow.obj
+COMPILER INVOKED BY: D:\安装文件\keil\C51\BIN\C51.EXE Lib\gmi_COsdFxCloseWindow.C OPTIMIZE(9,SIZE) BROWSE DEFINE(CMOS_CH
+                    -IP_TYPE=PCB_2025LV13) PRINT(.\Output\gmi_COsdFxCloseWindow.lst) OBJECT(.\Output\gmi_COsdFxCloseWindow.obj)
+
+line level    source
+
+   1          ////////////////////////////////////////////////////////////////////////////
+   2          //         Copyright of Vector Co.,Ltd.                                   //
+   3          //                                                                        //
+   4          //                                                                        //
+   5          //                     COsdFxCloseWindow function                         //
+   6          //   Ver: 0.00                                                            //
+   7          //   Creat file time: 2006.7.31                                           //
+   8          //   End modify time: 2006.7.31                                           //
+   9          //   For RTD2523B/RTD2553V/RTD2525L                                       //
+  10          ////////////////////////////////////////////////////////////////////////////
+  11          
+  12          #include "Header\Include.h"
+  13          
+  14          
+  15          
+  16          //-------------------------------------------------------------
+  17          void COsdFxCloseWindow(BYTE ucWinID)
+  18          {
+  19   1      
+  20   1          pData[0]    = 0x81;
+  21   1          pData[1]    = ucWinID * 4 + 3;
+  22   1          pData[2]    = 0x00;
+  23   1          CScalerWrite(_OSD_ADDR_MSB_90, 3, pData, _AUTOINC);
+  24   1      }
+  25          
+  26          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     30    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
