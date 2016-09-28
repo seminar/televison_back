@@ -1,0 +1,206 @@
+C51 COMPILER V8.16   OSDAV007                                                              04/05/2012 11:15:28 PAGE 1   
+
+
+C51 COMPILER V8.16, COMPILATION OF MODULE OSDAV007
+OBJECT MODULE PLACED IN .\Output\OsdAV007.obj
+COMPILER INVOKED BY: D:\安装文件\keil\C51\BIN\C51.EXE gmiOSD\OSD007\OsdAV007.c OPTIMIZE(9,SIZE) BROWSE DEFINE(CMOS_CHIP_
+                    -TYPE=PCB_2025LV13) PRINT(.\Output\OsdAV007.lst) OBJECT(.\Output\OsdAV007.obj)
+
+line level    source
+
+   1          #define __OSDAV007___
+   2          
+   3          #include "Header\Include.h"
+   4          
+   5          #if(_OSD_TYPE == _OSD007)
+   6          
+   7          #if(_VIDEO_SUPPORT)
+   8          
+   9          //------------------------------------------------------------   
+  10          void MAVNoneProc(void)
+  11          {
+  12   1          switch(ucKeyMessage)
+  13   1          {
+  14   2      #if(_MENU_FUNC == _MENU_EXIT_ITEM)
+  15   2              case VK_ENTER:       
+  16   2      #endif
+  17   2              case VK_MENU:        MPublicNoneMenu();   break;
+  18   2              case VK_LEFT:        MAVNoneLR(0);        break;
+  19   2              case VK_RIGHT:       MAVNoneLR(1);        break;
+  20   2      
+  21   2      #if(_IR_ENABLE)        
+  22   2              case VK_IR_MUTE:
+  23   2                  SSetMuteState();
+  24   2                  ucOsdEventMsg = _SAVE_EE_OSDUSERDATA_MSG;
+  25   2                  break;
+  26   2                  
+  27   2      #if(_USE_UD_LR_KEY_MSG && _REMOTE_CONTROLLER != IR_CHUNGHOP_RMH02)
+  28   2              case VK_F_LEFT:
+  29   2              case VK_F_RIGHT:
+  30   2      #endif
+  31   2              case VK_IR_VOLDEC:
+  32   2              case VK_IR_VOLINC:
+  33   2                  GotoAdjustVolume(); 
+  34   2                  break;
+  35   2      
+  36   2              case VK_IR_DISPLAY:
+  37   2                  CDisplayCurrentSourceMessage();
+  38   2                  break;
+  39   2      #if(_IMAGE_COLOR_MODE)
+  40   2              case _IR_IMAGE_KEY_MESSAGE:
+  41   2                  CGotoAdjImage();
+  42   2                  break;
+  43   2      #endif
+  44   2      #if(_AUTO_POWER_DOWN)
+  45   2              case VK_IR_SLEEP:
+  46   2                  CGotoAdjSleep();
+  47   2                  break;
+  48   2      #endif
+  49   2      #endif
+  50   2          }
+  51   1      }
+  52          
+  53          //------------------------------------------------------------
+  54          void MAVNoneLR(BYTE LR)
+C51 COMPILER V8.16   OSDAV007                                                              04/05/2012 11:15:28 PAGE 2   
+
+  55          {
+  56   1          GotoAdjustVolume();
+  57   1          LR = 0;  
+  58   1      }
+  59          
+  60          //------------------------------------------------------------
+  61          
+  62          
+  63          //--------- AV HUE proc ----------------------------------
+  64          void MAVHueAdjProc(void)
+  65          {
+  66   1          switch(ucKeyMessage)
+  67   1          {
+  68   2              // Move item
+  69   2      #if(_USE_UD_LR_KEY_MSG)
+  70   2              case VK_F_UP:
+  71   2              case VK_F_DOWN:
+  72   2                  MAVHueMenu();
+  73   2                  COsdProc();
+  74   2                  break;
+  75   2      #endif
+  76   2      
+  77   2              // Exit item
+  78   2      #if(_MENU_FUNC == _MENU_EXIT_ITEM)
+  79   2              case VK_ENTER:
+  80   2              case VK_AUTO:
+  81   2              #endif
+  82   2                case VK_IR_EXIT:
+  83   2              case VK_MENU:        MAVHueMenu();       break;
+  84   2      
+  85   2              // Adjust
+  86   2      #if(_USE_UD_LR_KEY_MSG)
+  87   2              case VK_F_LEFT:
+  88   2      #endif
+  89   2              case VK_LEFT:        MAVHueLR(1);        break;
+  90   2      
+  91   2              // Adjust
+  92   2      #if(_USE_UD_LR_KEY_MSG)
+  93   2              case VK_F_RIGHT:
+  94   2      #endif
+  95   2              case VK_RIGHT:       MAVHueLR(0);        break;
+  96   2                 
+  97   2              // Other key
+  98   2              default:             COthterKeyAction(); break;
+  99   2          }
+ 100   1      }
+ 101          
+ 102          //------------------------------------------------------------
+ 103          void MAVHueMenu(void)
+ 104          {
+ 105   1          ucOsdState = MENU_AV_HUE;
+ 106   1          CClearMsg(_CLEAR_AND_EXIT_SUB_ITEM);
+ 107   1      }
+ 108          
+ 109          //------------------------------------------------------------
+ 110          void MAVHueLR(BYTE  LR)
+ 111          {
+ 112   1          SET_KEYREPEATENABLE();     
+ 113   1          stConBriData.Hue = ValueInRangeChange(0,100,stConBriData.Hue,LR,0);
+ 114   1          SLIDER1(HUE_GUAGE);
+ 115   1          gmi_CAdjustVDCHue(stConBriData.Hue);
+ 116   1          ucOsdEventMsg = _SAVE_EE_BriConHueSat_MSG;
+C51 COMPILER V8.16   OSDAV007                                                              04/05/2012 11:15:28 PAGE 3   
+
+ 117   1      }
+ 118          
+ 119          //--------- AV Saturation proc ----------------------------------
+ 120          void MAVSaturationAdjProc(void)
+ 121          {
+ 122   1          switch(ucKeyMessage)
+ 123   1          {
+ 124   2              // Move item
+ 125   2      #if(_USE_UD_LR_KEY_MSG)
+ 126   2              case VK_F_UP:
+ 127   2              case VK_F_DOWN:
+ 128   2                  MAVSaturationMenu();
+ 129   2                  COsdProc();
+ 130   2                  break;
+ 131   2      #endif
+ 132   2      
+ 133   2              // Exit item
+ 134   2      #if(_MENU_FUNC == _MENU_EXIT_ITEM)
+ 135   2              case VK_ENTER:       
+ 136   2      #endif
+ 137   2              case VK_AUTO:
+ 138   2              case VK_IR_EXIT:
+ 139   2              case VK_MENU:        MAVSaturationMenu();       break;
+ 140   2      
+ 141   2              // Adjust
+ 142   2      #if(_USE_UD_LR_KEY_MSG)
+ 143   2              case VK_F_LEFT:
+ 144   2      #endif
+ 145   2              case VK_LEFT:        MAVSaturationLR(1);        break;
+ 146   2      
+ 147   2              // Adjust
+ 148   2      #if(_USE_UD_LR_KEY_MSG)
+ 149   2              case VK_F_RIGHT:
+ 150   2      #endif
+ 151   2              case VK_RIGHT:       MAVSaturationLR(0);        break;
+ 152   2                 
+ 153   2              default:             COthterKeyAction();        break;
+ 154   2          }
+ 155   1      }
+ 156          
+ 157          //------------------------------------------------------------
+ 158          void MAVSaturationMenu(void)
+ 159          {
+ 160   1          ucOsdState = MENU_AV_SATURATION;
+ 161   1          CClearMsg(_CLEAR_AND_EXIT_SUB_ITEM);
+ 162   1      }
+ 163          
+ 164          //------------------------------------------------------------
+ 165          void MAVSaturationLR(BYTE  LR)
+ 166          {
+ 167   1          SET_KEYREPEATENABLE();
+ 168   1          stConBriData.Saturation = ValueInRangeChange(0,100,stConBriData.Saturation,LR,0);
+ 169   1          SLIDER1(SATURATION_GUAGE);
+ 170   1          CSetVDCSaturation(stConBriData.Saturation);
+ 171   1          ucOsdEventMsg = _SAVE_EE_BriConHueSat_MSG;
+ 172   1      }
+ 173          
+ 174          #endif  //#if(_VIDEO_AV_SUPPORT || _VIDEO_SV_SUPPORT || _VIDEO_TV_SUPPORT)
+ 175          
+ 176          #endif  //#if(OSD_TYPE == OSD007)
+
+
+C51 COMPILER V8.16   OSDAV007                                                              04/05/2012 11:15:28 PAGE 4   
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    342    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       1
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
