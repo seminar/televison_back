@@ -1,0 +1,1 @@
+"Code\Main.c" OPTIMIZE (9,SIZE) BROWSE DEFINE (CMOS_CHIP_TYPE="PCB_2025LV13") PRINT(.\Output\Main.lst) OBJECT(.\Output\Main.obj)
