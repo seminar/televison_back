@@ -1,0 +1,2 @@
+---- Swtich to Uart mode. Matches (1 in 1 files) ----
+Uart.c (code):    DebugPrintf("Swtich to Uart mode.\n",0x00);
