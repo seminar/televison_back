@@ -1,0 +1,828 @@
+C51 COMPILER V8.16   EEPROM                                                                04/05/2012 11:15:21 PAGE 1   
+
+
+C51 COMPILER V8.16, COMPILATION OF MODULE EEPROM
+OBJECT MODULE PLACED IN .\Output\Eeprom.obj
+COMPILER INVOKED BY: D:\安装文件\keil\C51\BIN\C51.EXE Code\Eeprom.c OPTIMIZE(9,SIZE) BROWSE DEFINE(CMOS_CHIP_TYPE=PCB_20
+                    -25LV13) PRINT(.\Output\Eeprom.lst) OBJECT(.\Output\Eeprom.obj)
+
+line level    source
+
+   1          //----------------------------------------------------------------------------------------------------
+   2          // ID Code      : Eeprom.c No.0003
+   3          // Update Note  : 
+   4          //
+   5          //----------------------------------------------------------------------------------------------------
+   6          
+   7          #define __EEPROM__
+   8          
+   9          #include "Header\Include.h"
+  10          
+  11          
+  12          //--------------------------------------------------
+  13          // Description  : Eeprom check at firmware startup
+  14          // Input Value  : None
+  15          // Output Value : None
+  16          //--------------------------------------------------
+  17          void CEepromStartupCheck(void)
+  18          {
+  19   1          bit bRCallAllData = 0;
+  20   1          BYTE cnt;
+  21   1      
+  22   1          //This delay is for Eeprom power rising time when the connector plug in (VGA_5V or DVI_5V).
+  23   1          CTimerDelayXms(20);
+  24   1      
+  25   1          for(cnt=0;cnt<2;cnt++)
+  26   1          {
+  27   2              CEepromRead(_EEPROM_PAGE3_BANK1 + 126, 2, pData);
+  28   2              if((pData[0] == (_VERSION_CODE))&&(pData[1] == (POWERUPSTATE+(_NTSC_SEARCH_TABLE<<2) + (_INPUTSOUR
+             -CE<<3))))    break;
+  29   2          }
+  30   1      
+  31   1          if((pData[0] != (_VERSION_CODE))||(pData[1] != (POWERUPSTATE+(_NTSC_SEARCH_TABLE<<2) + (_INPUTSOURCE<<
+             -3))))
+  32   1          {
+  33   2              bRCallAllData = 1;
+  34   2          }
+  35   1          else
+  36   1          {
+  37   2              CEepromLoadSystemData();
+  38   2              CEepromLoadOsdUserData();
+  39   2              CEepromLoadAdcData();
+  40   2              CEepromLoadBriConData();
+  41   2              CEepromLoadColorTempData();
+  42   2      #if(_DDC_TYPE == _DDC_MTV512)
+                      CEepromLoadEDIDData();
+              #endif
+  45   2      
+  46   2              #if(_VIDEO_SUPPORT)
+  47   2              CEepromLoadVedioColor();
+  48   2              #endif    //#if(_VIDEO_SUPPORT)
+  49   2          }
+  50   1      
+  51   1      #if (_VIDEO_SUPPORT)
+  52   1          if (stConBriData.Brightness > 100 || stConBriData.Contrast > 100 || stConBriData.Saturation > 100)
+C51 COMPILER V8.16   EEPROM                                                                04/05/2012 11:15:21 PAGE 2   
+
+  53   1              bRCallAllData = 1;
+  54   1      #else
+                  if (stConBriData.Brightness > 100 || stConBriData.Contrast > 100)
+                      bRCallAllData = 1;
+              #endif
+  58   1      
+  59   1          if (bRCallAllData)
+  60   1          {
+  61   2              CEepromLoadDefault(1);
+  62   2      
+  63   2      #if (_VIDEO_TV_SUPPORT)
+  64   2              CRecallTVData();
+  65   2      #endif
+  66   2      
+  67   2              pData[0] = (_VERSION_CODE);
+  68   2              pData[1] = (POWERUPSTATE+(_NTSC_SEARCH_TABLE<<2) + (_INPUTSOURCE<<3));
+  69   2              CEepromWrite(_EEPROM_PAGE3_BANK1 + 126, 2, pData);
+  70   2          }
+  71   1              else
+  72   1                      {
+  73   2      #if(_NTSC_SEARCH_TABLE)
+              #if (_VIDEO_TV_SUPPORT)
+                        ucTVType=CLoadChannelColorType(stVDCColor.CurrentChannel);
+                      if(ucTVType!=_TV_NTSC_M&&ucTVType!=_TV_PAL_N&&ucTVType!=_TV_PAL_M)
+                      CRecallTVData();
+              #endif
+              #endif
+  80   2          }
+  81   1          _SET_POWER_DOWN_TIME(0);
+  82   1      }
+  83          
+  84          //--------------------------------------------------
+  85          // Description  : Load eeprom default
+  86          // Input Value  : None
+  87          // Output Value : None
+  88          //--------------------------------------------------
+  89          #if (_VIDEO_TV_SUPPORT)
+  90          void CRecallTVData(void)
+  91          {
+  92   1          BYTE ucCount = 0;
+  93   1      
+  94   1          // Reset Max channel number
+  95   1          pData[0] = 0;
+  96   1          CI2cWrite(_TV_MAX_CHANNEL_EEPROM_ADDR, _MAX_CHANNEL_ADDR, 1, pData);
+  97   1        
+  98   1          // Recall freq/tv type/sound type
+  99   1          ucTVType = _NORMAL_TV_TYPE;
+ 100   1          for(ucCount = 0; ucCount < (_MAX_CHANNEL_COUNT+1); ucCount++)
+ 101   1          {
+ 102   2            //  CSaveChannelData(_MIN_FREQ | 0x8000, 0, ucCount);
+ 103   2              CSaveChannelData((WORD)_MAX_FREQ | 0x8000, 0, ucCount);
+ 104   2          } 
+ 105   1      }
+ 106          #endif
+ 107          
+ 108          //--------------------------------------------------
+ 109          // Description  : Load eeprom default
+ 110          // Input Value  : None
+ 111          // Output Value : None
+ 112          //--------------------------------------------------
+ 113          void CEepromLoadDefault(BYTE ucMode)
+ 114          {
+C51 COMPILER V8.16   EEPROM                                                                04/05/2012 11:15:21 PAGE 3   
+
+ 115   1      
+ 116   1          BYTE ucInputSource = _GET_INPUT_SOURCE();
+ 117   1      
+ 118   1      
+ 119   1          StructModeUserFIFODataType stFIFOModeTemp;
+ 120   1      
+ 121   1              //when enable the Factory OSD, can not reset the factory data
+ 122   1      
+ 123   1      
+ 124   1          if (1)//1 == ucMode || ucInputSource == _SOURCE_VGA || ucInputSource == _SOURCE_DVI)
+ 125   1          {
+ 126   2              if((GET_MODE_SEARCH_TYPE() == _USER_MODE_TYPE) && (stModeInfo.ModeCurr < 16))
+ 127   2              {
+ 128   3                  CEepromLoadUserFIFOModeData((stModeInfo.ModeCurr / 4), pData);
+ 129   3                  stFIFOModeTemp.ModeNum = pData[(stModeInfo.ModeCurr % 4) * 4];
+ 130   3              }
+ 131   2          
+ 132   2              CEepromInitialModeData();
+ 133   2              CEepromInitialCenterModeData();
+ 134   2              CEepromInitialUserFIFOModeData();
+ 135   2          }
+ 136   1      
+ 137   1          CEepromLoadSystemDataDefault();
+ 138   1          CEepromLoadOsdUserDataDefault();
+ 139   1          CEepromLoadBriConDataDefault();
+ 140   1      
+ 141   1          if (1)//1 == ucMode || ucInputSource == _SOURCE_VGA || ucInputSource == _SOURCE_DVI)
+ 142   1          {
+ 143   2              CEepromLoadAdcDataDefault();
+ 144   2              CEepromLoadColorTempDataDefault();
+ 145   2          }
+ 146   1      
+ 147   1      #if(_DDC_TYPE == _DDC_MTV512)
+                  CEepromLoadEDIDDataDefault();
+              #endif
+ 150   1      
+ 151   1      #if(_VIDEO_SUPPORT)
+ 152   1          if (1)//1 == ucMode || ucInputSource != _SOURCE_VGA && ucInputSource != _SOURCE_DVI)
+ 153   1          {
+ 154   2              CEepromLoadVedioColorDefault();
+ 155   2          }
+ 156   1      #endif
+ 157   1      
+ 158   1          if (1)//1 == ucMode || ucInputSource == _SOURCE_VGA || ucInputSource == _SOURCE_DVI)
+ 159   1          {
+ 160   2              if((GET_MODE_SEARCH_TYPE() == _USER_MODE_TYPE) && (stModeInfo.ModeCurr < 16))
+ 161   2              {
+ 162   3                  if(stSystemData.UserFIFOMode >= 15)
+ 163   3                      stSystemData.UserFIFOMode = 0;
+ 164   3                  else
+ 165   3                      stSystemData.UserFIFOMode++;
+ 166   3          
+ 167   3                  stFIFOModeTemp.IHFreq  = stModeInfo.IHFreq;
+ 168   3                  stFIFOModeTemp.IVFreq  = stModeInfo.IVFreq;
+ 169   3                  CEepromSaveUserFIFOModeData(stFIFOModeTemp);
+ 170   3          
+ 171   3                  stModeUserData.FirstAuto    = 0;
+ 172   3                  stModeUserData.HPosition    = tINPUTMODE_PRESET_TABLE[stFIFOModeTemp.ModeNum].IHStartPos;
+ 173   3                  stModeUserData.VPosition    = tINPUTMODE_PRESET_TABLE[stFIFOModeTemp.ModeNum].IVStartPos;
+ 174   3                  stModeUserData.Clock        = tINPUTMODE_PRESET_TABLE[stFIFOModeTemp.ModeNum].IHTotal;
+ 175   3                  stModeUserData.Phase        = 0;
+ 176   3                  CEepromSaveModeData(stSystemData.UserFIFOMode);
+C51 COMPILER V8.16   EEPROM                                                                04/05/2012 11:15:21 PAGE 4   
+
+ 177   3          
+ 178   3                  stModeInfo.ModeCurr = stSystemData.UserFIFOMode;
+ 179   3              }
+ 180   2              else if((GET_MODE_SEARCH_TYPE() == _PRESET_MODE_TYPE) && (stModeInfo.ModeCurr < _MAX_PRESET_MODE))
+ 181   2              {
+ 182   3                  CEepromLoadModeData(stModeInfo.ModeCurr);
+ 183   3              }
+ 184   2          }
+ 185   1      
+ 186   1         if (0 == ucMode)
+ 187   1         {
+ 188   2             _SET_INPUT_SOURCE(ucInputSource);
+ 189   2             CEepromSaveSystemData();
+ 190   2         }
+ 191   1      }
+ 192          
+ 193          //--------------------------------------------------
+ 194          // Description  : Eeprom write function
+ 195          // Input Value  : usAddr        --> absolute address
+ 196          //                usLength      --> Numbers of data we want to write
+ 197          //                pWriteArray   --> Writing data array
+ 198          // Output Value : Return _SUCCESS if succeed
+ 199          //--------------------------------------------------
+ 200          bit CEepromWrite(WORD usAddr, WORD usLength, BYTE *pWriteArray)
+ 201          {
+ 202   1          return CI2cWrite(_EEPROM_ADDRESS + (BYTE)((usAddr & 0xff00) >> 7), (BYTE)(usAddr & 0x00ff), usLength, 
+             -pWriteArray);
+ 203   1      }
+ 204          
+ 205          //--------------------------------------------------
+ 206          // Description  : Eeprom read function
+ 207          // Input Value  : usAddr        --> absolute address
+ 208          //                usLength      --> Numbers of data we want to read
+ 209          //                pReadArray    --> Result array
+ 210          // Output Value : Return _SUCCESS if succeed
+ 211          //--------------------------------------------------
+ 212          bit CEepromRead(WORD usAddr, WORD usLength, BYTE *pReadArray)
+ 213          {
+ 214   1          return CI2cRead(_EEPROM_ADDRESS + (BYTE)((usAddr & 0xff00) >> 7), (BYTE)(usAddr & 0x00ff), usLength, p
+             -ReadArray);
+ 215   1      }
+ 216          
+ 217          //----------------------------------------------------------------------------------------------------
+ 218          
+ 219          //--------------------------------------------------
+ 220          // Description  : Save mode setting data, such as FirstAuto,
+ 221          //                HPosition, VPosition, Clock and Phase.
+ 222          // Input Value  : None
+ 223          // Output Value : None
+ 224          //--------------------------------------------------
+ 225          void CEepromSaveModeData(BYTE ucMode)
+ 226          {
+ 227   1          if(GET_MODE_SEARCH_TYPE() == _PRESET_MODE_TYPE)
+ 228   1          {
+ 229   2              CEepromWrite(_MODE_DATA_0_ADDRESS + (WORD)ucMode * 8, sizeof(StructModeUserDataType), &stModeUserD
+             -ata.FirstAuto);
+ 230   2          }
+ 231   1          else if(GET_MODE_SEARCH_TYPE() == _USER_MODE_TYPE)
+ 232   1          {
+ 233   2              CEepromWrite(_USER_FIFO_MODE_DATA_1_ADDRESS + (WORD)ucMode * 8, sizeof(StructModeUserDataType), &s
+             -tModeUserData.FirstAuto);
+ 234   2          }
+C51 COMPILER V8.16   EEPROM                                                                04/05/2012 11:15:21 PAGE 5   
+
+ 235   1      }
+ 236          
+ 237          //--------------------------------------------------
+ 238          // Description  : Load mode setting data, such as FirstAuto,
+ 239          //                HPosition, VPosition, Clock and Phase.
+ 240          // Input Value  : None
+ 241          // Output Value : None
+ 242          //--------------------------------------------------
+ 243          void CEepromLoadModeData(BYTE ucMode)
+ 244          {
+ 245   1          if(GET_MODE_SEARCH_TYPE() == _PRESET_MODE_TYPE)
+ 246   1          {
+ 247   2              if(CEepromRead(_MODE_DATA_0_ADDRESS + (WORD)ucMode * 8, sizeof(StructModeUserDataType), &stModeUse
+             -rData.FirstAuto) == _FAIL)
+ 248   2              {
+ 249   3                  stModeUserData.FirstAuto    = 0;
+ 250   3                  stModeUserData.HPosition    = stModeInfo.IHStartPos;
+ 251   3                  stModeUserData.VPosition    = stModeInfo.IVStartPos;
+ 252   3                  stModeUserData.Clock        = stModeInfo.IHTotal;
+ 253   3                  stModeUserData.Phase        = 0;
+ 254   3              }
+ 255   2          }
+ 256   1          else if(GET_MODE_SEARCH_TYPE() == _USER_MODE_TYPE)
+ 257   1          {
+ 258   2              if(CEepromRead(_USER_FIFO_MODE_DATA_1_ADDRESS + (WORD)ucMode * 8, sizeof(StructModeUserDataType), 
+             -&stModeUserData.FirstAuto) == _FAIL)
+ 259   2              {
+ 260   3                  stModeUserData.FirstAuto    = 0;
+ 261   3                  stModeUserData.HPosition    = stModeInfo.IHStartPos;
+ 262   3                  stModeUserData.VPosition    = stModeInfo.IVStartPos;
+ 263   3                  stModeUserData.Clock        = stModeInfo.IHTotal;
+ 264   3                  stModeUserData.Phase        = 0;
+ 265   3              }
+ 266   2          }
+ 267   1      }
+ 268          
+ 269          //--------------------------------------------------
+ 270          // Description  : Initial mode setting data with defaults
+ 271          // Input Value  : None
+ 272          // Output Value : None
+ 273          //--------------------------------------------------
+ 274          void CEepromInitialModeData(void)
+ 275          {
+ 276   1          BYTE modecnt, modetype;
+ 277   1      
+ 278   1          modetype = GET_MODE_SEARCH_TYPE();
+ 279   1          SET_MODE_SEARCH_TYPE(_PRESET_MODE_TYPE);
+ 280   1      
+ 281   1          for(modecnt=0;modecnt<_MAX_PRESET_MODE;modecnt++)
+ 282   1          {
+ 283   2              stModeUserData.FirstAuto    = 0;
+ 284   2              stModeUserData.HPosition    = tINPUTMODE_PRESET_TABLE[modecnt].IHStartPos;
+ 285   2              stModeUserData.VPosition    = tINPUTMODE_PRESET_TABLE[modecnt].IVStartPos;
+ 286   2              stModeUserData.Clock        = tINPUTMODE_PRESET_TABLE[modecnt].IHTotal;
+ 287   2              stModeUserData.Phase        = 0;
+ 288   2      
+ 289   2              CEepromSaveModeData(modecnt);
+ 290   2          }
+ 291   1      
+ 292   1          for(modecnt=0;modecnt<8;modecnt++)
+ 293   1          {
+ 294   2              CEepromWrite(_USER_FIFO_MODE_DATA_1_ADDRESS + (modecnt * 16), 16, tEEPROM_USER_FIFO_MODE_DEFAULT);
+C51 COMPILER V8.16   EEPROM                                                                04/05/2012 11:15:21 PAGE 6   
+
+ 295   2          }
+ 296   1      
+ 297   1          SET_MODE_SEARCH_TYPE(modetype);
+ 298   1      }
+ 299          
+ 300          //----------------------------------------------------------------------------------------------------
+ 301          
+ 302          //--------------------------------------------------
+ 303          // Description  : Save user FIFO mode data, such as ModeNum,
+ 304          //                IHFreq, IVFreq.
+ 305          // Input Value  : None
+ 306          // Output Value : None
+ 307          //--------------------------------------------------
+ 308          void CEepromSaveUserFIFOModeData(StructModeUserFIFODataType stUserFIFOMode)
+ 309          {
+ 310   1          stUserFIFOMode.IHFreq = ((stUserFIFOMode.IVFreq & 0x0f00) << 4) | (stUserFIFOMode.IHFreq & 0x0fff);
+ 311   1          stUserFIFOMode.IVFreq = ((stUserFIFOMode.IVFreq & 0x00ff) << 8);
+ 312   1      
+ 313   1          CEepromWrite(_USER_FIFO_MODE_DATA_0_ADDRESS + (stSystemData.UserFIFOMode * 4), 4, &stUserFIFOMode.Mode
+             -Num);
+ 314   1      }
+ 315          
+ 316          //--------------------------------------------------
+ 317          // Description  : Load 4 sets of user FIFO mode data.
+ 318          // Input Value  : None
+ 319          // Output Value : None
+ 320          //--------------------------------------------------
+ 321          void CEepromLoadUserFIFOModeData(BYTE ucNum, BYTE *pArray)
+ 322          {
+ 323   1          CEepromRead(_USER_FIFO_MODE_DATA_0_ADDRESS + (ucNum * 16), 16, pArray);
+ 324   1      }
+ 325          
+ 326          //--------------------------------------------------
+ 327          // Description  : Initial user FIFO mode data with defaults
+ 328          // Input Value  : None
+ 329          // Output Value : None
+ 330          //--------------------------------------------------
+ 331          void CEepromInitialUserFIFOModeData(void)
+ 332          {
+ 333   1          BYTE modecnt;
+ 334   1      
+ 335   1          for(modecnt=0;modecnt<4;modecnt++)
+ 336   1          {
+ 337   2              CEepromWrite(_USER_FIFO_MODE_DATA_0_ADDRESS + (modecnt * 16), 16, tEEPROM_USER_FIFO_MODE_DEFAULT);
+ 338   2          }
+ 339   1      }
+ 340          
+ 341          //----------------------------------------------------------------------------------------------------
+ 342          
+ 343          //--------------------------------------------------
+ 344          // Description  : 
+ 345          //                
+ 346          // Input Value  : 
+ 347          // Output Value : None
+ 348          //--------------------------------------------------
+ 349          void CEepromSaveCenterModeData(BYTE ucMode)
+ 350          {
+ 351   1          if(GET_MODE_SEARCH_TYPE() == _PRESET_MODE_TYPE)
+ 352   1          {
+ 353   2              CEepromWrite(_MODE_CENTER_DATA_ADDRESS + (WORD)ucMode * 8, sizeof(StructModeUserCenterDataType), (
+             -BYTE *)&stModeUserCenterData.CenterHPos);
+ 354   2          }
+C51 COMPILER V8.16   EEPROM                                                                04/05/2012 11:15:21 PAGE 7   
+
+ 355   1          else if(GET_MODE_SEARCH_TYPE() == _USER_MODE_TYPE)
+ 356   1          {
+ 357   2              CEepromWrite(_MODE_CENTER_DATA_ADDRESS + (WORD)_MAX_PRESET_MODE * 8 + (WORD)ucMode * 8, sizeof(Str
+             -uctModeUserCenterDataType), (BYTE *)&stModeUserCenterData.CenterHPos);
+ 358   2          }
+ 359   1      }
+ 360          
+ 361          //--------------------------------------------------
+ 362          // Description  : 
+ 363          //                
+ 364          // Input Value  : 
+ 365          // Output Value : None
+ 366          //--------------------------------------------------
+ 367          void CEepromLoadCenterModeData(BYTE ucMode)
+ 368          {
+ 369   1          if(GET_MODE_SEARCH_TYPE() == _PRESET_MODE_TYPE)
+ 370   1          {
+ 371   2              if(CEepromRead(_MODE_CENTER_DATA_ADDRESS + (WORD)ucMode * 8, sizeof(StructModeUserCenterDataType),
+             - (BYTE *)&stModeUserCenterData.CenterHPos) == _FAIL)
+ 372   2              {
+ 373   3                  stModeUserCenterData.CenterHPos     = stModeInfo.IHStartPos;
+ 374   3                  stModeUserCenterData.CenterVPos     = stModeInfo.IVStartPos;
+ 375   3                  stModeUserCenterData.CenterClock    = stModeInfo.IHTotal;
+ 376   3              }
+ 377   2          }
+ 378   1          else if(GET_MODE_SEARCH_TYPE() == _USER_MODE_TYPE)
+ 379   1          {
+ 380   2              if(CEepromRead(_MODE_CENTER_DATA_ADDRESS + (WORD)_MAX_PRESET_MODE * 8 + (WORD)ucMode * 8, sizeof(S
+             -tructModeUserCenterDataType), (BYTE *)&stModeUserCenterData.CenterHPos) == _FAIL) //V308 modify
+ 381   2              {
+ 382   3                  stModeUserCenterData.CenterHPos     = stModeInfo.IHStartPos;
+ 383   3                  stModeUserCenterData.CenterVPos     = stModeInfo.IVStartPos;
+ 384   3                  stModeUserCenterData.CenterClock    = stModeInfo.IHTotal;
+ 385   3              }
+ 386   2          }
+ 387   1      }
+ 388          
+ 389          //--------------------------------------------------
+ 390          // Description  : Initial mode setting data with defaults
+ 391          // Input Value  : None
+ 392          // Output Value : None
+ 393          //--------------------------------------------------
+ 394          void CEepromInitialCenterModeData(void)
+ 395          {
+ 396   1          BYTE modecnt, modetype;
+ 397   1      
+ 398   1          modetype = GET_MODE_SEARCH_TYPE();
+ 399   1          SET_MODE_SEARCH_TYPE(_PRESET_MODE_TYPE);
+ 400   1      
+ 401   1          for(modecnt=0;modecnt<_MAX_PRESET_MODE;modecnt++)
+ 402   1          {
+ 403   2              stModeUserCenterData.CenterHPos     = tINPUTMODE_PRESET_TABLE[modecnt].IHStartPos;
+ 404   2              stModeUserCenterData.CenterVPos     = tINPUTMODE_PRESET_TABLE[modecnt].IVStartPos;
+ 405   2              stModeUserCenterData.CenterClock    = tINPUTMODE_PRESET_TABLE[modecnt].IHTotal;
+ 406   2      
+ 407   2              CEepromSaveCenterModeData(modecnt);
+ 408   2          }
+ 409   1             
+ 410   1          for(modecnt=0;modecnt<8;modecnt++)
+ 411   1          {
+ 412   2              CEepromWrite(_MODE_CENTER_DATA_ADDRESS + (WORD)_MAX_PRESET_MODE * 8 + ((WORD)modecnt * 16), 16, tE
+             -EPROM_USER_FIFO_MODE_DEFAULT);
+C51 COMPILER V8.16   EEPROM                                                                04/05/2012 11:15:21 PAGE 8   
+
+ 413   2          }    
+ 414   1      
+ 415   1          SET_MODE_SEARCH_TYPE(modetype);
+ 416   1      }
+ 417          
+ 418          //----------------------------------------------------------------------------------------------------
+ 419          
+ 420          //--------------------------------------------------
+ 421          // Description  : Save system data
+ 422          // Input Value  : None
+ 423          // Output Value : None
+ 424          //--------------------------------------------------
+ 425          void CEepromSaveSystemData(void)
+ 426          {
+ 427   1          CEepromWrite(_SYSTEM_DATA_ADDRESS, sizeof(StructSystemDataType), &stSystemData.MonitorFlag);
+ 428   1      }
+ 429          
+ 430          //--------------------------------------------------
+ 431          // Description  : Load system data
+ 432          // Input Value  : None
+ 433          // Output Value : None
+ 434          //--------------------------------------------------
+ 435          void CEepromLoadSystemData(void)
+ 436          {
+ 437   1          CEepromRead(_SYSTEM_DATA_ADDRESS, sizeof(StructSystemDataType), &stSystemData.MonitorFlag);
+ 438   1      }
+ 439          
+ 440          //--------------------------------------------------
+ 441          // Description  : Load default system data
+ 442          // Input Value  : None
+ 443          // Output Value : None
+ 444          //--------------------------------------------------
+ 445          void CEepromLoadSystemDataDefault(void)
+ 446          {
+ 447   1          CEepromWrite(_SYSTEM_DATA_ADDRESS, sizeof(StructSystemDataType), &tEEPROM_SYSTEM_DATA.MonitorFlag);
+ 448   1          stSystemData = tEEPROM_SYSTEM_DATA;
+ 449   1      }
+ 450          
+ 451          //----------------------------------------------------------------------------------------------------
+ 452          
+ 453          //--------------------------------------------------
+ 454          // Description  : Save OSD data
+ 455          // Input Value  : None
+ 456          // Output Value : None
+ 457          //--------------------------------------------------
+ 458          void CEepromSaveOsdUserData(void)
+ 459          {
+ 460   1          CEepromWrite(_OSDUSER_DATA_ADDRESS, sizeof(StructOsdUserDataType), &stOsdUserData.OsdSettingFlag);
+ 461   1      }
+ 462          
+ 463          //--------------------------------------------------
+ 464          // Description  : Load OSD data
+ 465          // Input Value  : None
+ 466          // Output Value : None
+ 467          //--------------------------------------------------
+ 468          void CEepromLoadOsdUserData(void)
+ 469          {
+ 470   1          CEepromRead(_OSDUSER_DATA_ADDRESS, sizeof(StructOsdUserDataType), &stOsdUserData.OsdSettingFlag);
+ 471   1      }
+ 472          
+ 473          //--------------------------------------------------
+ 474          // Description  : Load default OSD data
+C51 COMPILER V8.16   EEPROM                                                                04/05/2012 11:15:21 PAGE 9   
+
+ 475          // Input Value  : None
+ 476          // Output Value : None
+ 477          //--------------------------------------------------
+ 478          void CEepromLoadOsdUserDataDefault(void)
+ 479          {
+ 480   1          CEepromWrite(_OSDUSER_DATA_ADDRESS, sizeof(StructOsdUserDataType), &tEEPROM_OSDUSER_DATA.OsdSettingFla
+             -g);
+ 481   1          stOsdUserData = tEEPROM_OSDUSER_DATA;
+ 482   1      }
+ 483          
+ 484          //----------------------------------------------------------------------------------------------------
+ 485          
+ 486          //--------------------------------------------------
+ 487          // Description  : Save ADC data
+ 488          // Input Value  : None
+ 489          // Output Value : None
+ 490          //--------------------------------------------------
+ 491          void CEepromSaveAdcData(void)
+ 492          {
+ 493   1      
+ 494   1          if(_GET_INPUT_SOURCE() == _SOURCE_VGA) 
+ 495   1          {
+ 496   2              CEepromWrite(_VGA_ADC_DATA_ADDRESS, sizeof(StructAdcDataType), &stAdcData.AdcGain[_RED]);
+ 497   2              CEepromWrite(_VGA_ADC_DATA_ADDRESS + sizeof(StructAdcDataType), 1, &ucAdcPGA);
+ 498   2          }
+ 499   1          else if(_GET_INPUT_SOURCE() == _SOURCE_YPBPR)
+ 500   1          {
+ 501   2              CEepromWrite(_YPbPr_ADC_DATA_ADDRESS , sizeof(StructAdcDataType), &stAdcData.AdcGain[_RED]);
+ 502   2              CEepromWrite(_YPbPr_ADC_DATA_ADDRESS + sizeof(StructAdcDataType), 1, &ucAdcPGA);
+ 503   2          }
+ 504   1              else
+ 505   1          {
+ 506   2              CEepromWrite(_VIDEO_ADC_DATA_ADDRESS, sizeof(StructAdcDataType), &stAdcData.AdcGain[_RED]);
+ 507   2              CEepromWrite(_VIDEO_ADC_DATA_ADDRESS + sizeof(StructAdcDataType), 1, &ucAdcPGA);
+ 508   2          }
+ 509   1      }
+ 510          
+ 511          //--------------------------------------------------
+ 512          // Description  : Load ADC data
+ 513          // Input Value  : None
+ 514          // Output Value : None
+ 515          //--------------------------------------------------
+ 516          void CEepromLoadAdcData(void)
+ 517          {
+ 518   1      
+ 519   1          if(_GET_INPUT_SOURCE() == _SOURCE_VGA) 
+ 520   1          {
+ 521   2              CEepromRead(_VGA_ADC_DATA_ADDRESS, sizeof(StructAdcDataType), &stAdcData.AdcGain[_RED]);
+ 522   2              CEepromRead(_VGA_ADC_DATA_ADDRESS + sizeof(StructAdcDataType), 1, &ucAdcPGA);
+ 523   2          }
+ 524   1          else if(_GET_INPUT_SOURCE() == _SOURCE_YPBPR)
+ 525   1          {
+ 526   2              CEepromRead(_YPbPr_ADC_DATA_ADDRESS , sizeof(StructAdcDataType), &stAdcData.AdcGain[_RED]);
+ 527   2              CEepromRead(_YPbPr_ADC_DATA_ADDRESS + sizeof(StructAdcDataType), 1, &ucAdcPGA);
+ 528   2          }
+ 529   1          else
+ 530   1          {
+ 531   2              CEepromRead(_VIDEO_ADC_DATA_ADDRESS, sizeof(StructAdcDataType), &stAdcData.AdcGain[_RED]);
+ 532   2              CEepromRead(_VIDEO_ADC_DATA_ADDRESS + sizeof(StructAdcDataType), 1, &ucAdcPGA);
+ 533   2          }
+ 534   1      }
+ 535          
+C51 COMPILER V8.16   EEPROM                                                                04/05/2012 11:15:21 PAGE 10  
+
+ 536          //--------------------------------------------------
+ 537          // Description  : Load default ADC data
+ 538          // Input Value  : None
+ 539          // Output Value : None
+ 540          //--------------------------------------------------
+ 541          void CEepromLoadAdcDataDefault(void)
+ 542          {
+ 543   1          stAdcData = tEEPROM_ADC_DATA_VGA;
+ 544   1          ucAdcPGA = 0x05;
+ 545   1      
+ 546   1          CEepromWrite(_VGA_ADC_DATA_ADDRESS, sizeof(StructAdcDataType), &tEEPROM_ADC_DATA_VGA.AdcGain[_RED]);
+ 547   1          CEepromWrite(_VGA_ADC_DATA_ADDRESS + sizeof(StructAdcDataType), 1, &ucAdcPGA);
+ 548   1          stAdcData = tEEPROM_ADC_DATA_YPbPr;
+ 549   1          CEepromWrite(_YPbPr_ADC_DATA_ADDRESS , sizeof(StructAdcDataType), &tEEPROM_ADC_DATA_YPbPr.AdcGain[_RED
+             -]);
+ 550   1          CEepromWrite(_YPbPr_ADC_DATA_ADDRESS + sizeof(StructAdcDataType) , 1, &ucAdcPGA);
+ 551   1          stAdcData = tEEPROM_ADC_DATA_VIDEO;
+ 552   1          CEepromWrite(_VIDEO_ADC_DATA_ADDRESS , sizeof(StructAdcDataType), &tEEPROM_ADC_DATA_VIDEO.AdcGain[_RED
+             -]);
+ 553   1          CEepromWrite(_VIDEO_ADC_DATA_ADDRESS + sizeof(StructAdcDataType) , 1, &ucAdcPGA);
+ 554   1      
+ 555   1      }
+ 556          
+ 557          //----------------------------------------------------------------------------------------------------
+ 558          //--------------------------------------------------
+ 559          BYTE CGetInputSourceNum(BYTE ucInputSource)
+ 560          {
+ 561   1          switch(ucInputSource)
+ 562   1          {
+ 563   2              default:
+ 564   2              case _SOURCE_YPBPR:
+ 565   2              case _SOURCE_VGA:
+ 566   2                  return 0;
+ 567   2      
+ 568   2      #if(_TMDS_SUPPORT || _HDMI_SUPPORT)
+                      case _SOURCE_DVI:
+                      case _SOURCE_HDMI:
+                          return 1;
+              #endif
+ 573   2      
+ 574   2      #if(_VIDEO_SUPPORT)
+ 575   2              case _SOURCE_VIDEO_AV:
+ 576   2              case _SOURCE_VIDEO_SV:
+ 577   2            //  case _SOURCE_VIDEO_YUV:
+ 578   2              case _SOURCE_VIDEO_TV:
+ 579   2              case _SOURCE_VIDEO_SCART:
+ 580   2               case _SOURCE_VIDEO_DVD:
+ 581   2                  return 2;
+ 582   2      #endif
+ 583   2         }
+ 584   1      }
+ 585          
+ 586          //--------------------------------------------------
+ 587          // Description  : Save Brightness/Contrast data
+ 588          // Input Value  : None
+ 589          // Output Value : None
+ 590          //--------------------------------------------------
+ 591          void CEepromSaveBriConData(void)
+ 592          {
+ 593   1       //   CEepromWrite(_BriConHueSat_PROC0_ADDRESS + (CGetInputSourceNum(_GET_INPUT_SOURCE())) * 2, 2, &stConB
+             -riData.Brightness);
+ 594   1          switch(_GET_INPUT_SOURCE())
+C51 COMPILER V8.16   EEPROM                                                                04/05/2012 11:15:21 PAGE 11  
+
+ 595   1          {
+ 596   2              case _SOURCE_VGA:
+ 597   2                  CEepromWrite(_BriConHueSat_PROC0_ADDRESS + 0 * 4, 4, &stConBriData.Brightness);
+ 598   2                  break;
+ 599   2              case _SOURCE_VIDEO_AV:
+ 600   2                  CEepromWrite(_BriConHueSat_PROC0_ADDRESS + 1 * 4, 4, &stConBriData.Brightness);
+ 601   2                  break;
+ 602   2              case _SOURCE_VIDEO_SV:
+ 603   2                   CEepromWrite(_BriConHueSat_PROC0_ADDRESS + 2 * 4, 4, &stConBriData.Brightness);
+ 604   2                  break;
+ 605   2              case _SOURCE_VIDEO_TV:
+ 606   2                  CEepromWrite(_BriConHueSat_PROC0_ADDRESS + 3 * 4, 4, &stConBriData.Brightness);
+ 607   2                  break;
+ 608   2             case _SOURCE_VIDEO_DVD:
+ 609   2             case _SOURCE_VIDEO_SCART:
+ 610   2                  CEepromWrite(_BriConHueSat_PROC0_ADDRESS + 4 * 4, 4, &stConBriData.Brightness);
+ 611   2                  break;
+ 612   2         }
+ 613   1              
+ 614   1      }
+ 615          
+ 616          //--------------------------------------------------
+ 617          // Description  : Load Brightness/Contrast data
+ 618          // Input Value  : None
+ 619          // Output Value : None
+ 620          //--------------------------------------------------
+ 621          void CEepromLoadBriConData(void)
+ 622          {
+ 623   1      //    CEepromRead(_BriConHueSat_PROC0_ADDRESS + (CGetInputSourceNum(_GET_INPUT_SOURCE())) * 2, 2, &stConBr
+             -iData.Brightness);
+ 624   1          switch(_GET_INPUT_SOURCE())
+ 625   1          {
+ 626   2              case _SOURCE_VGA:
+ 627   2                  CEepromRead(_BriConHueSat_PROC0_ADDRESS + 0 * 4, 4, &stConBriData.Brightness);
+ 628   2                  break;
+ 629   2              case _SOURCE_VIDEO_AV:
+ 630   2                  CEepromRead(_BriConHueSat_PROC0_ADDRESS + 1 * 4, 4, &stConBriData.Brightness);
+ 631   2                  break;
+ 632   2              case _SOURCE_VIDEO_SV:
+ 633   2                   CEepromRead(_BriConHueSat_PROC0_ADDRESS + 2 * 4, 4, &stConBriData.Brightness);
+ 634   2                  break;
+ 635   2              case _SOURCE_VIDEO_TV:
+ 636   2                  CEepromRead(_BriConHueSat_PROC0_ADDRESS + 3 * 4, 4, &stConBriData.Brightness);
+ 637   2                  break;
+ 638   2             case _SOURCE_VIDEO_DVD:
+ 639   2             case _SOURCE_VIDEO_SCART:
+ 640   2                  CEepromRead(_BriConHueSat_PROC0_ADDRESS + 4 * 4, 4, &stConBriData.Brightness);
+ 641   2                  break;
+ 642   2         }
+ 643   1          stSystemData.BackLight = BRIGHTNESS_GUAGE;
+ 644   1      }
+ 645          
+ 646          //--------------------------------------------------
+ 647          // Description  : Load default Brightness/Contrast data
+ 648          // Input Value  : None
+ 649          // Output Value : None
+ 650          //--------------------------------------------------
+ 651          void CEepromLoadBriConDataDefault(void)
+ 652          {
+ 653   1          CEepromWrite(_BriConHueSat_PROC0_ADDRESS, 4 * 5, &tEEPROM_COLOR_PROC0_DATA[0].Brightness);
+ 654   1          CEepromLoadBriConData();
+ 655   1      }
+C51 COMPILER V8.16   EEPROM                                                                04/05/2012 11:15:21 PAGE 12  
+
+ 656          
+ 657          //----------------------------------------------------------------------------------------------------
+ 658          
+ 659          //--------------------------------------------------
+ 660          // Description  : Save Color Temperature data
+ 661          // Input Value  : None
+ 662          // Output Value : None
+ 663          //--------------------------------------------------
+ 664          void CEepromSaveColorTempData(void)
+ 665          {
+ 666   1          CEepromWrite(_COLORTEMP_DATA_ADDRESS + 9 * CGetInputSourceNum(_GET_INPUT_SOURCE()) + 3 * GET_COLOR_TEM
+             -P_TYPE(), 3, &stColorTempData.ColorTemp[_RED]);
+ 667   1      }
+ 668          
+ 669          //--------------------------------------------------
+ 670          // Description  : Load Color Temperature data
+ 671          // Input Value  : None
+ 672          // Output Value : None
+ 673          //--------------------------------------------------
+ 674          void CEepromLoadColorTempData(void)
+ 675          {
+ 676   1          CEepromRead(_COLORTEMP_DATA_ADDRESS + 9 * CGetInputSourceNum(_GET_INPUT_SOURCE()) + 3 * GET_COLOR_TEMP
+             -_TYPE(), 3, &stColorTempData.ColorTemp[_RED]);
+ 677   1      }
+ 678          
+ 679          //--------------------------------------------------
+ 680          // Description  : Load default Color Temperature data
+ 681          // Input Value  : None
+ 682          // Output Value : None
+ 683          //--------------------------------------------------
+ 684          void CEepromLoadColorTempDataDefault(void)
+ 685          {
+ 686   1          CEepromWrite(_COLORTEMP_DATA_ADDRESS, 9 * 3, &tEEPROM_COLORTEMP_DATA[0].ColorTemp9300Red);
+ 687   1          CEepromLoadColorTempData();
+ 688   1      }
+ 689          
+ 690          //----------------------------------------------------------------------------------------------------
+ 691          #if(_DDC_TYPE == _DDC_MTV512)
+              /*
+              //--------------------------------------------------
+              // Description  : Load EDID data (MTV512)
+              // Input Value  : None
+              // Output Value : None
+              //--------------------------------------------------
+              void CEepromSaveEDIDData(void)
+              {
+                  CEepromWrite(_EDID0_ADDRESS, 128, &MCU_DDCRAM_0[0]);
+                  CEepromWrite(_EDID1_ADDRESS, 128, &MCU_DDCRAM_1[0]);
+              }
+              */
+              //--------------------------------------------------
+              // Description  : Load EDID data (MTV512)
+              // Input Value  : None
+              // Output Value : None
+              //--------------------------------------------------
+              void CEepromLoadEDIDData(void)
+              {
+              #if((_MCU_TYPE == _MYSON_MTV512) || (_MCU_TYPE == _RTD_2120))
+              
+                  CEepromRead(_EDID0_ADDRESS, 128, &MCU_DDCRAM_0[0]);
+                  CEepromRead(_EDID1_ADDRESS, 128, &MCU_DDCRAM_1[0]);
+              
+C51 COMPILER V8.16   EEPROM                                                                04/05/2012 11:15:21 PAGE 13  
+
+              #endif
+              
+              }
+              
+              //--------------------------------------------------
+              // Description  : Load EDID data (MTV512)
+              // Input Value  : None
+              // Output Value : None
+              //--------------------------------------------------
+              void CEepromLoadEDIDDataDefault(void)
+              {
+              #if((_MCU_TYPE == _MYSON_MTV512) || (_MCU_TYPE == _RTD_2120))
+              
+                  CEepromWrite(_EDID0_ADDRESS, 128, &tEDID_TABLE_VGA[0]);
+                  CEepromWrite(_EDID1_ADDRESS, 128, &tEDID_TABLE_DVI[0]);
+                  CEepromLoadEDIDData();
+              
+              #endif
+              }
+              #endif  // End of #if(_MCU_TYPE == _MYSON_MTV512)
+ 736          //----------------------------------------------------------------------------------------------------
+ 737          #if(_VIDEO_SUPPORT)
+ 738          
+ 739          void CEepromLoadVedioColor(void)
+ 740          {
+ 741   1           CEepromRead(_VIDEO_DATA_ADDRESS, sizeof(StructVDCColor), &stVDCColor.CurrentChannel);
+ 742   1      }
+ 743          //----------------------------------------------------------------------------------------------------
+ 744          void CEepromSaveVedioColor(void)
+ 745          {
+ 746   1           CEepromWrite(_VIDEO_DATA_ADDRESS, sizeof(StructVDCColor), &stVDCColor.CurrentChannel);
+ 747   1      }
+ 748          //----------------------------------------------------------------------------------------------------
+ 749          void CEepromLoadVedioColorDefault(void)
+ 750          {
+ 751   1          stVDCColor = tVDCColorDefault;
+ 752   1          CEepromWrite(_VIDEO_DATA_ADDRESS, sizeof(StructVDCColor), &stVDCColor.CurrentChannel);
+ 753   1          CEepromLoadVedioColor();
+ 754   1      }   
+ 755          #endif    //#if(_VIDEO_SUPPORT)
+ 756          //----------------------------------------------------------------------------------------------------
+ 757          
+ 758          
+ 759          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1938    ----
+   CONSTANT SIZE    =     99    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----      37
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----       1
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
