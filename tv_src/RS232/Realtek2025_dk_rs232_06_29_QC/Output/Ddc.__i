@@ -1,0 +1,1 @@
+"DDC\Ddc.c" OPTIMIZE (9,SIZE) BROWSE DEFINE (CMOS_CHIP_TYPE="PCB_2025LV13") PRINT(.\Output\Ddc.lst) OBJECT(.\Output\Ddc.obj)
