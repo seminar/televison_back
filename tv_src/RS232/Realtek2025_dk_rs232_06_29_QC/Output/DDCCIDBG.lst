@@ -1,0 +1,232 @@
+C51 COMPILER V8.16   DDCCIDBG                                                              04/05/2012 11:15:33 PAGE 1   
+
+
+C51 COMPILER V8.16, COMPILATION OF MODULE DDCCIDBG
+OBJECT MODULE PLACED IN .\Output\DDCCIDBG.obj
+COMPILER INVOKED BY: D:\安装文件\keil\C51\BIN\C51.EXE Lib\DDCCIDBG.C OPTIMIZE(9,SIZE) BROWSE DEFINE(CMOS_CHIP_TYPE=PCB_2
+                    -025LV13) PRINT(.\Output\DDCCIDBG.lst) OBJECT(.\Output\DDCCIDBG.obj)
+
+line level    source
+
+   1          #define __DDCCIDBG__
+   2          
+   3          #include <string.h>
+   4          #include "Header\Include.h"
+   5          
+   6          
+   7          void DDCCI_Debug()
+   8          {
+   9   1      
+  10   1           switch(ucDDCCI_RxBuf[2])
+  11   1           {
+  12   2              case DDC2B_CMD_DBG_READRTD:             DDCCI_DBG_Read_RTD();             break;
+  13   2              case DDC2B_CMD_DBG_WRITERTD:            DDCCI_DBG_Write_RTD();            break;
+  14   2              case DDC2B_CMD_DBG_READIIC:             DDCCI_DBG_Read_IIC();             break;
+  15   2              case DDC2B_CMD_DBG_WRITEIIC:            DDCCI_DBG_Write_IIC();            break;
+  16   2              case DDC2B_CMD_DBG_WRITERTDEX:          DDCCI_DBG_Write_RTDEX();          break;
+  17   2              case DDC2B_CMD_DBG_STOP:                DDCCI_DBG_Stop();                 break;
+  18   2              case DDC2B_CMD_DBG_RUN:                 DDCCI_DBG_Run();                  break;
+  19   2              case DDC2B_CMD_DBG_READ512REG:          DDCCI_DBG_Read512Reg();           break;
+  20   2              case DDC2B_CMD_DBG_WRITE512REG:         DDCCI_DBG_Write512Reg();          break;
+  21   2              case DDC2B_CMD_DBG_VIRTUALKEY:          DDCCI_DBG_VirtualKey();           break;
+  22   2         //     case DDC2B_CMD_DBG_CHGTOUART:           DDCCI_DBG_ChgUart();              break;
+  23   2              case DDC2B_CMD_DBG_READ_RTD2120REG:     DDCCI_DBG_ReadRTD2120Reg();       break;
+  24   2              case DDC2B_CMD_DBG_WRITE_RTD2120REG:    DDCCI_DBG_WriteRTD2120Reg();      break;
+  25   2      
+  26   2           }
+  27   1      }
+  28          //---------------------------------------------------------------------------------------
+  29          void DDCCI_DBG_Read_RTD()
+  30          {
+  31   1           unsigned char i;
+  32   1      
+  33   1           ucDDCCI_TxBuf[CI_LENGTH] = ucDDCCI_RxBuf[4] + 2;
+  34   1           ucDDCCI_TxBuf[COMMAND]     = DDC2B_CMD_DEBUG + 1;
+  35   1           ucDDCCI_TxBuf[2] = DDC2B_CMD_DBG_READRTD;
+  36   1      
+  37   1           for(i=0;i<16;i++)
+  38   1              pData[i] = 0;
+  39   1      
+  40   1           CScalerRead(ucDDCCI_RxBuf[3],ucDDCCI_RxBuf[4], pData, ucDDCCI_RxBuf[5]);
+  41   1           //RTDRead(ucDDCCI_RxBuf[3],ucDDCCI_RxBuf[4],ucDDCCI_RxBuf[5]);
+  42   1           for(i=0;i<ucDDCCI_RxBuf[4];i++)
+  43   1               ucDDCCI_TxBuf[3 + i] = pData[i];
+  44   1           TxCommandReady();
+  45   1      }
+  46          
+  47          //---------------------------------------------------------------------------------------
+  48          void DDCCI_DBG_Write_RTD()
+  49          {
+  50   1           ucDDCCI_TxBuf[CI_LENGTH]           = 2;
+  51   1           ucDDCCI_TxBuf[COMMAND]                 = DDC2B_CMD_DEBUG + 1;
+  52   1           ucDDCCI_TxBuf[2]                   = DDC2B_CMD_DBG_WRITERTD;
+  53   1           RTDSetByte(ucDDCCI_RxBuf[3],ucDDCCI_RxBuf[4]);
+  54   1           TxCommandReady();
+C51 COMPILER V8.16   DDCCIDBG                                                              04/05/2012 11:15:33 PAGE 2   
+
+  55   1      }
+  56          //---------------------------------------------------------------------------------------
+  57          void DDCCI_DBG_Write_RTDEX()
+  58          {
+  59   1           ucDDCCI_TxBuf[CI_LENGTH]           = 2;
+  60   1           ucDDCCI_TxBuf[COMMAND]                 = DDC2B_CMD_DEBUG + 1;
+  61   1           ucDDCCI_TxBuf[2]                   = DDC2B_CMD_DBG_WRITERTDEX;
+  62   1           CScalerWrite(ucDDCCI_RxBuf[3], ucDDCCI_RxBuf[4], &ucDDCCI_RxBuf[6], ucDDCCI_RxBuf[5]);
+  63   1           TxCommandReady();
+  64   1      }
+  65          //---------------------------------------------------------------------------------------
+  66          void DDCCI_DBG_Read_IIC()
+  67          {
+  68   1      
+  69   1           unsigned char i;
+  70   1           ucDDCCI_TxBuf[CI_LENGTH]   = ucDDCCI_RxBuf[5] + 2;
+  71   1           ucDDCCI_TxBuf[COMMAND]     = DDC2B_CMD_DEBUG + 1;
+  72   1           ucDDCCI_TxBuf[2]           = DDC2B_CMD_DBG_READIIC;
+  73   1      
+  74   1           for(i=0;i<16;i++)
+  75   1              pData[i] = 0;
+  76   1           I2CRead(ucDDCCI_RxBuf[3],ucDDCCI_RxBuf[4],ucDDCCI_RxBuf[5]);
+  77   1           for(i=0;i<ucDDCCI_RxBuf[5];i++)
+  78   1               ucDDCCI_TxBuf[3 + i] = pData[i];
+  79   1           TxCommandReady();
+  80   1      }
+  81          //---------------------------------------------------------------------------------------
+  82          void DDCCI_DBG_Write_IIC()
+  83          {
+  84   1           // IIC WRITE
+  85   1           pData[0] = 4;
+  86   1           pData[1] = ucDDCCI_RxBuf[3];
+  87   1           pData[2] = ucDDCCI_RxBuf[4];
+  88   1           pData[3] = ucDDCCI_RxBuf[5];
+  89   1           I2CWrite(pData);
+  90   1      
+  91   1           ucDDCCI_TxBuf[CI_LENGTH]           = 2;
+  92   1           ucDDCCI_TxBuf[COMMAND]             = DDC2B_CMD_DEBUG + 1;
+  93   1           ucDDCCI_TxBuf[2]                   = DDC2B_CMD_DBG_WRITEIIC;
+  94   1           TxCommandReady();
+  95   1      }
+  96          //---------------------------------------------------------------------------------------
+  97          void I2CWrite(unsigned char *Array)
+  98          {
+  99   1           CI2cWrite(Array[1], Array[2], Array[0] - 3, &Array[3]);
+ 100   1      }
+ 101          //---------------------------------------------------------------------------------------
+ 102          void DDCCI_DBG_Stop()
+ 103          {
+ 104   1           ucDDCCI_TxBuf[CI_LENGTH]              = 2;
+ 105   1           ucDDCCI_TxBuf[COMMAND]             = DDC2B_CMD_DEBUG + 1;
+ 106   1           ucDDCCI_TxBuf[2]                   = DDC2B_CMD_DBG_STOP;
+ 107   1           fDDCCI_Loop = 1;
+ 108   1           TxCommandReady();
+ 109   1      }
+ 110          //---------------------------------------------------------------------------------------
+ 111          void DDCCI_DBG_Run()
+ 112          {
+ 113   1           ucDDCCI_TxBuf[CI_LENGTH]           = 2;
+ 114   1           ucDDCCI_TxBuf[COMMAND]             = DDC2B_CMD_DEBUG + 1;
+ 115   1           ucDDCCI_TxBuf[2]                   = DDC2B_CMD_DBG_RUN;
+ 116   1           fDDCCI_Loop = 0;
+C51 COMPILER V8.16   DDCCIDBG                                                              04/05/2012 11:15:33 PAGE 3   
+
+ 117   1           TxCommandReady();
+ 118   1      }
+ 119          //---------------------------------------------------------------------------------------
+ 120          void DDCCI_DBG_VirtualKey()
+ 121          {
+ 122   1           // Set Virtual Key
+ 123   1           ucVirtualKey = ucDDCCI_RxBuf[3];
+ 124   1      
+ 125   1           ucDDCCI_TxBuf[CI_LENGTH]           = 2;
+ 126   1           ucDDCCI_TxBuf[COMMAND]             = DDC2B_CMD_DEBUG + 1;
+ 127   1           ucDDCCI_TxBuf[2]                   = DDC2B_CMD_DBG_VIRTUALKEY;
+ 128   1           TxCommandReady();
+ 129   1      }                     /*
+ 130          //---------------------------------------------------------------------------------------
+ 131          void DDCCI_DBG_ChgUart()
+ 132          {
+ 133               //ucDDCCI_TxBuf[CI_LENGTH]           = 2;
+ 134               //ucDDCCI_TxBuf[COMMAND]             = DDC2B_CMD_DEBUG + 1;
+ 135               //ucDDCCI_TxBuf[2]                   = DDC2B_CMD_DBG_CHGTOUART;
+ 136               //TxCommandReady();
+ 137               
+ 138               #if(_RS232 == _ON)
+ 139               ChagneToUart();
+ 140               fDDCCI_Loop = 0;
+ 141               #endif
+ 142          }         */
+ 143          //---------------------------------------------------------------------------------------
+ 144          
+ 145          void DDCCI_DBG_Read512Reg()
+ 146          {
+ 147   1           unsigned char xdata *p;
+ 148   1           p = (0xf00 + ucDDCCI_RxBuf[3]);
+ 149   1      
+ 150   1           ucDDCCI_TxBuf[CI_LENGTH]           = 3;
+ 151   1           ucDDCCI_TxBuf[COMMAND]             = DDC2B_CMD_DEBUG + 1;
+ 152   1           ucDDCCI_TxBuf[2]                   = DDC2B_CMD_DBG_READ512REG;
+ 153   1           ucDDCCI_TxBuf[3]                   = *p;
+ 154   1           TxCommandReady();
+ 155   1      }
+ 156          //---------------------------------------------------------------------------------------
+ 157          void DDCCI_DBG_Write512Reg()
+ 158          {
+ 159   1           unsigned char xdata *p;
+ 160   1           p = (0xf00 + ucDDCCI_RxBuf[3]);
+ 161   1           *p = ucDDCCI_RxBuf[4];
+ 162   1      
+ 163   1           ucDDCCI_TxBuf[CI_LENGTH]           = 2;
+ 164   1           ucDDCCI_TxBuf[COMMAND]             = DDC2B_CMD_DEBUG + 1;
+ 165   1           ucDDCCI_TxBuf[2]                   = DDC2B_CMD_DBG_WRITE512REG;
+ 166   1           TxCommandReady();     
+ 167   1      }
+ 168          //---------------------------------------------------------------------------------------
+ 169          void DDCCI_DBG_ReadRTD2120Reg()
+ 170          {
+ 171   1           unsigned char xdata *p;
+ 172   1           p = (0xff00 + ucDDCCI_RxBuf[3]);
+ 173   1      
+ 174   1           ucDDCCI_TxBuf[CI_LENGTH]           = 3;
+ 175   1           ucDDCCI_TxBuf[COMMAND]             = DDC2B_CMD_DEBUG + 1;
+ 176   1           ucDDCCI_TxBuf[2]                   = DDC2B_CMD_DBG_READ_RTD2120REG;
+ 177   1           ucDDCCI_TxBuf[3]                   = *p;
+ 178   1           TxCommandReady();
+C51 COMPILER V8.16   DDCCIDBG                                                              04/05/2012 11:15:33 PAGE 4   
+
+ 179   1      }
+ 180          //---------------------------------------------------------------------------------------
+ 181          void DDCCI_DBG_WriteRTD2120Reg()
+ 182          {
+ 183   1           unsigned char xdata *p;
+ 184   1           p = (0xff00 + ucDDCCI_RxBuf[3]);
+ 185   1           *p = ucDDCCI_RxBuf[4];
+ 186   1      
+ 187   1           ucDDCCI_TxBuf[CI_LENGTH]           = 2;
+ 188   1           ucDDCCI_TxBuf[COMMAND]             = DDC2B_CMD_DEBUG + 1;
+ 189   1           ucDDCCI_TxBuf[2]                   = DDC2B_CMD_DBG_WRITE_RTD2120REG;
+ 190   1           TxCommandReady();     
+ 191   1      }
+ 192          //---------------------------------------------------------------------------------------
+ 193          void GetVirtualKey()
+ 194          {
+ 195   1          if(ucKeyMessage == _NONE_KEY_MESSAGE)
+ 196   1          {
+ 197   2              ucKeyMessage = ucVirtualKey;
+ 198   2          }
+ 199   1          ucVirtualKey = _NONE_KEY_MESSAGE;
+ 200   1      }
+ 201          //---------------------------------------------------------------------------------------
+ 202          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    527    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =      1    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       3
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
