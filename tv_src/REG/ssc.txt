@@ -1,0 +1,7 @@
+SSC:
+MIU:
+#define MIU_DDFSTEP                             (0x28)//0x110D28
+
+#define MIU_SSC_EN                              (0x29)//0x110D29
+
+#define MIU_DDFSPAN                             (0x2A)//0x110D2A
