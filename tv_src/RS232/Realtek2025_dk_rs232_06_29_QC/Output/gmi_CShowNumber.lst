@@ -1,0 +1,83 @@
+C51 COMPILER V8.16   GMI_CSHOWNUMBER                                                       04/05/2012 11:15:34 PAGE 1   
+
+
+C51 COMPILER V8.16, COMPILATION OF MODULE GMI_CSHOWNUMBER
+OBJECT MODULE PLACED IN .\Output\gmi_CShowNumber.obj
+COMPILER INVOKED BY: D:\安装文件\keil\C51\BIN\C51.EXE Lib\gmi_CShowNumber.C OPTIMIZE(9,SIZE) BROWSE DEFINE(CMOS_CHIP_TYP
+                    -E=PCB_2025LV13) PRINT(.\Output\gmi_CShowNumber.lst) OBJECT(.\Output\gmi_CShowNumber.obj)
+
+line level    source
+
+   1          ////////////////////////////////////////////////////////////////////////////
+   2          //         Copyright of Vector Co.,Ltd.                                   //
+   3          //                                                                        //
+   4          //                                                                        //
+   5          //                      CShowNumber function                              //
+   6          //   Ver: 0.00                                                            //
+   7          //   Creat file time: 2006.7.31                                           //
+   8          //   End modify time: 2006.7.31                                           //
+   9          //   For RTD2523B/RTD2553V/RTD2525L                                       //
+  10          ////////////////////////////////////////////////////////////////////////////
+  11          
+  12          #include "Header\Include.h"
+  13          
+  14          
+  15          
+  16          //-------------------------------------------------------------
+  17          //----------------------------------------------------------- 
+  18          //  ucNumber:      0~65535
+  19          //  ucUserDefLong: 0   --> 自动计算ucNumber长度，有几位输出几位
+  20          //                 1~5 --> 输出1~5位，不足用0补
+  21          //  exp:           ucNumber = 12
+  22          //                 ucUserDefLong = 0    Output:  12
+  23          //                 ucUserDefLong = 3    Output:  012
+  24          //----------------------------------------------------------- 
+  25          void CShowNumber(const WORD ucNumber, BYTE ucUserDefLong)
+  26          {
+  27   1          BYTE uctemp[5];
+  28   1          
+  29   1          uctemp[4] = (ucNumber / 10000) % 10;
+  30   1          uctemp[3] = (ucNumber / 1000) % 10;
+  31   1          uctemp[2] = (ucNumber / 100) % 10;
+  32   1          uctemp[1] = (ucNumber / 10) % 10;
+  33   1          uctemp[0] = ucNumber  % 10;
+  34   1          
+  35   1          if (ucUserDefLong)
+  36   1              ucUserDefLong -= 1;     
+  37   1          else    
+  38   1          {
+  39   2              for(pData[15] = 4; pData[15]>0;pData[15]--)
+  40   2              {
+  41   3                  if(uctemp[pData[15]] != 0)
+  42   3                      break;          
+  43   3              }
+  44   2              
+  45   2              ucUserDefLong = pData[15];
+  46   2          }
+  47   1          
+  48   1          CScalerSendAddr(_OSD_DATA_PORT_92, _WRITE, _NON_AUTOINC);
+  49   1          do
+  50   1          {
+  51   2              CScalerSendByte(uctemp[ucUserDefLong]+'0');
+  52   2          }
+  53   1          while(ucUserDefLong--);
+  54   1          CScalerSendWriteStop();
+C51 COMPILER V8.16   GMI_CSHOWNUMBER                                                       04/05/2012 11:15:34 PAGE 2   
+
+  55   1      }      
+  56          
+  57          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    119    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       6
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
