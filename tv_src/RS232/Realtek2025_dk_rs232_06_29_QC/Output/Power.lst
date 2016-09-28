@@ -1,0 +1,612 @@
+C51 COMPILER V8.16   POWER                                                                 04/05/2012 11:15:23 PAGE 1   
+
+
+C51 COMPILER V8.16, COMPILATION OF MODULE POWER
+OBJECT MODULE PLACED IN .\Output\Power.obj
+COMPILER INVOKED BY: D:\安装文件\keil\C51\BIN\C51.EXE Code\Power.c OPTIMIZE(9,SIZE) BROWSE DEFINE(CMOS_CHIP_TYPE=PCB_202
+                    -5LV13) PRINT(.\Output\Power.lst) OBJECT(.\Output\Power.obj)
+
+line level    source
+
+   1          //----------------------------------------------------------------------------------------------------
+   2          // ID Code      : Power.c No.0003
+   3          // Update Note  : 
+   4          //
+   5          //----------------------------------------------------------------------------------------------------
+   6          
+   7          #define __POWER__
+   8          
+   9          #include "Header\Include.h"
+  10          
+  11          
+  12          //--------------------------------------------------
+  13          // Description  : Check if the power status changed
+  14          // Input Value  : None
+  15          // Output Value : Return _TRUE if power status is changed, _FALSE if not
+  16          //--------------------------------------------------
+  17          bit CPowerHandler(void)
+  18          {
+  19   1      #if(_AUTO_POWER_DOWN && _VIDEO_TV_SUPPORT)
+  20   1          if(GET_POWERSWITCH() || ucAutoPowerDownTime == 0)
+  21   1      #else
+                  if(GET_POWERSWITCH())
+              #endif 
+  24   1          {
+  25   2              CPowerControl();
+  26   2              CLR_POWERSWITCH();
+  27   2      
+  28   2              return _TRUE;
+  29   2          }
+  30   1      
+  31   1          return _FALSE;
+  32   1      }
+  33          
+  34          //--------------------------------------------------
+  35          // Description  : Execute power up/down process
+  36          // Input Value  : None
+  37          // Output Value : None
+  38          //--------------------------------------------------
+  39          void CPowerControl(void)
+  40          {
+  41   1          CModeResetMode();
+  42   1      
+  43   1      #if(_AUTO_POWER_DOWN && _VIDEO_TV_SUPPORT)
+  44   1          if(GET_POWERSTATUS() || ucAutoPowerDownTime == 0)       // Power Down Process
+  45   1      #else
+                  if(GET_POWERSTATUS())       // Power Down Process
+              #endif
+  48   1          {
+  49   2              CLR_KEYREPEATENABLE(); // Add for IR key repat problem
+  50   2              CLR_POWERSTATUS();
+  51   2              CPowerPanelOff();
+  52   2              CPowerADCAPLLOff();
+  53   2              CPowerLVDSOff();
+  54   2              CPowerDPLLOff();
+C51 COMPILER V8.16   POWER                                                                 04/05/2012 11:15:23 PAGE 2   
+
+  55   2      #if(_SCALER_TYPE == _RTD2547D)
+                      CPowerMPLLOff();
+              #endif
+  58   2              CPowerPWMOff();
+  59   2              CScalerDisableDisplayTiming();
+  60   2              CPowerTMDSOff();
+  61   2      #if(_SCALER_TYPE == _RTD2553V || _SCALER_TYPE == _RTD2546N || _SCALER_TYPE == _RTD2525L) 
+  62   2              CScalerSetBit(_HOST_CTRL_01, ~_BIT1, _BIT1); //V307 modify
+  63   2      #elif(_SCALER_TYPE == _RTD2547D)
+                      CScalerSetByte(_HOST_CTRL_01, 0x46);
+              #else
+                      CScalerSetByte(_HOST_CTRL_01, 0x02);
+              #endif
+  68   2      
+  69   2      #if(_AUTO_POWER_DOWN && _VIDEO_TV_SUPPORT)
+  70   2              ucAutoPowerDownTime = 0xff;
+  71   2      #endif
+  72   2      
+  73   2      #if(_AUTO_POWER_DOWN && _VIDEO_TV_SUPPORT)
+  74   2              if (_GET_INPUT_SOURCE() == _SOURCE_VIDEO_TV && ucAutoPowerDownTime == 0)
+  75   2              {
+  76   3                //  ucAutoPowerDownTime = 0xff;
+  77   3              }
+  78   2              else
+  79   2      #endif
+  80   2              {
+  81   3                  CEepromSaveSystemData();
+  82   3              }
+  83   2      
+  84   2      
+  85   2      #if(_VIDEO_SUPPORT)
+  86   2              CPowerDownVDC();
+  87   2              SET_MUTE_STATE(_MUTE_OFF);
+  88   2          #if (_VIDEO_TV_SUPPORT)
+  89   2          //    TUNER_PWR_OFF();
+  90   2          #endif
+  91   2      #endif
+  92   2      #if(DVD_EN)
+  93   2                   bDVD_PWR_OFF();//0208
+  94   2      #endif
+  95   2          SET_MUTE_STATE(_MUTE_OFF);
+  96   2          CEepromSaveOsdUserData();
+  97   2      #if(PowerDownLED==RedLED)                       
+                              CPowerLedRed(); 
+              #elif(PowerDownLED==GreenLED)                   
+                              CPowerLedGreen(); 
+              #elif(PowerDownLED==OrangeLED)                  
+                              CPowerLedOrange(); 
+              #elif(PowerDownLED==BlackLED)                   
+ 104   2                      CPowerLedBlack(); 
+ 105   2      #endif
+ 106   2      
+ 107   2          }
+ 108   1          else                        // Power Up Process
+ 109   1          {
+ 110   2      #if(KeyPowerUpLED==RedLED)                      
+ 111   2                      CPowerLedRed(); 
+ 112   2      #elif(KeyPowerUpLED==GreenLED)                  
+                              CPowerLedGreen(); 
+              #elif(KeyPowerUpLED==OrangeLED)                 
+                              CPowerLedOrange(); 
+              #elif(KeyPowerUpLED==BlackLED)                  
+C51 COMPILER V8.16   POWER                                                                 04/05/2012 11:15:23 PAGE 3   
+
+                              CPowerLedBlack(); 
+              #endif
+ 119   2      #if(_AUTO_POWER_DOWN && _VIDEO_TV_SUPPORT)
+ 120   2                      //when power on clear the auto power down
+ 121   2                      _SET_POWER_DOWN_TIME(0);
+ 122   2              ucMinuteCount       = 0;
+ 123   2              ucAutoPowerDownTime = _GET_POWER_DOWN_TIME() * 15;
+ 124   2              if (0 == ucAutoPowerDownTime) // Auto power down time off
+ 125   2              {
+ 126   3                  ucAutoPowerDownTime = 0xff;
+ 127   3              }
+ 128   2      
+ 129   2              ucVideoNoModeTime = 253;
+ 130   2      #endif                                 
+ 131   2      
+ 132   2              CLR_KEYREPEATENABLE(); // Add for IR key repat problem
+ 133   2      #if(_SCALER_TYPE != _RTD2547D)
+ 134   2              CModeResetMode();    // eric Marked by add RTD2547D
+ 135   2      #endif
+ 136   2              SET_POWERSTATUS();
+ 137   2              CLR_POWERSWITCH() ;
+ 138   2              CScalerInitial();
+ 139   2         _SET_POWER_DOWN_TIME(0);
+ 140   2              CEepromSaveSystemData();
+ 141   2      
+ 142   2      #if(_VIDEO_SUPPORT)
+ 143   2              bVideoON = 0;
+ 144   2      #endif
+ 145   2      #if(DVD_EN)
+ 146   2                   bDVD_PWR_OFF();//0208
+ 147   2      #endif
+ 148   2      
+ 149   2        SET_MUTE_STATE(_MUTE_OFF);
+ 150   2          CEepromSaveOsdUserData();
+ 151   2         // if (_GET_INPUT_SOURCE() == _SOURCE_VIDEO_TV)
+ 152   2          {
+ 153   3              ucVideoNoModeTime=255;
+ 154   3                      CModeResetMode();
+ 155   3      }
+ 156   2         if(_GET_INPUT_SOURCE()==_SOURCE_VIDEO_DVD)
+ 157   2              bDVD_PWR_ON();
+ 158   2                 SET_DO_SHOW_NOTE(0);
+ 159   2          }
+ 160   1      }
+ 161          
+ 162          //--------------------------------------------------
+ 163          // Description  : Set panel on process
+ 164          // Input Value  : None
+ 165          // Output Value : None
+ 166          //--------------------------------------------------
+ 167          void CPowerPanelOn(void)
+ 168          {
+ 169   1          if(GET_PANELPOWERSTATUS() == _OFF)
+ 170   1          {
+ 171   2              CPowerPanelPowerOn();
+ 172   2              CTimerDelayXms(40);
+ 173   2              CPowerDisplayPortOn();
+ 174   2              CScalerEnableDisplayOutput();
+ 175   2              //CTimerDelayXms(80);
+ 176   2          }
+ 177   1         CTimerDelayXms(200);//modify by chenlinfu
+ 178   1      
+C51 COMPILER V8.16   POWER                                                                 04/05/2012 11:15:23 PAGE 4   
+
+ 179   1      #if(_VIDEO_SUPPORT)
+ 180   1          if (_GET_INPUT_SOURCE() == _SOURCE_VGA  || 
+ 181   1              _GET_INPUT_SOURCE() == _SOURCE_DVI  || 
+ 182   1              _GET_INPUT_SOURCE() == _SOURCE_HDMI || 
+ 183   1              _GET_INPUT_SOURCE() == _SOURCE_YPBPR) 
+ 184   1      #endif
+ 185   1              CPowerLightPowerOn();
+ 186   1      
+ 187   1          CMiscClearStatusRegister();
+ 188   1      }
+ 189          
+ 190          //--------------------------------------------------
+ 191          // Description  : Set panel off process
+ 192          // Input Value  : None
+ 193          // Output Value : None
+ 194          //--------------------------------------------------
+ 195          void CPowerPanelOff(void)
+ 196          {
+ 197   1          MUTE_ON();
+ 198   1      
+ 199   1          CPowerLightPowerOff();
+ 200   1          CTimerDelayXms(120);
+ 201   1          CScalerDisableDisplayOutput();
+ 202   1          CPowerPanelPowerOff();
+ 203   1          CTimerDelayXms(40);
+ 204   1          CPowerDisplayPortOff();
+ 205   1      
+ 206   1          // The delay below is to prevent from short period between panel OFF and next ON
+ 207   1          CTimerDelayXms(250);
+ 208   1      }
+ 209          
+ 210          //--------------------------------------------------
+ 211          // Description  : Set panel power on
+ 212          // Input Value  : None
+ 213          // Output Value : None
+ 214          //--------------------------------------------------
+ 215          void CPowerPanelPowerOn(void)
+ 216          {
+ 217   1          PANELPOWER_UP();
+ 218   1          SET_PANELPOWERSTATUS();
+ 219   1      }
+ 220          
+ 221          //--------------------------------------------------
+ 222          // Description  : Set panel power off
+ 223          // Input Value  : None
+ 224          // Output Value : None
+ 225          //--------------------------------------------------
+ 226          void CPowerPanelPowerOff(void)
+ 227          {
+ 228   1          PANELPOWER_DOWN();
+ 229   1          CLR_PANELPOWERSTATUS();
+ 230   1      }
+ 231          //--------------------------------------------------
+ 232          // Description  : Set backlight power on
+ 233          // Input Value  : None
+ 234          // Output Value : None
+ 235          //--------------------------------------------------
+ 236          void CPowerLightPowerOn(void)
+ 237          {
+ 238   1          LIGHTPOWER_UP();
+ 239   1          SET_LIGHTPOWERSTATUS();
+ 240   1      }
+C51 COMPILER V8.16   POWER                                                                 04/05/2012 11:15:23 PAGE 5   
+
+ 241          
+ 242          //--------------------------------------------------
+ 243          // Description  : Set backlight power off
+ 244          // Input Value  : None
+ 245          // Output Value : None
+ 246          //--------------------------------------------------
+ 247          void CPowerLightPowerOff(void)
+ 248          {
+ 249   1          LIGHTPOWER_DOWN();
+ 250   1          CLR_LIGHTPOWERSTATUS();
+ 251   1      }
+ 252          
+ 253          //--------------------------------------------------
+ 254          // Description  : Power on display port
+ 255          // Input Value  : None
+ 256          // Output Value : None
+ 257          //--------------------------------------------------
+ 258          void CPowerDisplayPortOn(void)
+ 259          {
+ 260   1          switch(Panel.PanelStyle)
+ 261   1          {
+ 262   2              case _PANEL_TTL:
+ 263   2                  CPowerLVDSOn();
+ 264   2                  break;
+ 265   2      
+ 266   2              case _PANEL_LVDS:
+ 267   2                  CPowerLVDSOn();
+ 268   2                  break;
+ 269   2      
+ 270   2              case _PANEL_RSDS:
+ 271   2                  CPowerRSDSOn();
+ 272   2                  break;
+ 273   2          }
+ 274   1      }
+ 275          
+ 276          //--------------------------------------------------
+ 277          // Description  : Power off display port
+ 278          // Input Value  : None
+ 279          // Output Value : None
+ 280          //--------------------------------------------------
+ 281          void CPowerDisplayPortOff(void)
+ 282          {
+ 283   1          switch(Panel.PanelStyle)
+ 284   1          {
+ 285   2              case _PANEL_TTL:
+ 286   2                      CPowerLVDSOff();
+ 287   2                  break;
+ 288   2      
+ 289   2              case _PANEL_LVDS:
+ 290   2                  CPowerLVDSOff();
+ 291   2                  break;
+ 292   2      
+ 293   2              case _PANEL_RSDS:
+ 294   2                  CPowerRSDSOff();
+ 295   2                  break;
+ 296   2          }
+ 297   1      }
+ 298          
+ 299          //--------------------------------------------------
+ 300          // Description  : Power on LVDS
+ 301          // Input Value  : None
+ 302          // Output Value : None
+C51 COMPILER V8.16   POWER                                                                 04/05/2012 11:15:23 PAGE 6   
+
+ 303          //--------------------------------------------------
+ 304          void CPowerLVDSOn(void)
+ 305          {    
+ 306   1      #if(_SCALER_TYPE == _RTD2547D)
+                  CScalerSetDataPortByte(_TCON_ADDR_PORT_8B, _TCON_LVDS_CTRL0_A0, 0x30);
+              #else
+ 309   1          CScalerSetByte(_TCON_ADDR_PORT_8B, _LVDS_CTRL0_78);
+ 310   1      
+ 311   1      #if (_SCALER_TYPE == _RTD2553V || _SCALER_TYPE == _RTD2546N || _SCALER_TYPE == _RTD2525L)
+ 312   1          CScalerSetByte(_TCON_DATA_PORT_8C, 0x30);
+ 313   1      #else
+                  CScalerSetByte(_TCON_DATA_PORT_8C, 0xf0);
+              #endif
+ 316   1      #endif // #if(_SCALER_TYPE == _RTD2547D)
+ 317   1      }
+ 318          
+ 319          //--------------------------------------------------
+ 320          // Description  : Power off LVDS
+ 321          // Input Value  : None
+ 322          // Output Value : None
+ 323          //--------------------------------------------------
+ 324          void CPowerLVDSOff(void)
+ 325          {
+ 326   1      #if(_SCALER_TYPE == _RTD2547D)
+                  CScalerSetDataPortByte(_TCON_ADDR_PORT_8B, _TCON_LVDS_CTRL0_A0, 0x00);
+              #else
+ 329   1          CScalerSetByte(_TCON_ADDR_PORT_8B, _LVDS_CTRL0_78);
+ 330   1          CScalerSetByte(_TCON_DATA_PORT_8C, 0x00);
+ 331   1      #endif
+ 332   1      }
+ 333          
+ 334          //--------------------------------------------------
+ 335          // Description  : Power on RSDS
+ 336          // Input Value  : None
+ 337          // Output Value : None
+ 338          //--------------------------------------------------
+ 339          void CPowerRSDSOn(void)
+ 340          {
+ 341   1          CPowerLVDSOn();
+ 342   1      #if(_SCALER_TYPE == _RTD2547D)
+                  CScalerSetDataPortByte(_TCON_ADDR_PORT_8B, _TCON_CTRL0_00, 0xc6);//for 8-bit RSDS panel
+                  CTimerDelayXms(40);
+                  CScalerSetDataPortByte(_TCON_ADDR_PORT_8B, _TCON_CTRL0_00, 0x86);
+              #else
+ 347   1          CScalerSetByte(_TCON_ADDR_PORT_8B, 0x00);
+ 348   1          CScalerSetByte(_TCON_DATA_PORT_8C, 0xc3);
+ 349   1          CTimerDelayXms(40);
+ 350   1          CScalerSetByte(_TCON_ADDR_PORT_8B, 0x00);
+ 351   1          CScalerSetByte(_TCON_DATA_PORT_8C, 0x83);
+ 352   1      #endif
+ 353   1      }
+ 354          
+ 355          //--------------------------------------------------
+ 356          // Description  : Power off RSDS
+ 357          // Input Value  : None
+ 358          // Output Value : None
+ 359          //--------------------------------------------------
+ 360          void CPowerRSDSOff(void)
+ 361          {
+ 362   1          CPowerLVDSOff();
+ 363   1      #if(_SCALER_TYPE == _RTD2547D)
+                  CScalerSetDataPortByte(_TCON_ADDR_PORT_8B, _TCON_CTRL0_00, 0x41);
+C51 COMPILER V8.16   POWER                                                                 04/05/2012 11:15:23 PAGE 7   
+
+              #else
+ 366   1          CScalerSetByte(_TCON_ADDR_PORT_8B, 0x00);
+ 367   1          CScalerSetByte(_TCON_DATA_PORT_8C, 0x41);
+ 368   1      #endif
+ 369   1      }
+ 370          
+ 371          //--------------------------------------------------
+ 372          // Description  : Power on ADC and APLL
+ 373          // Input Value  : None
+ 374          // Output Value : None
+ 375          //--------------------------------------------------
+ 376          void CPowerADCAPLLOn(void)
+ 377          {
+ 378   1      #if(_SCALER_TYPE == _RTD2547D)
+              
+                  CScalerPageSelect(_PAGE1);
+                  CScalerSetBit(_P1_PLL1_N_AB, ~_BIT7, 0x00);     // Power up PLL1
+                  CScalerSetBit(_P1_PLL2_WD_B1, ~_BIT0, 0x00);    // Power up PLL2
+              
+                  CScalerPageSelect(_PAGE0);
+                  CScalerSetBit(_P0_ADC_POWER_AD, ~(_BIT2 | _BIT1 | _BIT0), (_BIT2 | _BIT1 | _BIT0));    // Power up ADC
+              
+              #else
+ 388   1      
+ 389   1          CScalerSetBit(_PLL1_N_A2, ~_BIT7, 0x00);                                                // Power up PL
+             -L1
+ 390   1          CScalerSetBit(_PLL2_WD_A8, ~_BIT0, 0x00);                                               // Power up PL
+             -L2
+ 391   1          
+ 392   1      #if (_SCALER_TYPE == _RTD2553V || _SCALER_TYPE == _RTD2546N || _SCALER_TYPE == _RTD2525L)                 
+             -                                              
+ 393   1              CScalerSetDataPortBit(_ADC_ACCESS_PORT_DC, 0x0c, ~(_BIT2 | _BIT1 | _BIT0), (_BIT2 | _BIT1 | _BIT0));    /
+             -/ Power up ADC
+ 394   1      #else
+                  CScalerSetBit(_ADC_POWER_CTRL_E8, ~(_BIT2 | _BIT1 | _BIT0), (_BIT2 | _BIT1 | _BIT0));   // Power up AD
+             -C
+              #endif
+ 397   1      #endif  // #if(_SCALER_TYPE == _RTD2547D)
+ 398   1      }
+ 399          
+ 400          //--------------------------------------------------
+ 401          // Description  : Power off ADC and APLL
+ 402          // Input Value  : None
+ 403          // Output Value : None
+ 404          //--------------------------------------------------
+ 405          void CPowerADCAPLLOff(void)
+ 406          {
+ 407   1      #if(_SCALER_TYPE == _RTD2547D)
+              
+                  CScalerPageSelect(_PAGE1);
+                  CScalerSetBit(_P1_PLL1_N_AB, ~_BIT7, _BIT7);     // Power down PLL1
+                  CScalerSetBit(_P1_PLL2_WD_B1, ~_BIT0, _BIT0);    // Power down PLL2
+              
+                  CScalerPageSelect(_PAGE0);
+                  CScalerSetBit(_P0_ADC_POWER_AD, ~(_BIT2 | _BIT1 | _BIT0), 0x00);    // Power down ADC
+              
+              #else
+ 417   1      
+ 418   1          CScalerSetBit(_PLL1_N_A2, ~_BIT7, _BIT7);                                               // Power down 
+             -PLL1
+ 419   1          CScalerSetBit(_PLL2_WD_A8, ~_BIT0, _BIT0);                                              // Power down 
+             -PLL2
+C51 COMPILER V8.16   POWER                                                                 04/05/2012 11:15:23 PAGE 8   
+
+ 420   1      #if (_SCALER_TYPE == _RTD2553V || _SCALER_TYPE == _RTD2546N || _SCALER_TYPE == _RTD2525L)
+ 421   1              CScalerSetDataPortBit(_ADC_ACCESS_PORT_DC, 0x0c, ~(_BIT2 | _BIT1 | _BIT0), 0x00);                       /
+             -/ Power down ADC
+ 422   1      #else
+                  CScalerSetBit(_ADC_POWER_CTRL_E8, ~(_BIT2 | _BIT1 | _BIT0), 0x00);                      // Power down 
+             -ADC
+              #endif
+ 425   1      
+ 426   1      #endif // #if(_SCALER_TYPE == _RTD2547D)
+ 427   1      }
+ 428          
+ 429          #if((_TMDS_SUPPORT == _ON) || (_HDMI_SUPPORT == _ON))
+              //--------------------------------------------------
+              // Description  : Power on TMDS
+              // Input Value  : None
+              // Output Value : None
+              //--------------------------------------------------
+              void CPowerTMDSOn(void)
+              {
+              #if (_SCALER_TYPE != _RTD2553V && _SCALER_TYPE != _RTD2546N && _SCALER_TYPE != _RTD2525L && _SCALER_TYPE !
+             -= _RTD2547D)
+                  CScalerSetBit(_DEVICE_KEY_BIST_PATTERN_D7, ~_BIT7, _BIT7);
+              #endif
+                  CScalerSetBit(_SYNC_CTRL_49, ~(_BIT1 | _BIT0), 0x00);
+              }
+              #endif
+ 443          
+ 444          //--------------------------------------------------
+ 445          // Description  : Power off TMDS
+ 446          // Input Value  : None
+ 447          // Output Value : None
+ 448          //--------------------------------------------------
+ 449          void CPowerTMDSOff(void)
+ 450          {
+ 451   1      #if(_SCALER_TYPE == _RTD2547D)
+              
+                  CScalerPageSelect(_PAGE2);
+                  CScalerSetBit(_P2_Z0_CALIBRATION_CTRL_AC, ~_BIT6, 0x00);
+                  CScalerSetBit(_P2_TMDS_OUTPUT_CTRL_A6, ~_BIT7, 0x00);
+              
+              #else
+ 458   1      
+ 459   1          CScalerSetBit(_Z0_CALIBRATION_CTRL_C7, ~_BIT6, 0x00);
+ 460   1          CScalerSetBit(_TMDS_OUTPUT_CTRL_C1, ~_BIT7, 0x00);
+ 461   1      #if (_SCALER_TYPE != _RTD2553V && _SCALER_TYPE != _RTD2546N && _SCALER_TYPE != _RTD2525L)
+                  CScalerSetBit(_DEVICE_KEY_BIST_PATTERN_D7, ~_BIT7, 0x00);
+              #endif
+ 464   1      
+ 465   1      #endif
+ 466   1      }
+ 467          
+ 468          //--------------------------------------------------
+ 469          // Description  : Power off ADC and APLL
+ 470          // Input Value  : None
+ 471          // Output Value : None
+ 472          //--------------------------------------------------
+ 473          void CPowerDPLLOff(void)
+ 474          {
+ 475   1      #if(_SCALER_TYPE == _RTD2547D)
+                  CScalerPageSelect(_PAGE1);
+                  CScalerSetBit(_P1_DPLL_N_B8, ~_BIT7, _BIT7);  // Power down DPLL
+              #else
+C51 COMPILER V8.16   POWER                                                                 04/05/2012 11:15:23 PAGE 9   
+
+ 479   1          CScalerSetBit(_DPLL_N_AF, ~_BIT7, _BIT7);                                               // Power down 
+             -DPLL
+ 480   1      #endif
+ 481   1      }
+ 482          
+ 483          #if(_SCALER_TYPE == _RTD2547D)
+              //--------------------------------------------------
+              // Description  : Power off MPLL
+              // Input Value  : None
+              // Output Value : None
+              //--------------------------------------------------
+              void CPowerMPLLOff(void)
+              {
+                  CScalerPageSelect(_PAGE1);
+                  CScalerSetBit(_P1_MPLL_N_C9, ~_BIT7, _BIT7);  // Power down MPLL
+              }
+              #endif
+ 495          
+ 496          //--------------------------------------------------
+ 497          // Description  : Power on PWM
+ 498          // Input Value  : None
+ 499          // Output Value : None
+ 500          //--------------------------------------------------
+ 501          void CPowerPWMOn(void)
+ 502          {
+ 503   1          pData[0] = 0x40;
+ 504   1          pData[1] = 0x02;
+ 505   1          pData[2] = 0x10;
+ 506   1          CScalerWrite(_OSD_ADDR_MSB_90, 3, pData, _AUTOINC);
+ 507   1      }
+ 508          
+ 509          //--------------------------------------------------
+ 510          // Description  : Power off PWM
+ 511          // Input Value  : None
+ 512          // Output Value : None
+ 513          //--------------------------------------------------
+ 514          void CPowerPWMOff(void)
+ 515          {
+ 516   1          pData[0] = 0x40;
+ 517   1          pData[1] = 0x02;
+ 518   1          pData[2] = 0x00;
+ 519   1          CScalerWrite(_OSD_ADDR_MSB_90, 3, pData, _AUTOINC);
+ 520   1      }
+ 521          
+ 522          
+ 523          //---------------------------------------------------------------------------
+ 524          #if(PowerUpLED==GreenLED||PowerDownLED==GreenLED||RunLED==GreenLED||NosignalStateLED==GreenLED)
+ 525          //eric 20070531
+ 526          void CPowerLedGreen(void)
+ 527          {
+ 528   1              REDLED_OFF();
+ 529   1              GREENLED_ON();
+ 530   1      }
+ 531          #endif
+ 532          //---------------------------------------------------------------------------
+ 533          #if(PowerUpLED==RedLED||PowerDownLED==RedLED||RunLED==RedLED||NosignalStateLED==RedLED)
+ 534          
+ 535          void CPowerLedRed(void)
+ 536          {
+ 537   1              REDLED_ON();
+ 538   1              GREENLED_OFF();
+ 539   1      }
+C51 COMPILER V8.16   POWER                                                                 04/05/2012 11:15:23 PAGE 10  
+
+ 540          #endif
+ 541          //---------------------------------------------------------------------------
+ 542          
+ 543          #if(PowerUpLED==OrangeLED||PowerDownLED==OrangeLED||RunLED==OrangeLED||NosignalStateLED==OrangeLED)
+              void CPowerLedOrange(void)
+              {
+                      REDLED_ON();
+                      GREENLED_ON();
+              }
+              #endif
+ 550          //---------------------------------------------------------------------------
+ 551          
+ 552          #if(PowerUpLED==BlackLED||PowerDownLED==BlackLED||RunLED==BlackLED||NosignalStateLED==BlackLED)
+ 553          void CPowerLedBlack(void)
+ 554          {
+ 555   1              REDLED_OFF();
+ 556   1              GREENLED_OFF();
+ 557   1      }
+ 558          #endif
+ 559          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    642    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =      1    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
