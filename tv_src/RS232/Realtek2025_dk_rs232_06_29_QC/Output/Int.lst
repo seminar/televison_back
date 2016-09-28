@@ -1,0 +1,203 @@
+C51 COMPILER V8.16   INT                                                                   04/05/2012 11:15:22 PAGE 1   
+
+
+C51 COMPILER V8.16, COMPILATION OF MODULE INT
+OBJECT MODULE PLACED IN .\Output\Int.obj
+COMPILER INVOKED BY: D:\安装文件\keil\C51\BIN\C51.EXE Code\Int.c OPTIMIZE(9,SIZE) BROWSE DEFINE(CMOS_CHIP_TYPE=PCB_2025L
+                    -V13) PRINT(.\Output\Int.lst) OBJECT(.\Output\Int.obj)
+
+line level    source
+
+   1          //----------------------------------------------------------------------------------------------------
+   2          // ID Code      : Int.c No.0002
+   3          // Update Note  : 
+   4          //
+   5          //----------------------------------------------------------------------------------------------------
+   6          
+   7          #include "Header\Include.h"
+   8          
+   9          //--------------------------------------------------
+  10          // Timer0 Interrupt (1ms)
+  11          //--------------------------------------------------
+  12          void IntProcTimer0(void) interrupt 1
+  13          {
+  14   1          TR0 = _ON;
+  15   1          TL0 = _TIMER0_COUNT_LBYTE;
+  16   1          TH0 = _TIMER0_COUNT_HBYTE;
+  17   1      
+  18   1          bNotifyTimer0Int = _TRUE;
+  19   1      
+  20   1          if(--ucTimer0Cnt)
+  21   1          {
+  22   2      
+  23   2          }
+  24   1          else
+  25   1          {
+  26   2              if(bTimer0Ctrl == _FALSE)
+  27   2              {
+  28   3                  CTimerDecreaseTimerCnt();
+  29   3                  ucTimer0Cnt = 10;
+  30   3              }
+  31   2          }
+  32   1      
+  33   1      #if(_AUTO_POWER_DOWN && _VIDEO_TV_SUPPORT)
+  34   1          if (0x00 != ucAutoPowerDownTime && 0xff != ucAutoPowerDownTime)
+  35   1          {
+  36   2              ucMinuteCount++;
+  37   2              if (ucMinuteCount == _ONE_MINUTE_COUNT)  // 1 minute
+  38   2              {
+  39   3                  ucAutoPowerDownTime--;
+  40   3                  ucMinuteCount = 0;
+  41   3              }
+  42   2          }
+  43   1      #endif
+  44   1      }
+  45          /*
+  46          #if(_RS232 == _ON)
+  47          
+  48          //--------------------------------------------------------------------------------------------------------
+             ------------
+  49          // UART interrupt function (4)
+  50          //--------------------------------------------------------------------------------------------------------
+             ------------
+  51          void IntProcUart(void)  interrupt 4
+  52          {
+C51 COMPILER V8.16   INT                                                                   04/05/2012 11:15:22 PAGE 2   
+
+  53              if(TI)
+  54                  TI = 0;
+  55          
+  56              if(RI)
+  57              {
+  58                  if(!bUartCommandStart)
+  59                  {
+  60                      pUartData[0] = SBUF;
+  61                      switch(pUartData[0])
+  62                      {
+  63                          case 0x5a:
+  64                          case 0x5b:
+  65                          case 0x5c:
+  66                          case 0x5d:
+  67                          case 0x41:
+  68                              bUartCommandStart = _TRUE;
+  69                              ucUartCommandNum = 1;
+  70                                                  break;
+  71                          default:
+  72                              bUartCommandStart = _FALSE;
+  73                              break;
+  74                      }
+  75                  }
+  76                  else
+  77                  {
+  78                      if(ucUartCommandNum < 5)
+  79                      {
+  80                          pUartData[ucUartCommandNum] = SBUF;
+  81                          ucUartCommandNum++;
+  82                          if(ucUartCommandNum == 5)
+  83                          {
+  84                              bUartCommandStart = _FALSE;
+  85                              bUartCommandSuccess = _TRUE;
+  86                              ucUartCommandNum = 1;
+  87                          }
+  88                      }
+  89                  }
+  90          
+  91                  RI = 0;
+  92              }
+  93          }
+  94          
+  95          #endif*/
+  96          
+  97          
+  98          #if(_RS232)
+  99          //--------------------------------------------------
+ 100          void UartRxData(void)
+ 101          {
+ 102   1              if (fUartStart == 0) 
+ 103   1              {
+ 104   2                      pUartData[0] = SBUF;
+ 105   2                      fUartStart = 1;
+ 106   2                      switch(pUartData[0])
+ 107   2                      {
+ 108   3                              case UartCMD_DebugModeEnter:            // Enter debug mode
+ 109   3                              case UartCMD_DebugModeExit:             // Exit debug mode
+ 110   3                                      ucUartRxCount = 4;
+ 111   3                                      break;
+ 112   3                              case UartCMD_CScalerRead:                       // Read RTD2553V
+ 113   3                              case UartCMD_I2CRead:                           // Read I2C
+ 114   3                              case UartCMD_I2CWrite:                          // Write I2C
+C51 COMPILER V8.16   INT                                                                   04/05/2012 11:15:22 PAGE 3   
+
+ 115   3                                      ucUartRxCount = 3;
+ 116   3                                      break;
+ 117   3                              case UartCMD_CScalerWrite:              // Write RTD2553V
+ 118   3                                      ucUartRxCount = 2;
+ 119   3                                      break;
+ 120   3                              default:
+ 121   3                                      fUartStart = 0;
+ 122   3                                      break;
+ 123   3      
+ 124   3      
+ 125   3                            case UartCMD_RS232Control:                //leo add for  RS232 
+ 126   3                              if(pUartData[2] == 0x1f)
+ 127   3                                      {
+ 128   4                                      ucUartRxCount = 5;
+ 129   4                                    fInitCmdlength = 0;
+ 130   4                                      }
+ 131   3                              else
+ 132   3                                      {
+ 133   4                                      ucUartRxCount = 5;
+ 134   4                                     fInitCmdlength =1;
+ 135   4                                      }
+ 136   3                                      break;
+ 137   3                      }
+ 138   2      
+ 139   2                      ucUartRxIndex = 1;
+ 140   2              }
+ 141   1              else 
+ 142   1              {
+ 143   2                      pUartData[ucUartRxIndex] = SBUF;
+ 144   2                      ucUartRxIndex++;
+ 145   2                      if (ucUartRxIndex > ucUartRxCount)
+ 146   2                      {
+ 147   3                              fUartRxCmdSuccess = 1;
+ 148   3                              fUartStart = 0;
+ 149   3                      }
+ 150   2              }
+ 151   1      }
+ 152          
+ 153          //--------------------------------------------------
+ 154          void IntProcUart(void) interrupt 4
+ 155          {
+ 156   1              ES = 0; // disable uart interrupt.
+ 157   1              if (TI) 
+ 158   1              {
+ 159   2                      TI = 0;
+ 160   2              }
+ 161   1              else if (RI) 
+ 162   1              {
+ 163   2                      UartRxData();
+ 164   2                      RI = 0;
+ 165   2              }
+ 166   1              ES = 1;
+ 167   1      }
+ 168          
+ 169          
+ 170          #endif
+ 171          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    301    ----
+   CONSTANT SIZE    =   ----    ----
+C51 COMPILER V8.16   INT                                                                   04/05/2012 11:15:22 PAGE 4   
+
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
