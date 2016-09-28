@@ -1,0 +1,119 @@
+C51 COMPILER V8.16   GMI_IRFUNC                                                            04/05/2012 11:15:35 PAGE 1   
+
+
+C51 COMPILER V8.16, COMPILATION OF MODULE GMI_IRFUNC
+OBJECT MODULE PLACED IN .\Output\gmi_IRFunc.obj
+COMPILER INVOKED BY: D:\安装文件\keil\C51\BIN\C51.EXE Lib\gmi_IRFunc.C OPTIMIZE(9,SIZE) BROWSE DEFINE(CMOS_CHIP_TYPE=PCB
+                    -_2025LV13) PRINT(.\Output\gmi_IRFunc.lst) OBJECT(.\Output\gmi_IRFunc.obj)
+
+line level    source
+
+   1          ////////////////////////////////////////////////////////////////////////////
+   2          //         Copyright of Vector Co.,Ltd.                                   //
+   3          //                                                                        //
+   4          //                                                                        //
+   5          //                              IR function                              //
+   6          //   Ver: 0.00                                                            //
+   7          //   Creat file time: 2006.7.31                                           //
+   8          //   End modify time: 2006.7.31                                           //
+   9          //   For RTD2523B/RTD2553V/RTD2525L                                       //
+  10          ////////////////////////////////////////////////////////////////////////////
+  11          
+  12          #include "Header\Include.h"
+  13          
+  14          
+  15          //////////////////////////////////////////////////////////////////////////////////////////////////////////
+             -/////
+  16          
+  17          //                                        IR FUNCTION
+  18          
+  19          //////////////////////////////////////////////////////////////////////////////////////////////////////////
+             -/////
+  20          void gmi_CInitial_IR(void)
+  21          {
+  22   1          //-----------------------------------
+  23   1          //   add for IR
+  24   1          //-----------------------------------
+  25   1          // Initial INT0
+  26   1          IT0     = 1;  // 0/1:  低电平/下降沿 触发
+  27   1          PX0     = 0;  // 0/1:  低/高 优先级
+  28   1          EX0     = 0;   // Disable external interrupt 0
+  29   1      }
+  30          
+  31          void gmi_CStopIR(void)
+  32          {
+  33   1      
+  34   1          EX0 = 0;   // Disable external interrupt 0
+  35   1      }
+  36          
+  37          void gmi_CStartIR(void)
+  38          {
+  39   1      
+  40   1          EX0 = 1;  // Enable external interrupt 0
+  41   1      }
+  42          
+  43          void gmi_Delay_65us(void)
+  44          {
+  45   1          Delay5us();
+  46   1          Delay5us();
+  47   1          Delay5us();
+  48   1          Delay5us();
+  49   1          Delay5us();
+  50   1          Delay5us();
+  51   1          Delay5us();
+  52   1          Delay5us();
+C51 COMPILER V8.16   GMI_IRFUNC                                                            04/05/2012 11:15:35 PAGE 2   
+
+  53   1          Delay5us();
+  54   1          Delay5us();
+  55   1          Delay5us();
+  56   1          Delay5us();
+  57   1          Delay5us();
+  58   1      }
+  59          
+  60          void gmi_IR_Delay(void)
+  61          {
+  62   1          // Delay 365us
+  63   1          do
+  64   1          {
+  65   2              // Delay 325us
+  66   2              gmi_Delay_65us();
+  67   2              gmi_Delay_65us();
+  68   2              gmi_Delay_65us();
+  69   2              gmi_Delay_65us();
+  70   2              gmi_Delay_65us();
+  71   2          
+  72   2              // delay 40us
+  73   2              Delay5us();
+  74   2          
+  75   2              Delay5us();
+  76   2          
+  77   2              Delay5us();
+  78   2          
+  79   2              Delay5us();
+  80   2          
+  81   2              Delay5us();
+  82   2          
+  83   2              Delay5us();
+  84   2          
+  85   2              Delay5us();
+  86   2          
+  87   2              Delay5us();
+  88   2          }while(0);
+  89   1      }           
+  90          
+  91          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     91    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
