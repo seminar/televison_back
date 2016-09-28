@@ -1,0 +1,1598 @@
+C51 COMPILER V8.16   TV                                                                    04/05/2012 11:15:29 PAGE 1   
+
+
+C51 COMPILER V8.16, COMPILATION OF MODULE TV
+OBJECT MODULE PLACED IN .\Output\TV.obj
+COMPILER INVOKED BY: D:\安装文件\keil\C51\BIN\C51.EXE TV\TV.c OPTIMIZE(9,SIZE) BROWSE DEFINE(CMOS_CHIP_TYPE=PCB_2025LV13
+                    -) PRINT(.\Output\TV.lst) OBJECT(.\Output\TV.obj)
+
+line level    source
+
+   1          #include "Header\Include.h"
+   2          
+   3          #if(_VIDEO_TV_SUPPORT)
+   4          bit bChangeChannel              = 0;
+   5          BYTE idata ucTVType             = _NORMAL_TV_TYPE;
+   6          BYTE xdata ucPrevChannel        = 0;
+   7          WORD xdata ucCurrentInputNumber = 0;
+   8          BYTE xdata ucCurrentInputState  = 0;
+   9          
+  10          //add the NTSC table
+  11          #if(_NTSC_SEARCH_TABLE)
+              //-------------------------------------------------------------------------
+              WORD code tNTSC_AIR[MAX_CHANNEL_AIR] =
+              {
+                  ((55.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),    // 0
+                  ((55.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),    // 1
+                  ((55.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),    // 2
+                  ((61.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),    // 3
+                  ((67.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 4
+                  ((77.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),    // 5
+                  ((83.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),    // 6
+                  ((175.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 7
+                  ((181.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 8
+                  ((187.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 9
+                  ((193.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 10
+                  ((199.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 11
+                  ((205.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 12
+                  ((211.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 13
+                  ((471.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 14
+                  ((477.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 15
+                  ((483.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 16
+                  ((489.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 17
+                  ((495.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 18
+                  ((501.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 19
+                  ((507.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 20
+                  ((513.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 21
+                  ((519.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 22
+                  ((525.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 23
+                  ((531.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 24
+                  ((537.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 25
+                  ((543.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 26
+                  ((549.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 27
+                  ((555.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 28
+                  ((561.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))), // 29
+                  ((567.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 30
+                  ((573.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 31
+                  ((579.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 32
+                  ((585.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 33
+                  ((591.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 34
+                  ((597.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 35
+                  ((603.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 36
+                  ((609.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))), // 37
+                  ((615.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 38
+                  ((621.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 39
+C51 COMPILER V8.16   TV                                                                    04/05/2012 11:15:29 PAGE 2   
+
+                  ((627.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))), // 40
+                  ((633.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 41
+                  ((639.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 42
+                  ((645.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 43
+                  ((651.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))), // 44
+                  ((657.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))), // 45
+                  ((663.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 46
+                  ((669.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 47
+                  ((675.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 48
+                  ((681.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 49
+                  ((687.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 50
+                  ((693.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 51
+                  ((699.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))), // 52
+                  ((705.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 53
+                  ((711.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 54
+                  ((717.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 55
+                  ((723.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 56
+                  ((729.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))), // 57
+                  ((735.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 58
+                  ((741.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 59
+                  ((747.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 60
+                  ((753.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 61
+                  ((759.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 62
+                  ((765.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 63
+                  ((771.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 64
+                  ((777.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 65
+                  ((783.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 66
+                  ((789.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 67
+                  ((795.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 68
+                  ((801.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 69
+              };                
+                                
+              //-------------------------------------------------------------------------
+              WORD code tNTSC_CATV[MAX_CHANNEL_CATV] =
+              {                 
+                   ((55.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 0 
+                   ((73.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 1
+                   ((55.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 2
+                   ((61.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 3
+                   ((67.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),    // 4
+                   ((77.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),    // 5
+                   ((83.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),    // 6
+                   ((175.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 7 
+                   ((181.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 8 
+                   ((187.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 9 
+                   ((193.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 10
+                   ((199.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 11
+                   ((205.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 12
+                   ((211.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 13
+                   ((121.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 14 
+                   ((127.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 15 
+                   ((133.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 16
+                   ((139.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 17
+                   ((145.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 18
+                   ((151.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 19
+                   ((157.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))), // 20
+                   ((163.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 21
+                   ((169.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 22
+                   ((217.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 23
+                   ((223.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 24
+                   ((229.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 25
+                   ((235.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 26
+C51 COMPILER V8.16   TV                                                                    04/05/2012 11:15:29 PAGE 3   
+
+                   ((241.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 27
+                   ((247.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 28
+                   ((253.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 29
+                   ((259.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 30
+                   ((265.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 31
+                   ((271.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 32
+                   ((277.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 33
+                   ((283.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 34
+                   ((289.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 35
+                   ((295.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 36
+                   ((301.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 37
+                   ((307.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 38
+                   ((313.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 39
+                   ((319.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 40
+                   ((325.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 41
+                   ((331.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 42
+                   ((337.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 43
+                   ((343.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 44
+                   ((349.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))), // 45
+                   ((355.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 46
+                   ((361.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 47
+                   ((367.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 48
+                   ((373.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 49
+                   ((379.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 50
+                   ((385.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 51
+                   ((391.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 52
+                   ((397.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 53
+                   ((403.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 54
+                   ((409.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 55
+                   ((415.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 56
+                   ((421.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 57
+                   ((427.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 58
+                   ((433.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 59
+                   ((439.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 60
+                   ((445.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 61
+                   ((451.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 62
+                   ((457.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 63
+                   ((463.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 64
+                   ((469.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 65
+                   ((475.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 66
+                   ((481.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 67
+                   ((487.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 68
+                   ((493.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 69
+                   ((499.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))), // 70
+                   ((505.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 71
+                   ((511.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 72
+                   ((517.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 73
+                   ((523.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 74
+                   ((529.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 75
+                   ((535.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 76
+                   ((541.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 77
+                   ((547.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 78
+                   ((553.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 79
+                   ((559.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 80
+                   ((565.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 81
+                   ((571.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 82
+                   ((577.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 83
+                   ((583.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 84
+                   ((589.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 85
+                   ((595.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 86
+                   ((601.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 87
+                   ((607.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 88
+C51 COMPILER V8.16   TV                                                                    04/05/2012 11:15:29 PAGE 4   
+
+                   ((613.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 89
+                   ((619.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 90
+                   ((625.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 91
+                   ((631.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))), // 92
+                   ((637.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 93
+                   ((643.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 94
+                   ((91.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),    // 95
+                   ((97.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),    // 96
+                   ((103.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 97
+                   ((109.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 98
+                   ((115.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))), // 99
+                   ((649.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))), // 100
+                   ((655.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 101
+                   ((661.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 102
+                   ((667.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 103
+                   ((673.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 104
+                   ((679.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 105
+                   ((685.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 106
+                   ((691.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 107
+                   ((697.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 108
+                   ((703.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 109
+                   ((709.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 110
+                   ((715.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 111
+                   ((721.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 112
+                   ((727.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 113
+                   ((733.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 114
+                   ((739.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 115
+                   ((745.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 116
+                   ((751.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 117
+                   ((757.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 118
+                   ((763.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 119
+                   ((769.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 120
+                   ((775.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 121
+                   ((781.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 122
+                   ((787.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 123
+                   ((793.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),  // 124
+                   ((799.25*_TUNER_BP+(_PIF_FREQ*_TUNER_BP/1000))),   // 125
+              };  
+              WORD code *ChanelTbl[]={tNTSC_CATV,tNTSC_AIR};
+              #endif
+ 219          
+ 220          WORD CLoadChannelFreq(const BYTE ucCurrentChannel);
+ 221          void CSaveChannelFreq(const WORD iFreq, const BYTE ucCurrentChannel);
+ 222          
+ 223          #if(_VIDEO_CHIP == _VDC_TB1334)
+ 224          //============================================================================== 
+ 225          // ucTVColorMode:    _TV_NTSC_M,   _TV_NTSC_4_BG, _TV_NTSC_4_DK 
+ 226          //                   _TV_NTSC_4_I, _TV_PAL_M  --> 60Hz
+ 227          //                   ------------------------------------------
+ 228          //                   _TV_PAL_BG,   _TV_PAL_I,     _TV_PAL_DK,
+ 229          //                   _TV_PAL_N     --> 50Hz PAL
+ 230          //                   ------------------------------------------
+ 231          //                   _TV_SECAM_BG, _TV_SECAM_DK,  _TV_SECAM_L
+ 232          //                   _TV_SECAM_LL  --> 50Hz SECAM
+ 233          //-------------------------------------------------------------
+ 234          // ucMode:       _SEARCH_CHANNEL_MODE/_NORMAL_MODE
+ 235          // PifFreq:      45750/39500/38900/38000/34200/33900 KHz
+ 236          //CarrierSelect: 0: Split carrier    1: Inter carrier
+ 237          //============================================================================== 
+ 238          extern void gmi_CSetIfMode(const BYTE ucTVColorMode, const BYTE ucMode, const WORD PifFreq, const BYTE Car
+             -rierSelect);
+ 239          
+C51 COMPILER V8.16   TV                                                                    04/05/2012 11:15:29 PAGE 5   
+
+ 240          
+ 241          //============================================================================== 
+ 242          BYTE bCurrentTVColorMode(void)
+ 243          {
+ 244   1          switch(ucTVType)
+ 245   1          {
+ 246   2          case _TV_PAL_M     :    // 60Hz PAL M
+ 247   2          case _TV_NTSC_M    :    // 60Hz NTSC M
+ 248   2          case _TV_NTSC_4_BG :    // 60Hz NTSC 4/BG
+ 249   2          case _TV_NTSC_4_I  :    // 60Hz NTSC 4/I
+ 250   2          case _TV_NTSC_4_DK :    // 60Hz NTSC 4/DK
+ 251   2              return _60HZ;
+ 252   2      
+ 253   2          default:                // Normal sound
+ 254   2          case _TV_SECAM_BG  :    // 50Hz SECAM B/G
+ 255   2          case _TV_SECAM_DK  :    // 50Hz SECAM D/K
+ 256   2          case _TV_PAL_N     :    // 50Hz PAL N
+ 257   2          case _TV_PAL_BG    :    // 50Hz PAL B/G
+ 258   2          case _TV_PAL_I     :    // 50Hz PAL I
+ 259   2          case _TV_PAL_DK    :    // 50Hz PAL D/K
+ 260   2          case _TV_SECAM_L   :    // 50Hz SECAM L
+ 261   2          case _TV_SECAM_LL  :    // 50Hz Secam L'
+ 262   2              return _50HZ;
+ 263   2          } // end switch
+ 264   1      }
+ 265          
+ 266          //============================================================================== 
+ 267          void CStartSearch(bit bStart)
+ 268          {                           
+ 269   1          BYTE uctemp;
+ 270   1      
+ 271   1          if (bStart)
+ 272   1              uctemp = 0x00;
+ 273   1          else
+ 274   1              uctemp = 0x01;
+ 275   1             
+ 276   1          if (_60HZ == bCurrentTVColorMode())  // NTSC
+ 277   1              gmi_CI2CWriteVDCByte(0x15, 0x40 | uctemp); 
+ 278   1          else
+ 279   1              gmi_CI2CWriteVDCByte(0x15, 0x20 | uctemp); 
+ 280   1      
+ 281   1      
+ 282   1          if (!bStart)
+ 283   1              return;
+ 284   1      
+ 285   1          do
+ 286   1          {
+ 287   2              gmi_CI2CWriteVDCByte(0x20, 0x40);
+ 288   2              CI2cRead(0x88, 0x00, 3, pData);
+ 289   2              CTimerDelayXms(100);
+ 290   2          }
+ 291   1          while(pData[1] & 0x01);
+ 292   1      
+ 293   1          gmi_CI2CWriteVDCByte(0x20, 0x20);
+ 294   1      } 
+ 295          
+ 296          #endif // end #if(_VIDEO_CHIP == _VDC_TB1334)
+ 297          
+ 298          BYTE CGetTVEepromAddr(const BYTE ucCurrentChannel)
+ 299          {
+ 300   1          BYTE ucEeprom_Addr = (_TV_FREQ_EP0_TV_NUMBER < ucCurrentChannel) ? _TV_FREQ_EEPROM_ADDR1 : _TV_FREQ_EE
+             -PROM_ADDR0;
+C51 COMPILER V8.16   TV                                                                    04/05/2012 11:15:29 PAGE 6   
+
+ 301   1      
+ 302   1          return ucEeprom_Addr;
+ 303   1      }
+ 304          
+ 305          BYTE CGetTVStartAddr(const BYTE ucCurrentChannel)
+ 306          {
+ 307   1          BYTE ucStart_Addr = (_TV_FREQ_EP0_TV_NUMBER < ucCurrentChannel) ? ((ucCurrentChannel - (_TV_FREQ_EP0_T
+             -V_NUMBER+1)) * 2)
+ 308   1                                                      : (_TV_FREQ_EP_START_ADDR0 + (ucCurrentChannel * 2));
+ 309   1      
+ 310   1          return ucStart_Addr;
+ 311   1      }
+ 312          
+ 313          //==========================================================================
+ 314          //
+ 315          //==========================================================================
+ 316          void CForceBackGroundToBlack(void)
+ 317          {
+ 318   1      #if(_CHANGE_SOURCE_BACKGROUCD_COLOR==_BACK_COLOR)                                               
+ 319   1                      CAdjustBackgroundColor(0x00, 0x00, 0x00);     
+ 320   1      #else
+                              CAdjustBackgroundColor(0x00, 0x00, 0xFF);     
+              #endif
+ 323   1          CScalerSetBit(_VDISP_CTRL_28, ~_BIT5, _BIT5);
+ 324   1          bChangeChannel = 1;
+ 325   1      }
+ 326          
+ 327          // ucMode: Search/Normal mode
+ 328          void gmi_CI2CWrite9886(BYTE ucTvType, const bit bTunerMute, BYTE ucMode)
+ 329          {
+ 330   1      #if(_VIDEO_CHIP == _VDC_TB1334)
+ 331   1      
+ 332   1          gmi_CSetIfMode(ucTvType, ucMode, _PIF_FREQ, _CARRIER_SELECT); 
+ 333   1      
+ 334   1          if(bTunerMute)     
+ 335   1             MUTE_ON();
+ 336   1              else
+ 337   1             MUTE_OFF();
+ 338   1      
+ 339   1      #else
+              
+                  ucMode = ucMode;
+              /*
+                  if (_TV_PAL_BG > ucTvType) // NTSC 
+                  {
+                      pData[0] = 0x16;
+                      pData[1] = 0x30;
+                  }
+                  else    // Color PAL/SECAM/Other
+                  {
+                      pData[0] = 0xd6;
+                      pData[1] = 0x70;
+                  }
+              
+                  pData[2] = 0x0c;
+                            */
+                  // Set TDA9886 B,C data
+                  switch(ucTvType)
+                  {
+                  case _TV_PAL_M     :    // 60Hz PAL M
+                  case _TV_NTSC_M    :    // 60Hz NTSC M
+                  case _TV_NTSC_4_BG :    // 60Hz NTSC 4/BG
+C51 COMPILER V8.16   TV                                                                    04/05/2012 11:15:29 PAGE 7   
+
+                  case _TV_NTSC_4_I  :    // 60Hz NTSC 4/I
+                  case _TV_NTSC_4_DK :    // 60Hz NTSC 4/DK
+                      pData[0] = _TDA9886_B_DATA_NTSC;
+                      pData[1] = _TDA9886_C_DATA_NTSC;
+                      break;
+              
+                  default:                // Normal sound
+                  case _TV_SECAM_BG  :    // 50Hz SECAM B/G
+                  case _TV_SECAM_DK  :    // 50Hz SECAM D/K
+                  case _TV_PAL_N     :    // 50Hz PAL N
+                  case _TV_PAL_BG    :    // 50Hz PAL B/G
+                  case _TV_PAL_I     :    // 50Hz PAL I
+                  case _TV_PAL_DK    :    // 50Hz PAL D/K
+                      pData[0] = _TDA9886_B_DATA_PAL;
+                      pData[1] = _TDA9886_C_DATA_PAL;
+                      break;
+              
+              #if(_TV_CHIP == _TV_JS_6B2 || _TV_CHIP == _TV_JS_6H2_122A2)
+                 case _TV_SECAM_L   :    // 50Hz SECAM L
+                      pData[0] = _TDA9886_B_DATA_SECAML;
+                      pData[1] = _TDA9886_C_DATA_SECAML;
+                      break;
+              
+                  case _TV_SECAM_LL  :    // 50Hz Secam L'
+                      pData[0] = _TDA9886_B_DATA_SECAMLL;
+                      pData[1] = _TDA9886_C_DATA_SECAMLL;
+                      break;
+              #endif
+                  } // end switch
+              
+                  if (bTunerMute)
+                     MUTE_ON();
+              //        pData[0] |= _BIT5;
+                  
+                  // Set TDA9886 E data
+                  switch(ucTvType)
+                  {
+                  case _TV_PAL_M     :    // Sound 4.5M  PAL M
+                  case _TV_NTSC_M    :    // Sound 4.5M  NTSC M
+                  case _TV_PAL_N     :    // Sound 4.5M  PAL N 
+                      pData[2] = _TDA9886_E_DATA_NTSC;
+                      break;
+              
+                  case _TV_NTSC_4_BG :    // Sound 5.5M  NTSC 4/BG
+                  case _TV_PAL_BG    :    // Sound 5.5M  PAL B/G
+                  case _TV_SECAM_BG  :    // Sound 5.5M  SECAM B/G
+                      pData[2] = _TDA9886_E_DATA_PAL_BG;
+                      break;
+              
+                  default:                // Normal sound
+                  case _TV_NTSC_4_I  :    // Sound 6.0M  NTSC 4/I
+                  case _TV_PAL_I     :    // Sound 6.0M  PAL I
+                      pData[2] = _TDA9886_E_DATA_PAL_I;
+                      break;
+              
+                  case _TV_NTSC_4_DK :    // Sound 6.5M  NTSC 4/DK
+                  case _TV_PAL_DK    :    // Sound 6.5M  PAL D/K
+                  case _TV_SECAM_DK  :    // Sound 6.5M  SECAM D/K
+                      pData[2] = _TDA9886_E_DATA_PAL_DK;
+                      break;
+              
+              
+C51 COMPILER V8.16   TV                                                                    04/05/2012 11:15:29 PAGE 8   
+
+              #if(_TV_CHIP == _TV_JS_6B2 || _TV_CHIP == _TV_JS_6H2_122A2)
+                 case _TV_SECAM_L   :    // Sound 6.5M  SECAM L
+                      pData[2] = _TDA9886_E_DATA_SECAML;
+                      break;
+              
+                  case _TV_SECAM_LL  :    // Sound 6.5M  Secam L'
+                      pData[2] = _TDA9886_E_DATA_SECAMLL;
+                      break;
+              #endif
+                  } // end switch
+                    
+                  CI2cWrite(_ADDR_9886,0x00,3, pData);  // Set TDA9886
+              #endif
+ 437   1      }
+ 438          
+ 439          //==========================================================================
+ 440          //
+ 441          //==========================================================================
+ 442          void gmi_CSetTuner(BYTE ucTunerAddress, WORD Freq)
+ 443          {        
+ 444   1      #if(_TV_CHIP == _TV_TDQ_G4X002A)
+              
+                 pData[0] = 7;
+                 pData[1] = ucTunerAddress;
+                 ((WORD *)pData)[1] = Freq;
+                 pData[4] = 0x8A;//0x82; 
+                 
+                 if(Freq < _VHF_LOW_BAND)        // VHFLOW  
+                    pData[5]=0x65;     
+                 else if(Freq < _VHF_HIGH_BAND0) // VHFHIGH  
+                    pData[5]=0x66;     
+                 else if(Freq < _VHF_HIGH_BAND)   
+                    pData[5]=0xA6;     
+                 else if(Freq < _VHF_HIGH_BAND1)   
+                    pData[5]=0xAC;     
+                 else                           //Band select//UHF
+                    pData[5]=0xEC;   
+              
+                 pData[6]=0xC6;     
+                 gmi_CI2CWriteTuner(pData);
+              
+              #elif(_TV_CHIP == _TV_TDQ_6F6 || _TV_CHIP == _TNF_8337)
+ 466   1                   
+ 467   1         pData[0] = 6;
+ 468   1         pData[1] = ucTunerAddress;
+ 469   1         ((WORD *)pData)[1] = Freq;
+ 470   1         pData[4] = 0xC8; // 0xCE 
+ 471   1         
+ 472   1         if(Freq < _VHF_LOW_BAND)  
+ 473   1            pData[5]=0x01;   // VHFLOW   
+ 474   1         else if(Freq < _VHF_HIGH_BAND)   
+ 475   1            pData[5]=0x02;  // VHFHIGH 
+ 476   1         else 
+ 477   1      #if(_TV_CHIP == _TNF_8337)
+ 478   1            pData[5]=0x08;  //Band select//UHF 
+ 479   1      #else
+                    pData[5]=0x04;  //Band select//UHF 
+              #endif
+ 482   1      
+ 483   1         gmi_CI2CWriteTuner(pData);
+ 484   1      
+ 485   1      #else
+C51 COMPILER V8.16   TV                                                                    04/05/2012 11:15:29 PAGE 9   
+
+              
+              #if(_TV_CHIP == _TV_FQ1216ME)
+                 pData[0] = 7;
+              #else
+                 pData[0] = 8;
+              #endif
+                 pData[1] = ucTunerAddress;
+                 ((WORD *)pData)[1] = Freq;
+              
+                 pData[4] = 0x88;//0xc8; 
+                
+                 if(Freq < _VHF_LOW_BAND)  
+                    pData[5]=0x01;   // VHFLOW   
+                 else if(Freq < _VHF_HIGH_BAND)
+                    pData[5]=0x02;  // VHFHIGH 
+                 else 
+                    pData[5]=0x04;  //Band select//UHF 
+                 pData[6]=0xd8;//0x98;
+                 pData[7]=0x60;
+              
+                 gmi_CI2CWriteTuner(pData);
+              #endif
+ 508   1      }
+ 509          
+ 510          //==========================================================================
+ 511          //
+ 512          //==========================================================================
+ 513          #if(_VIDEO_CHIP != _VDC_TB1334)
+              BYTE CDetectTVSignalType(void)
+              {
+                  BYTE ucTemp;
+              
+                  for(ucTemp = 0; ucTemp < 4; ucTemp++)
+                  {
+                      if (gmi_CVideoCurrentColor(0) != 0x00 && gmi_CModeLocked())  // Horizontal Lock
+                           return 1;
+              
+                      CTimerDelayXms(50);
+                  }
+              
+                  // No video detected or h/v sync not locked
+                   return 0;  
+              }
+              #endif
+ 530          
+ 531          //============================================================
+ 532          //Output: Channel skip     0 --> no skip     1 --> skip
+ 533          //============================================================
+ 534          bit CLoadChannelSkip(const BYTE ucCurrentChannel)
+ 535          {
+ 536   1          CI2cRead(ADDRESS(CGetTVEepromAddr(ucCurrentChannel)), CGetTVStartAddr(ucCurrentChannel)+1, LENGTH(1), 
+             -pData);  // eric 0223
+ 537   1      
+ 538   1          if (pData[0] & 0x80)  // Channel skip
+ 539   1              return 1;
+ 540   1          else         // No skip
+ 541   1              return 0;
+ 542   1      }
+ 543          
+ 544          //============================================================
+ 545          //
+ 546          //============================================================
+C51 COMPILER V8.16   TV                                                                    04/05/2012 11:15:29 PAGE 10  
+
+ 547          void CSaveChannelSkip(const bit bSkip, const BYTE ucCurrentChannel)
+ 548          {
+ 549   1          WORD iFreq = CLoadChannelFreq(ucCurrentChannel);
+ 550   1      
+ 551   1          if (bSkip)
+ 552   1             CSaveChannelFreq((iFreq & 0x7fff) | 0x8000, ucCurrentChannel);
+ 553   1          else
+ 554   1             CSaveChannelFreq(iFreq & 0x7fff, ucCurrentChannel);
+ 555   1      }
+ 556          
+ 557          /*
+ 558          //============================================================
+ 559          //
+ 560          //============================================================
+ 561          BYTE CLoadSearchChannelType(void)
+ 562          {
+ 563              CI2cRead(ADDRESS(EEPROM_TVSYSTEM_ADDR), EEPROM_SEARCH_TYPE_ADDR, LENGTH(1), pData);    // Read current
+             - channel freq
+ 564          
+ 565              return pData[0];
+ 566          }
+ 567          
+ 568          //============================================================
+ 569          //
+ 570          //============================================================
+ 571          void CSaveSearchChannelType(const BYTE ucSearchType)
+ 572          {
+ 573              pData[0] = ucSearchType;
+ 574              CI2cWrite(ADDRESS(EEPROM_TVSYSTEM_ADDR), EEPROM_SEARCH_TYPE_ADDR, LENGTH(1), pData);
+ 575          }
+ 576             */
+ 577          //============================================================
+ 578          //Output: Channel freq
+ 579          //============================================================
+ 580          WORD CLoadChannelFreq(const BYTE ucCurrentChannel)
+ 581          {
+ 582   1          WORD freq = 0;
+ 583   1      
+ 584   1          CI2cRead(ADDRESS(CGetTVEepromAddr(ucCurrentChannel)), CGetTVStartAddr(ucCurrentChannel), LENGTH(2), pD
+             -ata);  // eric 0223
+ 585   1          pData[1] &= 0x7f;
+ 586   1      
+ 587   1          freq = (256*pData[1]) + pData[0];
+ 588   1      
+ 589   1          if (_MAX_FREQ < freq)
+ 590   1              freq = _MAX_FREQ;
+ 591   1          else if(_MIN_FREQ > freq)
+ 592   1              freq = _MIN_FREQ;
+ 593   1      
+ 594   1          return freq;
+ 595   1      }
+ 596          
+ 597          //==========================================================================
+ 598          //
+ 599          //==========================================================================
+ 600          void CSaveChannelFreq(const WORD iFreq, const BYTE ucCurrentChannel)
+ 601          {
+ 602   1          pData[0] = iFreq & 0xff;
+ 603   1          pData[1] = (iFreq >> 8) & 0xff;
+ 604   1          CI2cWrite(ADDRESS(CGetTVEepromAddr(ucCurrentChannel)), CGetTVStartAddr(ucCurrentChannel), LENGTH(2), p
+             -Data);  // eric 0223
+ 605   1        //  CI2cWrite(ADDRESS(ucEEPROM_ADDR), ucStart_Addr, LENGTH(2), pData);  // eric 0223
+C51 COMPILER V8.16   TV                                                                    04/05/2012 11:15:29 PAGE 11  
+
+ 606   1      }
+ 607          
+ 608          //============================================================
+ 609          //Output: Channel color type
+ 610          //============================================================
+ 611          BYTE CLoadChannelColorType(const BYTE ucCurrentChannel)
+ 612          {
+ 613   1          CI2cRead(ADDRESS(_TV_SYSTEM_EEPROM_ADDR), _TV_SYSTEM_START_ADDR+ucCurrentChannel, LENGTH(1), pData);  
+             -  // Read current channel sound and tv system
+ 614   1          pData[0] = pData[0] >> 4; // tv type
+ 615   1      
+ 616   1          if (_MAX_TV_TYPE < pData[0])
+ 617   1              pData[0] = _NORMAL_TV_TYPE; // Set to normal PAL I 
+ 618   1      
+ 619   1          return pData[0];
+ 620   1      }
+ 621          
+ 622          //==========================================================================
+ 623          //
+ 624          //==========================================================================
+ 625          void CSaveChannelColorType(const BYTE ucCurrentChannel, const BYTE TVType)
+ 626          {
+ 627   1          pData[0] = (TVType << 4) | (CLoadChannelSoundType(ucCurrentChannel));
+ 628   1          CI2cWrite(ADDRESS(_TV_SYSTEM_EEPROM_ADDR), _TV_SYSTEM_START_ADDR+ucCurrentChannel, LENGTH(1), pData);
+ 629   1      }
+ 630          
+ 631          //============================================================
+ 632          //Output: Channel sound type
+ 633          //============================================================
+ 634          BYTE CLoadChannelSoundType(const BYTE ucCurrentChannel)
+ 635          {
+ 636   1          CI2cRead(ADDRESS(_TV_SYSTEM_EEPROM_ADDR), _TV_SYSTEM_START_ADDR+ucCurrentChannel, LENGTH(1), pData);  
+             -  // Read current channel sound and tv system
+ 637   1          pData[0] = pData[0] & 0x03; // sound type
+ 638   1      
+ 639   1        //  if (_MAX_TV_SOUND_TYPE_NUM < pData[0])
+ 640   1          //    pData[0] = 1;  // Set to normal: 6.0M
+ 641   1      
+ 642   1          return pData[0];
+ 643   1      }
+ 644          
+ 645          //==========================================================================
+ 646          //
+ 647          //==========================================================================
+ 648          void CSaveChannelSoundType(const BYTE ucCurrentChannel, const BYTE ucSoundType)
+ 649          {
+ 650   1          pData[0] = (CLoadChannelColorType(ucCurrentChannel) << 4) | ucSoundType;
+ 651   1          CI2cWrite(ADDRESS(_TV_SYSTEM_EEPROM_ADDR), _TV_SYSTEM_START_ADDR+ucCurrentChannel, LENGTH(1), pData);
+ 652   1      }
+ 653          
+ 654          //==========================================================================
+ 655          //
+ 656          //==========================================================================
+ 657          void CSaveChannelData(const WORD iFreq, const BYTE ucSound, const BYTE ucChannelNumber)
+ 658          {
+ 659   1          CSaveChannelFreq(iFreq, ucChannelNumber);
+ 660   1          CTimerDelayXms(4);
+ 661   1      
+ 662   1          // Save sound and tv system
+ 663   1          pData[0] = (ucTVType<<4) | (ucSound & 0x03);
+ 664   1          CI2cWrite(ADDRESS(_TV_SYSTEM_EEPROM_ADDR), _TV_SYSTEM_START_ADDR+ucChannelNumber, LENGTH(1), pData);
+ 665   1          CTimerDelayXms(4);
+C51 COMPILER V8.16   TV                                                                    04/05/2012 11:15:29 PAGE 12  
+
+ 666   1      }
+ 667          
+ 668          //==========================================================================
+ 669          //
+ 670          //==========================================================================
+ 671          void CSetTVChannel(const BYTE ucCurrentChannel)
+ 672          { 
+ 673   1      #if(_NTSC_SEARCH_TABLE)
+              
+                       BYTE ucMaxChannel = CloadMaxChannelNumber(0);
+                      BYTE ucMinChannel = CloadMinChannelNumber();
+                        if( ucCurrentChannel>ucMinChannel)    
+                              stVDCColor.CurrentChannel = (ucCurrentChannel > ucMaxChannel) ? ucMaxChannel : ucCurrentChannel;
+                      else
+                              stVDCColor.CurrentChannel = ucMinChannel;
+              
+                      {
+                      if(_ABS(ChanelTbl[_GET_CATV_AIR()][ucCurrentChannel],CLoadChannelFreq(ucCurrentChannel))>50)
+                              CSaveChannelFreq(ChanelTbl[_GET_CATV_AIR()][ucCurrentChannel], ucCurrentChannel);
+                              gmi_CSetTuner(_ADDR_TUNER, CLoadChannelFreq(ucCurrentChannel));
+                              gmi_CI2CWrite9886(ucTVType, _TUNER_MUTE_ON, _NORMAL_MODE);//_NORMAL_MODE); // set tv system
+                      }
+              #else
+ 689   1          {
+ 690   2              ucTVType = CLoadChannelColorType(ucCurrentChannel); // set tv system
+ 691   2             
+ 692   2              gmi_CSetTuner(_ADDR_TUNER, CLoadChannelFreq(ucCurrentChannel));
+ 693   2         // gmi_CI2CWrite9886(ucTVType, _TUNER_MUTE_OFF); // set tv system
+ 694   2          }
+ 695   1          gmi_CI2CWrite9886(ucTVType, _TUNER_MUTE_ON, _SEARCH_CHANNEL_MODE);//_NORMAL_MODE); // set tv system
+ 696   1        //  ucAudioState = 1;
+ 697   1      #endif  
+ 698   1      }
+ 699          
+ 700          //==========================================================================
+ 701          //
+ 702          //==========================================================================
+ 703          BYTE CloadMaxChannelNumber(bit uctemp)
+ 704          {
+ 705   1      #if(_NTSC_SEARCH_TABLE)
+                             uctemp=uctemp;
+                              if(_GET_CATV_AIR())
+                               return MAX_CHANNEL_AIR-1;      //AIR start from 2 chanel
+                              else
+                               return MAX_CHANNEL_CATV -1;    //CATV start from 1 chanel
+              #else
+ 712   1         if(uctemp)
+ 713   1                      return _MAX_CHANNEL_COUNT;
+ 714   1         else
+ 715   1              {
+ 716   2                      CI2cRead(ADDRESS(_TV_MAX_CHANNEL_EEPROM_ADDR), _MAX_CHANNEL_ADDR, LENGTH(1), pData);    // Read search m
+             -ax channel
+ 717   2                      if (_MAX_CHANNEL_COUNT < pData[0])
+ 718   2                      {
+ 719   3                              // Save search channel number
+ 720   3                              pData[0] = 0;
+ 721   3                              CI2cWrite(_TV_MAX_CHANNEL_EEPROM_ADDR, _MAX_CHANNEL_ADDR, 1, pData);
+ 722   3      
+ 723   3                              pData[0] = CloadMinChannelNumber();//_MAX_CHANNEL_COUNT;
+ 724   3                      }
+ 725   2      
+ 726   2                      return pData[0];
+C51 COMPILER V8.16   TV                                                                    04/05/2012 11:15:29 PAGE 13  
+
+ 727   2              }
+ 728   1      #endif
+ 729   1      }
+ 730          BYTE CloadMinChannelNumber(void)
+ 731          {
+ 732   1      #if(_NTSC_SEARCH_TABLE)
+                              if(_GET_CATV_AIR())
+                               return 2;      //AIR start from 2 chanel
+                            else
+                               return 1;      //CATV start from 1 chanel       
+              #else
+ 738   1         return 0;
+ 739   1      #endif
+ 740   1      }
+ 741          
+ 742          //==========================================================================
+ 743          //
+ 744          //==========================================================================
+ 745          void CModeResetTVMode(void)  // eric 1130 add for change tv channel bug
+ 746          {        
+ 747   1      #if(_VIDEO_CHIP == _VDC_TB1334)
+ 748   1          CLR_LIGHTPOWERSTATUS();
+ 749   1          CForceBackGroundToBlack();
+ 750   1          gmi_CSetVDCFreeRunMode(_VDC_FREE_RUN_MODE_TO_AUTO);
+ 751   1      #else
+                  CForceBackGroundToBlack();
+                  CModeAutoMeasureOff();
+                  CMiscClearStatusRegister();
+                  CTimerCancelTimerEvent(CModeNoSignalEvent);
+              
+                  CLR_FRAMESYNCSTATUS();
+              
+                  stModeInfo.ModeCurr   = _MODE_NOSIGNAL;
+                  ucEvent0              = _INACTIVE_COUNTDOWN_EVENT;
+               //   ucOsdState            = _MENU_NONE;
+                  ucOsdEventMsg         = _NONE_MSG;
+                  ucInputSyncType       = _NO_SYNC_STATE;
+                  ucVideoNoModeTime     = 0;
+                  VideoTurnOnLightCount = 0;
+                  stModeInfo.Polarity   = 0;
+                  stModeInfo.IHCount    = 0;
+                  stModeInfo.IHFreq     = 0;
+                  stModeInfo.IVTotal    = 0;
+                  stModeInfo.IVFreq     = 0;
+                  stModeInfo.IHWidth    = 0;
+                  stModeInfo.IVHeight   = 0;
+                  stModeInfo.IHSyncPulseCount = 0;
+                  VideoTurnOnLightCount = 0;
+              
+                  RECODE_NONE_VIDEO();
+              
+                  ucCurrState = _SEARCH_STATE;  
+              #endif
+ 780   1      }      
+ 781          
+ 782          void CModeResetTVNtscToPal(void)  //FOR TB1334  NTSC  TO  PAL  OR PAL TO NTSC
+ 783          {
+ 784   1          CEepromSaveVedioColor();
+ 785   1          switch(ucTVType) 
+ 786   1          {
+ 787   2          case _TV_NTSC_M    :    // 60Hz Sound 4.5M  NTSC M
+ 788   2          case _TV_NTSC_4_BG :    // 60Hz Sound 5.5M  NTSC 4/BG 
+C51 COMPILER V8.16   TV                                                                    04/05/2012 11:15:29 PAGE 14  
+
+ 789   2          case _TV_NTSC_4_DK :    // 60Hz Sound 6.5M  NTSC 4/DK 
+ 790   2          case _TV_NTSC_4_I  :    // 60Hz Sound 6.0M  NTSC 4/I
+ 791   2          case _TV_PAL_M     :    // 60Hz Sound 4.5M  PAL M  
+ 792   2              if(!CHECK60HZ())    
+ 793   2                      {
+ 794   3                       CModeSetFreeRun();
+ 795   3                      ucVideoNoModeTime=253;
+ 796   3                      Delay_Xms(200);
+ 797   3              CScalerRead(_STATUS0_02, 1, pData, _NON_AUTOINC);//  xdl  20080816
+ 798   3                      pData[0]|=0x80;
+ 799   3                    CScalerWrite(_STATUS0_02, 1, pData, _NON_AUTOINC);
+ 800   3                      CModeResetMode();
+ 801   3                      }
+ 802   2            break;
+ 803   2              
+ 804   2          case _TV_PAL_BG    :    // 50Hz Sound 5.5M  PAL B/G
+ 805   2          case _TV_PAL_I     :    // 50Hz Sound 6.0M  PAL I
+ 806   2          case _TV_PAL_DK    :    // 50Hz Sound 6.5M  PAL D/K
+ 807   2          case _TV_PAL_N     :    // 50Hz Sound 4.5M  PAL N 
+ 808   2          case _TV_SECAM_BG  :    // 50Hz Sound 5.5M  SECAM B/G
+ 809   2          case _TV_SECAM_DK  :    // 50Hz Sound 6.5M  SECAM D/K
+ 810   2          case _TV_SECAM_L   :    // 50Hz Sound 6.5M  SECAM L  
+ 811   2          case _TV_SECAM_LL  :    // 50Hz Sound 6.5M  Secam L' 
+ 812   2              if(CHECK60HZ())    
+ 813   2                      {
+ 814   3                      CModeSetFreeRun();
+ 815   3                      ucVideoNoModeTime=253;
+ 816   3                      Delay_Xms(200);
+ 817   3              CScalerRead(_STATUS0_02, 1, pData, _NON_AUTOINC);//  xdl  20080816
+ 818   3                      pData[0]|=0x80;
+ 819   3                    CScalerWrite(_STATUS0_02, 1, pData, _NON_AUTOINC);
+ 820   3                      CModeResetMode();
+ 821   3                      }
+ 822   2            break;
+ 823   2          } // end switch 
+ 824   1      
+ 825   1      }
+ 826          void CChangeChannel(bit bNext)
+ 827          {
+ 828   1          BYTE ucmaxchannel = CloadMaxChannelNumber(0);
+ 829   1      
+ 830   1          if (stVDCColor.CurrentChannel > ucmaxchannel)
+ 831   1          {
+ 832   2              ucPrevChannel             = 0;
+ 833   2              stVDCColor.CurrentChannel = 0;
+ 834   2              return;
+ 835   2          }
+ 836   1                    
+ 837   1          ucPrevChannel =  stVDCColor.CurrentChannel;
+ 838   1          MUTE_ON();
+ 839   1              
+ 840   1      #if(_VIDEO_CHIP == _VDC_TB1334)
+ 841   1          CForceBackGroundToBlack();
+ 842   1              Delay_Xms(200);
+ 843   1          bChangeChannel = 1;
+ 844   1      #else     
+                  CModeResetTVMode();
+              
+              #endif    
+ 848   1      
+ 849   1              do
+ 850   1              {
+C51 COMPILER V8.16   TV                                                                    04/05/2012 11:15:29 PAGE 15  
+
+ 851   2             if (bNext)  // Change next channel
+ 852   2                 stVDCColor.CurrentChannel = (stVDCColor.CurrentChannel == ucmaxchannel) ? 0 : (stVDCColor.Curre
+             -ntChannel+1);
+ 853   2             else        // Change prev channel
+ 854   2                 stVDCColor.CurrentChannel = (stVDCColor.CurrentChannel == 0) ? ucmaxchannel : (stVDCColor.Curre
+             -ntChannel-1);
+ 855   2          
+ 856   2                 if (!CLoadChannelSkip(stVDCColor.CurrentChannel) || stVDCColor.CurrentChannel == ucPrevChannel)
+ 857   2                      break;
+ 858   2              }
+ 859   1              while(1);
+ 860   1      
+ 861   1          bChangeChannel = 1;
+ 862   1          CSetTVChannel(stVDCColor.CurrentChannel);  
+ 863   1          CShowTVNumber(stVDCColor.CurrentChannel, _SHOW_CH_TV_NUMBER | _SHOW_CH_TV_TYPE | _SHOW_CH_SOUND_TYPE);
+             -  //eric1221 mark
+ 864   1               _SET_CHANNEL_FOR_AUDIO(1);
+ 865   1         CModeResetTVNtscToPal();
+ 866   1      }
+ 867           /*
+ 868          void CPrevChannel(void)
+ 869          {   
+ 870              ucPrevChannel =  stVDCColor.CurrentChannel;
+ 871          
+ 872              CForceBackGroundToBlack();
+ 873              bChangeChannel = 1;
+ 874          
+ 875                  do
+ 876                  {
+ 877                 stVDCColor.CurrentChannel = (stVDCColor.CurrentChannel == 0) ? CloadMaxChannelNumber() : (stVDCColo
+             -r.CurrentChannel-1);
+ 878              
+ 879                     if (!CLoadChannelSkip(stVDCColor.CurrentChannel) || stVDCColor.CurrentChannel == ucPrevChannel)
+ 880                          break;
+ 881                  }
+ 882                  while(1);
+ 883          
+ 884              CSetTVChannel(stVDCColor.CurrentChannel);
+ 885              CShowTVNumber(stVDCColor.CurrentChannel,_SHOW_CH_TV_NUMBER | _SHOW_CH_TV_TYPE | _SHOW_CH_SOUND_TYPE);
+ 886          }
+ 887          
+ 888          //==========================================================================
+ 889          //
+ 890          //==========================================================================
+ 891          void CNextChannel(void)
+ 892          {
+ 893              ucPrevChannel =  stVDCColor.CurrentChannel;
+ 894          
+ 895              CForceBackGroundToBlack();
+ 896              bChangeChannel = 1;
+ 897          
+ 898                  do
+ 899                  {
+ 900                 stVDCColor.CurrentChannel = (stVDCColor.CurrentChannel == CloadMaxChannelNumber()) ? 0 : (stVDCColo
+             -r.CurrentChannel+1);
+ 901              
+ 902                     if (!CLoadChannelSkip(stVDCColor.CurrentChannel) || stVDCColor.CurrentChannel == ucPrevChannel)
+ 903                          break;
+ 904                  }
+ 905                  while(1);
+ 906          
+ 907              CSetTVChannel(stVDCColor.CurrentChannel);
+C51 COMPILER V8.16   TV                                                                    04/05/2012 11:15:29 PAGE 16  
+
+ 908              CShowTVNumber(stVDCColor.CurrentChannel,_SHOW_CH_TV_NUMBER | _SHOW_CH_TV_TYPE | _SHOW_CH_SOUND_TYPE);
+ 909          }
+ 910              */
+ 911          
+ 912          //==========================================================================
+ 913          //
+ 914          //==========================================================================
+ 915          
+ 916          #if(_NTSC_SEARCH_TABLE)
+              //==========================================================================
+              //
+              //==========================================================================
+              void CTvAutoSearch(void)
+              {
+                      BYTE ucSound = 0;
+                      WORD *temptr;
+                      BYTE ucmaxchannel = CloadMaxChannelNumber(0);
+                      BYTE ucminchannel = CloadMinChannelNumber();
+                      WORD iFreq        = _MIN_FREQ;
+                      BYTE ucNoChanel = 0x0ff;
+                      BYTE FirstChanel=1;
+                      WORD chann;
+                      BYTE i;
+                      temptr=ChanelTbl[_GET_CATV_AIR()];
+                      for(i=0;i<=ucmaxchannel;i++)
+                      CSaveChannelSkip(1, i);//060821
+              
+              #if(_VIDEO_CHIP == _VDC_TB1334)
+                  CStartSearch(1);
+              #endif
+                  // Read color and sound type
+                  if (0 == ucmaxchannel)
+                  {
+                      ucSound  = 0; //CLoadChannelSoundType(0); // Not use sound type
+                      ucTVType = CLoadChannelColorType(0); 
+                  }
+                  else
+                  {
+                      ucSound  = 0; //CLoadChannelSoundType(stVDCColor.CurrentChannel); // Not use sound type 
+                      ucTVType = CLoadChannelColorType(stVDCColor.CurrentChannel); 
+                  }
+              
+                  // Reset search max tv channel number
+                  pData[0] = ucminchannel; 
+                  CI2cWrite(_TV_MAX_CHANNEL_EEPROM_ADDR, _MAX_CHANNEL_ADDR, 1, pData);
+              
+                  stVDCColor.CurrentChannel = ucminchannel;
+                      ucPrevChannel = ucminchannel;
+              
+                  gmi_CI2CWrite9886(ucTVType, _TUNER_MUTE_ON, _SEARCH_CHANNEL_MODE);
+                  CTimerDelayXms(8);
+                              chann = ucminchannel;    
+              #if(_VIDEO_CHIP == _VDC_TB1334)
+                  CStartSearch(0);
+              #endif
+                  CShowAutoSerachTotal(chann);   // Show search tv channel number
+                      CAdjustBackgroundColor(0x00, 0x00, 0xFF);                               
+                       CScalerSetBit(_VDISP_CTRL_28, ~(_BIT5|_BIT3), _BIT5); // Set bluebackground off
+                  while(1)
+                  {
+                     chann=CLockChannel(chann,1);
+                      
+C51 COMPILER V8.16   TV                                                                    04/05/2012 11:15:29 PAGE 17  
+
+                      if(chann == 0x0ff)  
+                                      break;
+                      CSaveChannelSkip(0, chann);
+                       CSaveChannelData(temptr[chann] , ucSound , chann);
+                       if(ucNoChanel==0x0ff)
+                       {
+                              FirstChanel=chann;
+                             ucNoChanel=0;
+                       }
+                      CAdjustBackgroundColor(0x00, 0x00, 0x00);                               
+                      CScalerSetBit(_VDISP_CTRL_28, ~(_BIT5|_BIT3), _BIT3); // Set bluebackground off
+                       for(ucNoChanel=0;ucNoChanel<=100;ucNoChanel++)
+                              {
+                                  if (CKeyStopAutoSearch())
+                                    break; 
+                                      CTimerDelayXms(5);
+                              }
+                      CAdjustBackgroundColor(0x00, 0x00, 0xFF);                               
+                              CScalerSetBit(_VDISP_CTRL_28, ~(_BIT5|_BIT3), _BIT5); // Set bluebackground off
+                             ucNoChanel=0;
+                            chann=chann+1;
+                  }  // End while
+                  
+              
+              
+              #if(_CHANGE_CHANNEL_MTD == _CHANGE_CHANNEL_M2)//0227 gmi
+                  {
+                      BYTE ucChannelCount = 0;
+              
+                      chann--;
+                      for(ucChannelCount = chann; ucChannelCount < _MAX_CHANNEL_COUNT; ucChannelCount++)
+                      {
+                          CSaveChannelData((WORD)_MIN_FREQ | 0x8000, ucSound, ucChannelCount);
+                      }
+              
+                  }
+              #endif
+                  // Save search channel number
+                  pData[0] = chann;
+                  CI2cWrite(_TV_MAX_CHANNEL_EEPROM_ADDR, _MAX_CHANNEL_ADDR, 1, pData);
+                  CSetTVChannel(FirstChanel);
+                      stVDCColor.CurrentChannel=FirstChanel;
+                  bChangeChannel = 1;
+                  // Save current channel
+                  CEepromSaveVedioColor();    
+              
+                  #if(_IR_ENABLE)
+                  ucDetectIR_Cmd = 0;
+                  #endif
+              
+                  if(stOsdUserData.OsdTimeout > 4)
+                  {
+                      CTimerReactiveTimerEvent(SEC(stOsdUserData.OsdTimeout),COsdDispOsdTimerEvent);
+                  }
+                  else
+                  {
+                      CTimerCancelTimerEvent(COsdDispOsdTimerEvent);
+                  }
+              
+                  gmi_CI2CWrite9886(ucTVType, _TUNER_MUTE_OFF, _NORMAL_MODE); // set tv system
+              #if(_VIDEO_CHIP == _VDC_TB1334)
+                  CTimerDelayXms(100);
+C51 COMPILER V8.16   TV                                                                    04/05/2012 11:15:29 PAGE 18  
+
+                  if (gmi_CModeLocked())
+                      gmi_CSetVDCFreeRunMode(_VDC_FREE_RUN_MODE_TO_AUTO);
+                  else
+                      gmi_CSetVDCFreeRunMode((CHECK60HZ()) ? _VDC_FREE_RUN_MODE_TO_60HZ : _VDC_FREE_RUN_MODE_TO_50HZ);
+              #else
+                  CModeResetTVMode();   
+              #endif
+              }
+              
+              WORD CLockChannel(WORD chann, const bit bCLockMode)
+              {
+              
+                  WORD i   ,imax     = 0;
+                  BYTE SignalCounter,uccount  = 0;
+                  WORD *temptr;
+                  WORD iLockedFreq   = 0;
+                  BYTE IFState       = 0;
+                  BYTE ucTB1334Flag  = 0;
+                  WORD ucmaxchannel=CloadMaxChannelNumber(0);
+                      i=bCLockMode;
+                              if(_GET_CATV_AIR())
+                              imax = MAX_CHANNEL_AIR; //AIR start from 2 chanel
+                      else
+                              imax = MAX_CHANNEL_CATV;        //CATV start from 1 chanel
+              
+                  temptr=ChanelTbl[_GET_CATV_AIR()];
+              for(i =chann;i<imax;i++ )
+                      {
+                      CSaveChannelFreq(temptr[i], i);
+                      CSaveChannelColorType(i,ucTVType);
+                      CShowAutoSerachTotal(i);        //show channel number
+                      
+                      gmi_CSetTuner(_ADDR_TUNER, temptr[i]);
+              
+                      CShowAutoSearchSliderInOSD(temptr[i]);  // show current frequency
+                              SignalCounter=0;        
+                              for(uccount = 0; uccount < 5; uccount++)
+                              {
+                                      CTimerDelayXms(150);//150
+                                  if (CKeyStopAutoSearch())
+                                      {
+                                      CSaveChannelSkip(1, i);//060821
+                                     return 0x0ff; 
+                                      }
+                                          CI2cRead(0x88, 0x00, 1, pData);
+                                          IFState = pData[0];
+                                      IFState = (IFState) & (_BIT0|_BIT6);
+                                      if(IFState==(_BIT0|_BIT6))
+                                              SignalCounter++;
+                                      if(SignalCounter >= 3)                  
+                                              return i;
+                              }
+              
+                          if (temptr[i] > _MAX_FREQ)
+                              {
+                              CSaveChannelSkip(1, i);//060821
+                              return 0x0ff;
+                              }
+              
+                      
+              
+                      CSaveChannelSkip(1, i);//060821
+C51 COMPILER V8.16   TV                                                                    04/05/2012 11:15:29 PAGE 19  
+
+                                      
+                      }
+                              
+              
+                  return 0x0ff;  //Not Find Channel
+              
+              }
+              #else
+1102           /*
+1103          void CPrevChannel(void)
+1104          {   
+1105              ucPrevChannel =  stVDCColor.CurrentChannel;
+1106          
+1107              CForceBackGroundToBlack();
+1108              bChangeChannel = 1;
+1109          
+1110                  do
+1111                  {
+1112                 stVDCColor.CurrentChannel = (stVDCColor.CurrentChannel == 0) ? CloadMaxChannelNumber() : (stVDCColo
+             -r.CurrentChannel-1);
+1113              
+1114                     if (!CLoadChannelSkip(stVDCColor.CurrentChannel) || stVDCColor.CurrentChannel == ucPrevChannel)
+1115                          break;
+1116                  }
+1117                  while(1);
+1118          
+1119              CSetTVChannel(stVDCColor.CurrentChannel);
+1120              CShowTVNumber(stVDCColor.CurrentChannel,_SHOW_CH_TV_NUMBER | _SHOW_CH_TV_TYPE | _SHOW_CH_SOUND_TYPE);
+1121          }
+1122          
+1123          //==========================================================================
+1124          //
+1125          //==========================================================================
+1126          void CNextChannel(void)
+1127          {
+1128              ucPrevChannel =  stVDCColor.CurrentChannel;
+1129          
+1130              CForceBackGroundToBlack();
+1131              bChangeChannel = 1;
+1132          
+1133                  do
+1134                  {
+1135                 stVDCColor.CurrentChannel = (stVDCColor.CurrentChannel == CloadMaxChannelNumber()) ? 0 : (stVDCColo
+             -r.CurrentChannel+1);
+1136              
+1137                     if (!CLoadChannelSkip(stVDCColor.CurrentChannel) || stVDCColor.CurrentChannel == ucPrevChannel)
+1138                          break;
+1139                  }
+1140                  while(1);
+1141          
+1142              CSetTVChannel(stVDCColor.CurrentChannel);
+1143              CShowTVNumber(stVDCColor.CurrentChannel,_SHOW_CH_TV_NUMBER | _SHOW_CH_TV_TYPE | _SHOW_CH_SOUND_TYPE);
+1144          }
+1145              */
+1146          
+1147          //==========================================================================
+1148          //
+1149          //==========================================================================
+1150          void CTvAutoSearch(void)
+1151          {
+1152   1          BYTE ucSound = 0;
+1153   1          BYTE ucPRG        = 0;
+C51 COMPILER V8.16   TV                                                                    04/05/2012 11:15:29 PAGE 20  
+
+1154   1          BYTE ucmaxchannel = CloadMaxChannelNumber(0);
+1155   1              BYTE ucminchannel = CloadMinChannelNumber();
+1156   1          WORD iFreq        = _MIN_FREQ;
+1157   1              BYTE i,ucNoChanel;
+1158   1              for(i=0;i<=ucmaxchannel;i++)
+1159   1              CSaveChannelSkip(1, i);//060821
+1160   1            
+1161   1      #if(_VIDEO_CHIP == _VDC_TB1334)
+1162   1          CStartSearch(1);
+1163   1      #endif
+1164   1          // Read color and sound type
+1165   1          if (0 == ucmaxchannel)
+1166   1          {
+1167   2              ucSound  = 0; //CLoadChannelSoundType(0); // Not use sound type
+1168   2              ucTVType = CLoadChannelColorType(0); 
+1169   2          }
+1170   1          else
+1171   1          {
+1172   2              ucSound  = 0; //CLoadChannelSoundType(stVDCColor.CurrentChannel); // Not use sound type 
+1173   2              ucTVType = CLoadChannelColorType(stVDCColor.CurrentChannel); 
+1174   2          }
+1175   1      
+1176   1          // Reset search max tv channel number
+1177   1          pData[0] = ucminchannel; 
+1178   1          CI2cWrite(_TV_MAX_CHANNEL_EEPROM_ADDR, _MAX_CHANNEL_ADDR, 1, pData);
+1179   1      
+1180   1          stVDCColor.CurrentChannel = ucminchannel;
+1181   1              ucPrevChannel = ucminchannel;
+1182   1      
+1183   1          gmi_CI2CWrite9886(ucTVType, _TUNER_MUTE_ON, _SEARCH_CHANNEL_MODE);
+1184   1          CTimerDelayXms(8);
+1185   1      #if(_VIDEO_CHIP == _VDC_TB1334)
+1186   1          CStartSearch(0);
+1187   1      #endif
+1188   1          CShowAutoSerachTotal(ucPRG);   // Show search tv channel number
+1189   1        //   gmi_CSetVDCFreeRunMode(_VDC_FREE_RUN_MODE_TO_AUTO);
+1190   1                         
+1191   1              CAdjustBackgroundColor(0x00, 0x00, 0xFF);                               
+1192   1               CScalerSetBit(_VDISP_CTRL_28, ~(_BIT5|_BIT3), _BIT5); // Set bluebackground off
+1193   1      
+1194   1          while(1)
+1195   1          {
+1196   2              iFreq = CLockChannel(iFreq+40, 1); // CLockChannelUp(iFreq+20); 
+1197   2      
+1198   2              if(iFreq < 2)
+1199   2              {
+1200   3                  ucPRG = (ucPRG == 0) ? 0 : (ucPRG - 1);
+1201   3                  break;
+1202   3              }
+1203   2               CSaveChannelSkip(0, i); 
+1204   2              CSaveChannelData(iFreq,ucSound,ucPRG);
+1205   2              CAdjustBackgroundColor(0x00, 0x00, 0x00);                               
+1206   2              CScalerSetBit(_VDISP_CTRL_28, ~(_BIT5|_BIT3), _BIT3); // Set bluebackground off
+1207   2               for(ucNoChanel=0;ucNoChanel<=100;ucNoChanel++)
+1208   2                      {
+1209   3                          if (CKeyStopAutoSearch())
+1210   3                            break; 
+1211   3                              CTimerDelayXms(5);
+1212   3                      }
+1213   2              CAdjustBackgroundColor(0x00, 0x00, 0xFF);                               
+1214   2                      CScalerSetBit(_VDISP_CTRL_28, ~(_BIT5|_BIT3), _BIT5); // Set bluebackground off
+1215   2                     ucNoChanel=0;
+C51 COMPILER V8.16   TV                                                                    04/05/2012 11:15:29 PAGE 21  
+
+1216   2              
+1217   2              ucPRG++;
+1218   2              if(ucPRG > _MAX_CHANNEL_COUNT)
+1219   2              {
+1220   3                 ucPRG -= 1;
+1221   3                 break;
+1222   3              }
+1223   2      
+1224   2              CShowAutoSerachTotal(ucPRG);  // Show search tv channel number
+1225   2      
+1226   2          }  // End while
+1227   1      
+1228   1      #if(_CHANGE_CHANNEL_MTD == _CHANGE_CHANNEL_M2)//0227 gmi
+1229   1          {
+1230   2              BYTE ucChannelCount = 0;
+1231   2      
+1232   2              ucPRG++;
+1233   2              for(ucChannelCount = ucPRG; ucChannelCount < _MAX_CHANNEL_COUNT; ucChannelCount++)
+1234   2              {
+1235   3                  CSaveChannelData((WORD)_MIN_FREQ | 0x8000, ucSound, ucChannelCount);
+1236   3              }
+1237   2      
+1238   2          }
+1239   1      #endif
+1240   1          // Save search channel number
+1241   1          pData[0] = ucPRG;
+1242   1          CI2cWrite(_TV_MAX_CHANNEL_EEPROM_ADDR, _MAX_CHANNEL_ADDR, 1, pData);
+1243   1          CSetTVChannel(ucminchannel);
+1244   1          // Save current channel
+1245   1          CEepromSaveVedioColor();    
+1246   1      
+1247   1          bChangeChannel = 1;
+1248   1      
+1249   1          #if(_IR_ENABLE)
+1250   1          ucDetectIR_Cmd = 0;
+1251   1          #endif
+1252   1      
+1253   1          if(stOsdUserData.OsdTimeout > 4)
+1254   1          {
+1255   2              CTimerReactiveTimerEvent(SEC(stOsdUserData.OsdTimeout),COsdDispOsdTimerEvent);
+1256   2          }
+1257   1          else
+1258   1          {
+1259   2              CTimerCancelTimerEvent(COsdDispOsdTimerEvent);
+1260   2          }
+1261   1      
+1262   1          gmi_CI2CWrite9886(ucTVType, _TUNER_MUTE_OFF, _NORMAL_MODE); // set tv system
+1263   1      #if(_VIDEO_CHIP == _VDC_TB1334)
+1264   1          CTimerDelayXms(100);
+1265   1          if (gmi_CModeLocked())
+1266   1              gmi_CSetVDCFreeRunMode(_VDC_FREE_RUN_MODE_TO_AUTO);
+1267   1          else
+1268   1              gmi_CSetVDCFreeRunMode((CHECK60HZ()) ? _VDC_FREE_RUN_MODE_TO_60HZ : _VDC_FREE_RUN_MODE_TO_50HZ);
+1269   1      #else
+                  CModeResetTVMode();   
+              #endif
+1272   1      }
+1273          //==========================================================================
+1274          //bSearchAction:   0 --> Search down
+1275          //                 1 --> Search up
+1276          //==========================================================================
+1277          void CManualSearch(const bit bSearchAction, const BYTE ucCurrentChannel)
+C51 COMPILER V8.16   TV                                                                    04/05/2012 11:15:29 PAGE 22  
+
+1278          {
+1279   1          BYTE ucSound           = 0;
+1280   1       //   BYTE ucmaxchannel      = CloadMaxChannelNumber();
+1281   1          WORD iFreq             = 0;
+1282   1          WORD ucSatrtSearchFreq = 0;     
+1283   1           ucSatrtSearchFreq = CLoadChannelFreq(ucCurrentChannel);
+1284   1      
+1285   1      #if(_VIDEO_CHIP == _VDC_TB1334)
+1286   1          CStartSearch(1);
+1287   1      #endif
+1288   1      
+1289   1          gmi_CI2CWrite9886(ucTVType, _TUNER_MUTE_ON, _SEARCH_CHANNEL_MODE);
+1290   1          CTimerDelayXms(100);
+1291   1      #if(_VIDEO_CHIP == _VDC_TB1334)
+1292   1          gmi_CSetTuner(_ADDR_TUNER, _MIN_FREQ);
+1293   1          CTimerDelayXms(100);
+1294   1      #endif
+1295   1          gmi_CSetVDCFreeRunMode(_VDC_FREE_RUN_MODE_TO_AUTO);
+1296   1      
+1297   1          if (ucSatrtSearchFreq > _MAX_FREQ)
+1298   1              ucSatrtSearchFreq = _MAX_FREQ;
+1299   1          else if(ucSatrtSearchFreq < _MIN_FREQ)
+1300   1              ucSatrtSearchFreq = _MIN_FREQ;
+1301   1      
+1302   1      #if(_VIDEO_CHIP == _VDC_TB1334)
+1303   1          CStartSearch(0);
+1304   1      #endif
+1305   1      
+1306   1          if (bSearchAction)
+1307   1              iFreq = CLockChannel(ucSatrtSearchFreq + 40, 1);//  CLockChannelUp(ucSatrtSearchFreq + 5);
+1308   1          else
+1309   1              iFreq = CLockChannel(ucSatrtSearchFreq - 40, 0);//   CLockChannelDown(ucSatrtSearchFreq - 5);
+1310   1      
+1311   1          if (iFreq > 100)
+1312   1              CSaveChannelData(iFreq,CLoadChannelSoundType(ucCurrentChannel),ucCurrentChannel);
+1313   1        //  else  // eric 1214 modify for manual search channel
+1314   1          CSetTVChannel(ucCurrentChannel);
+1315   1      
+1316   1      #if(_OSD_TYPE == _OSD007)
+1317   1          #if(_TV_SEARCH_SHOW_TYPE == _TV_SEARCH_SHOW_FREQ)
+1318   1              CShowAutoSearchSliderInOSD(CLoadChannelFreq(stVDCColor.CurrentChannel));                         
+1319   1          #endif
+1320   1      #endif
+1321   1      
+1322   1          CTimerDelayXms(50);
+1323   1          if (gmi_CModeLocked())
+1324   1              {
+1325   2              if(GET_BURNIN_STATE()==BURNIN_ON)                
+1326   2                      CScalerSetBit(_VDISP_CTRL_28, ~_BIT5, _BIT5); // Set bluebackground off
+1327   2              else
+1328   2                      CScalerSetBit(_VDISP_CTRL_28, ~_BIT5, 0x00); // Set bluebackground off
+1329   2              }
+1330   1          #if(_IR_ENABLE)
+1331   1          ucDetectIR_Cmd = 0;
+1332   1          #endif
+1333   1      
+1334   1          if(stOsdUserData.OsdTimeout > 4)
+1335   1          {
+1336   2              CTimerReactiveTimerEvent(SEC(stOsdUserData.OsdTimeout),COsdDispOsdTimerEvent);
+1337   2          }
+1338   1          else
+1339   1          {
+C51 COMPILER V8.16   TV                                                                    04/05/2012 11:15:29 PAGE 23  
+
+1340   2              CTimerCancelTimerEvent(COsdDispOsdTimerEvent);
+1341   2          }
+1342   1      
+1343   1          gmi_CI2CWrite9886(ucTVType, _TUNER_MUTE_OFF, _NORMAL_MODE);
+1344   1      #if(_VIDEO_CHIP == _VDC_TB1334)
+1345   1          CTimerDelayXms(100);
+1346   1          if (gmi_CModeLocked())
+1347   1              gmi_CSetVDCFreeRunMode(_VDC_FREE_RUN_MODE_TO_AUTO);
+1348   1          else
+1349   1              gmi_CSetVDCFreeRunMode((CHECK60HZ()) ? _VDC_FREE_RUN_MODE_TO_60HZ : _VDC_FREE_RUN_MODE_TO_50HZ);
+1350   1      #else
+                  CModeResetTVMode();   
+              #endif
+1353   1      }
+1354          #if(_VIDEO_CHIP == _VDC_TB1334)
+1355          #define _FLAG_RESET        0x00
+1356          #define _IF_H_LOCK         0x60
+1357          #define _AFT_W_OK          0x01
+1358          #define _AFT_C_LOWER       0x02
+1359          #define _AFT_C_UPPER       0x00
+1360          
+1361          #define _SKIP_SIZE6        0x06
+1362          #define _SKIP_SIZE2        0x02
+1363          #define _SKIP_SIZE_NORMAL  0x01
+1364          
+1365          #endif
+1366          
+1367          WORD CLockChannel(WORD iStartFreq, const bit bCLockMode)
+1368          {
+1369   1      
+1370   1          WORD iLockedFreq   = 0;
+1371   1          BYTE IFState       = 0;
+1372   1          BYTE ucTB1334Flag  = 0;
+1373   1                             
+1374   1          while(1)
+1375   1          {
+1376   2              gmi_CSetTuner(_ADDR_TUNER, iStartFreq);
+1377   2      
+1378   2      
+1379   2      #if(_OSD_TYPE == _OSD007)
+1380   2      
+1381   2          #if(_TV_SEARCH_SHOW_TYPE == _TV_SEARCH_SHOW_FREQ)
+1382   2              CShowAutoSearchSliderInOSD((iStartFreq));                         
+1383   2          #else
+                      CShowAutoSearchSliderInOSD((BYTE)((iStartFreq-_MIN_FREQ)/168));
+                  #endif
+1386   2      
+1387   2      #else
+              
+                      CShowAutoSearchSliderInOSD((BYTE)((iStartFreq-_MIN_FREQ)/168));
+               
+              #endif
+1392   2      
+1393   2             
+1394   2                      CTimerDelayXms(30);      
+1395   2                                      
+1396   2                      CI2cRead(0x88, 0x00, 1, pData);
+1397   2              IFState = pData[0];
+1398   2      
+1399   2              // Step1
+1400   2              if ((IFState & _AFT_C_LOWER) == _AFT_C_LOWER)
+1401   2                   ucTB1334Flag |= 0x01;
+C51 COMPILER V8.16   TV                                                                    04/05/2012 11:15:29 PAGE 24  
+
+1402   2              // Step4
+1403   2              else if((IFState & _AFT_C_LOWER) == _AFT_C_UPPER)
+1404   2                   ucTB1334Flag |= 0x08;
+1405   2              // Step2/3
+1406   2              if ((IFState & _IF_H_LOCK) == _IF_H_LOCK)
+1407   2              {   // Step2
+1408   3                  ucTB1334Flag |= 0x02;
+1409   3      
+1410   3                  // Step3
+1411   3                  if ((IFState & _AFT_W_OK) == _AFT_W_OK)
+1412   3                     ucTB1334Flag |= 0x04;
+1413   3              }
+1414   2              else
+1415   2                  ucTB1334Flag = _FLAG_RESET;
+1416   2      
+1417   2              switch(ucTB1334Flag)
+1418   2              {
+1419   3              default:
+1420   3                  ucTB1334Flag = _FLAG_RESET;   
+1421   3              case _FLAG_RESET: // IF&H not locked
+1422   3              case 0x01:
+1423   3                  if (bCLockMode)  // Search up
+1424   3                      iStartFreq += _SKIP_SIZE6;
+1425   3                  else             // Search down
+1426   3                      iStartFreq -= _SKIP_SIZE2;
+1427   3                  break;
+1428   3      
+1429   3              case 0x03:    // IF&H locked
+1430   3                  iStartFreq = (bCLockMode) ? (iStartFreq + _SKIP_SIZE2) : (iStartFreq - _SKIP_SIZE2);
+1431   3                  break;
+1432   3                     
+1433   3              case 0x07:    // IF&H locked & AFW-W OK
+1434   3                  if (bCLockMode)  // Search up
+1435   3                      iStartFreq += _SKIP_SIZE_NORMAL;
+1436   3                  else             // Search down
+1437   3                      return iStartFreq;
+1438   3                  break; 
+1439   3      
+1440   3      //        case 0x07:    // IF&H locked & AFW-W OK
+1441   3              case 0x0f:    // Channel lock complete  
+1442   3                  return iStartFreq;
+1443   3              }
+1444   2      
+1445   2              if (CKeyStopAutoSearch())
+1446   2                 return 0; 
+1447   2       
+1448   2              if (bCLockMode) // Search up
+1449   2              {
+1450   3                  if (iStartFreq > _MAX_FREQ)
+1451   3                      return 1;
+1452   3              }
+1453   2              else            // Search down
+1454   2              {
+1455   3                  if (iStartFreq < _MIN_FREQ)
+1456   3                      return 1;
+1457   3              }
+1458   2      
+1459   2          }
+1460   1          return 1;  //Not Find Channel
+1461   1      
+1462   1      }
+1463          
+C51 COMPILER V8.16   TV                                                                    04/05/2012 11:15:29 PAGE 25  
+
+1464          #endif
+1465          
+1466          //==========================================================================
+1467          //bSearchAction:   0 --> Tuning down
+1468          //                 1 --> Tuning up
+1469          //==========================================================================
+1470          void CTuningCurrentChannel(const bit bSearchAction, const BYTE ucCurrentChannel)
+1471          {
+1472   1          bit bSkip  = CLoadChannelSkip(ucCurrentChannel);
+1473   1          WORD iFreq = CLoadChannelFreq(ucCurrentChannel);
+1474   1      
+1475   1          if ((iFreq < _MIN_FREQ || iFreq > _MAX_FREQ) && 0 == CloadMaxChannelNumber(0))
+1476   1              iFreq = _MIN_FREQ;
+1477   1      
+1478   1          if (bSearchAction) // Tuning up
+1479   1          {
+1480   2              if (iFreq < _MAX_FREQ)
+1481   2                  iFreq++;
+1482   2          }
+1483   1          else  // Tuning down
+1484   1          {
+1485   2              if (iFreq > _MIN_FREQ)
+1486   2                  iFreq--;
+1487   2          }
+1488   1      
+1489   1          gmi_CSetTuner(_ADDR_TUNER, iFreq);
+1490   1          CSaveChannelFreq((iFreq | ((bSkip) ? 0x8000 : 0x0000)), ucCurrentChannel);
+1491   1      }
+1492          
+1493          //==========================================================================
+1494          //  bCLockMode --> 1: lock up         0 : lock down
+1495          //==========================================================================
+1496          //==========================================================================
+1497          void CInitTV()
+1498          {
+1499   1      
+1500   1      //     TUNER_PWR_ON();
+1501   1           CTimerDelayXms(50);
+1502   1           CSetTVChannel(stVDCColor.CurrentChannel);
+1503   1           ucPrevChannel = stVDCColor.CurrentChannel;
+1504   1           ucVideoNoModeTime = 0;       
+1505   1           gmi_CI2CWrite9886(ucTVType, _TUNER_MUTE_OFF, _NORMAL_MODE);
+1506   1      }
+1507          
+1508          //==========================================================================
+1509          #endif
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   2029    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =      4    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----      42
+   IDATA SIZE       =      1    ----
+   BIT SIZE         =      1       9
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
