@@ -1,0 +1,406 @@
+C51 COMPILER V8.16   MAIN                                                                  04/05/2012 11:15:22 PAGE 1   
+
+
+C51 COMPILER V8.16, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Output\Main.obj
+COMPILER INVOKED BY: D:\安装文件\keil\C51\BIN\C51.EXE Code\Main.c OPTIMIZE(9,SIZE) BROWSE DEFINE(CMOS_CHIP_TYPE=PCB_2025
+                    -LV13) PRINT(.\Output\Main.lst) OBJECT(.\Output\Main.obj)
+
+line level    source
+
+   1          //----------------------------------------------------------------------------------------------------
+   2          // Copyright of Realtek SemiConductor Corp. 
+   3          // Model   : RTD2533B & RTD2023LS
+   4          // Version : V3.00 (10.18.2005)
+   5          // 
+   6          //----------------------------------------------------------------------------------------------------
+   7          
+   8          //----------------------------------------------------------------------------------------------------
+   9          // ID Code      : Main.c No.0002
+  10          // Update Note  : 
+  11          //
+  12          //----------------------------------------------------------------------------------------------------
+  13          
+  14          #define __MAIN__
+  15          
+  16          #include "Header\Include.h"
+  17          
+  18          
+  19          void CMainUserInitial(void)
+  20          {
+  21   1              // User can make some initial settings at firmware startup
+  22   1          CLR_KEYREPEATENABLE();
+  23   1          CLR_PANELPOWERSTATUS();
+  24   1          CLR_LIGHTPOWERSTATUS();
+  25   1          CLR_FRAMESYNCSTATUS();
+  26   1          CLR_POWERSWITCH();
+  27   1          CLR_FIRST_ADCCLOCK();
+  28   1      
+  29   1              
+  30   1      #if(_HDMI_SUPPORT == _ON)
+                  CLR_HDMIINPUT();    
+                  CLR_AUDIOPLLLOCKREADY();
+                  CLR_AVRESUME();
+                  CLR_AUDIOWAITINGTIMEOUT();
+              #endif
+  36   1      
+  37   1          SET_FIRST_LOADFONT();
+  38   1      #if(_AUTO_SCAN_SOURCE)
+                  SET_SOURCE_AUTOCHANGE();
+              #endif
+  41   1          
+  42   1          SET_PRE_VGA_CONNECT(bVGACONNECT);
+  43   1      #if(_HDMI_SUPPORT == _ON)
+                  SET_PRE_HDMI_CONNECT(bHDMICONNECT);
+              #elif(_TMDS_SUPPORT == _ON)
+                  SET_PRE_DVI_CONNECT(bDVICONNECT);
+              #endif
+  48   1      
+  49   1      #if(_SCALER_TYPE == _RTD2547D)
+                  CLR_INTERLACE_MODE();
+              #if(_FRC_SUPPORT == _ON)
+                  CLR_FRCTATUS();
+              #if(_FIELD_MERGE_SUPPORT == _ON)
+                  CLR_FIELDMERGE_MODE();
+C51 COMPILER V8.16   MAIN                                                                  04/05/2012 11:15:22 PAGE 2   
+
+              #endif
+              #endif
+              #endif
+  58   1          CLR_USE_TRANSITION_RESULT();
+  59   1          ucCurrState = _PWOFF_STATE;
+  60   1      #if(_AUTO_POWER_DOWN && _VIDEO_TV_SUPPORT)
+  61   1          ucMinuteCount       = 0;
+  62   1          ucAutoPowerDownTime = _GET_POWER_DOWN_TIME() * 15;
+  63   1          if (0 == ucAutoPowerDownTime || !GET_POWERSTATUS()) // Auto power down time off
+  64   1          {
+  65   2              ucAutoPowerDownTime = 0xff;
+  66   2          }
+  67   1      #endif
+  68   1         
+  69   1      #if(_OSD_TYPE == _OSD007)
+  70   1       #if(_OFF == _OSD_POSITION_ADJ_CTRL)
+  71   1          stOsdUserData.OsdHPos = 50;
+  72   1          stOsdUserData.OsdVPos = 50;
+  73   1       #endif
+  74   1      #endif
+  75   1      
+  76   1      if(Panel.DHWidth<=1024&&Panel.DVHeight<=768)
+  77   1              _SET_OSD_SIZE(0);
+  78   1      }
+  79          
+  80          
+  81          //------------------------------------------------------------
+  82          bit CMainDetectSystemPower(void)
+  83          {
+  84   1      #if(_RESET_TYPE == _RESET_IN)
+              
+                  if(!bLVRPOWERDETECT);
+                      return _FALSE;
+              
+              #endif
+  90   1      
+  91   1      #if(_SYSTEMPOWER_DETECT_SUPPORT == _ON)
+              
+                  // It's an example F/W for RTD2120.
+                  MCU_ADC_CTRL_FF0B = 0x80;
+                  while((MCU_ADC_CTRL_FF0B & _BIT7) != 0x00);
+              
+                  if((bSYSTEMPOWERDETECT & 0xfc) < 0xe0)
+                      return _FALSE;
+              
+              #endif
+ 101   1      
+ 102   1          return _TRUE;
+ 103   1      }
+ 104          
+ 105          
+ 106          //------------------------------------------------------------
+ 107          bit CMainResetCheck(void) //V306 modify
+ 108          {
+ 109   1      #if((_RESET_CHECK_SUPPORT == _ON) && (_SCALER_TYPE == _RTD2525L))
+              
+                  // The Reset Check for RTD2525L.
+                  while(!GETSCALERSDIO3())
+                  {
+                      if(bSCALERSCLK)
+                          CLRSCALERSCLK();
+                      else
+C51 COMPILER V8.16   MAIN                                                                  04/05/2012 11:15:22 PAGE 3   
+
+                          SETSCALERSCLK();
+                  }
+              
+                  CScalerRead(_ID_REG_00, 1, pData, _NON_AUTOINC);
+              
+                  if((pData[0] != 0x31) || (!((bit)CScalerGetBit(_HOST_CTRL_01, _BIT6))))
+                      return _FALSE;
+              
+              #endif  // End of #if((_RESET_CHECK_SUPPORT == _ON) && (_SCALER_TYPE == _RTD2525L))
+ 126   1      
+ 127   1          return _TRUE;
+ 128   1      }
+ 129          
+ 130          //------------------------------------------------------------
+ 131          // eric 1227 add for check input source
+ 132          void CCheckInputSource(void)
+ 133          {
+ 134   1          bit bErrInputSource = 0;
+ 135   1      
+ 136   1          switch(_GET_INPUT_SOURCE())
+ 137   1          {
+ 138   2      #if(!_VGA_SUPPORT)
+                  case _SOURCE_VGA:
+                      bErrInputSource = 1;
+                      break;
+              #endif
+ 143   2      
+ 144   2      #if(!_TMDS_SUPPORT)
+ 145   2          case _SOURCE_DVI:
+ 146   2              bErrInputSource = 1;
+ 147   2              break;
+ 148   2      #endif 
+ 149   2         
+ 150   2      #if(!_HDMI_SUPPORT)
+ 151   2          case _SOURCE_HDMI:
+ 152   2              bErrInputSource = 1;
+ 153   2              break;
+ 154   2      #endif    
+ 155   2      
+ 156   2      #if(!_VIDEO_SUPPORT)
+                  case _SOURCE_VIDEO_AV:
+                  case _SOURCE_VIDEO_SV:
+                 // case _SOURCE_VIDEO_YUV:
+                  case _SOURCE_VIDEO_SCART:
+                  case _SOURCE_VIDEO_DVD:
+                      bErrInputSource = 1;
+                      break;
+              #endif  
+ 165   2        
+ 166   2      #if(!_VIDEO_TV_SUPPORT)
+                  case _SOURCE_VIDEO_TV:
+                      bErrInputSource = 1;
+                      break;
+              #endif
+ 171   2      
+ 172   2      #if(!_YPBPR_SUPPORT)
+ 173   2          case _SOURCE_YPBPR:
+ 174   2              bErrInputSource = 1;
+ 175   2              break;
+ 176   2      #endif
+ 177   2          }
+ 178   1                 
+C51 COMPILER V8.16   MAIN                                                                  04/05/2012 11:15:22 PAGE 4   
+
+ 179   1          if (bErrInputSource)
+ 180   1          {
+ 181   2              _SET_INPUT_SOURCE(_NORMAL_SOURCE);
+ 182   2              CEepromSaveSystemData();
+ 183   2          }
+ 184   1      }
+ 185          //------------------------------------------------------------
+ 186          void CMainSystemInitial(void)
+ 187          {
+ 188   1      
+ 189   1          // Initial MCU
+ 190   1          CMcuInitial();
+ 191   1              pData[3]=PNL3;
+ 192   1              pData[2]=PNL2;
+ 193   1              pData[1]=PNL1;
+ 194   1              
+ 195   1      #if(DVD_EN)
+ 196   1              PanelIndex=((pData[1])<<2)|((pData[2])<<1)|((pData[3])<<0);
+ 197   1              PanelIndex=(~PanelIndex)&0x07;
+ 198   1      #else
+                      PanelIndex=(PNL0<<3)|((pData[1])<<2)|((pData[2])<<1)|((pData[3])<<0);
+                      PanelIndex=(~PanelIndex)&0x0f;
+              #endif
+ 202   1             Panel=PanelArray[PanelIndex];
+ 203   1             Panel=PanelArray[PanelIndex];
+ 204   1      #if(_IR_ENABLE)
+ 205   1          gmi_CStopIR();
+ 206   1      #endif
+ 207   1          // Initial timer events
+ 208   1          CTimerInitialTimerEvent();
+ 209   1      
+ 210   1          MUTE_ON();
+ 211   1          CPowerLightPowerOff();
+ 212   1          CPowerPanelPowerOff();
+ 213   1          CLR_LIGHTPOWERSTATUS();
+ 214   1      #if (_VIDEO_TV_SUPPORT)
+ 215   1      //    TUNER_PWR_OFF();                 //
+ 216   1      #endif
+ 217   1      
+ 218   1      #if(_VIDEO_SUPPORT == _ON)
+ 219   1       #if(_VIDEO_CHIP == _VDC_TB1334)
+ 220   1          VideoDecAddress = 0;  // Only select 0,for TB1334 source AV/SV
+ 221   1       #else
+                  VideoDecAddress = _VIDEODEVICE;
+               #endif
+ 224   1          gmi_CVDCOff();
+ 225   1      #endif
+ 226   1              
+ 227   1          // Check eeprom and load eeprom settings
+ 228   1          CEepromStartupCheck();
+ 229   1          CCheckInputSource();  // eric 1227 add for check input source
+ 230   1      
+ 231   1      
+ 232   1      #if(_VIDEO_TV_SUPPORT)
+ 233   1          ucVideoNoModeTime = 252;
+ 234   1      #endif    //#if(_VIDEO_TV_SUPPORT)
+ 235   1      
+ 236   1          while(!CMainDetectSystemPower()); //V306 modify
+ 237   1      
+ 238   1      #ifdef _SII164_INIT_SUPPORT
+                  CModeInitSiI164();
+              #endif
+C51 COMPILER V8.16   MAIN                                                                  04/05/2012 11:15:22 PAGE 5   
+
+ 241   1      
+ 242   1          // Scaler reset
+ 243   1      #if(((_SCALER_TYPE == _RTD2023S) || (_SCALER_TYPE == _RTD2023S_VB) || (_SCALER_TYPE == _RTD2547D)) && (_RE
+             -SET_TYPE == _RESET_IN))
+                  CScalerResetInForRTD2023();
+              #endif
+ 246   1      
+ 247   1      #if((_SCALER_TYPE == _RTD2023L) || (_SCALER_TYPE == _RTD2023S) || (_SCALER_TYPE == _RTD2023L_VB) || (_SCAL
+             -ER_TYPE == _RTD2023S_VB))
+                  CScalerInitialForRTD2023();
+              #endif
+ 250   1          // Initial scaler settings
+ 251   1          CScalerInitial();
+ 252   1          
+ 253   1          // Initial key scan status
+ 254   1          CKeyInitial();
+ 255   1          
+ 256   1          // Initial source input port settings
+ 257   1      //    CSourceInitialInputPort();
+ 258   1      
+ 259   1          // DAC Chip reset
+ 260   1      #if(_SCALER_TYPE == _RTD2547D) 
+              #if(_DAC_SUPPORT == _ON)
+                  CHdmiResetDAC();
+              #endif
+              #endif
+ 265   1      
+ 266   1          // Initial user settings
+ 267   1          CMainUserInitial();
+ 268   1      
+ 269   1          //CVideoInitial();
+ 270   1          CInitInputSource();
+ 271   1      
+ 272   1      #if(_RS232)
+ 273   1              CUartInit();
+ 274   1      #endif
+ 275   1          
+ 276   1          // Add ddcci debug
+ 277   1      #if(_ISPACK && _ISPACK_MCU == _ISPACK_TYPE)
+ 278   1          Init_DDCCI();
+ 279   1      #endif
+ 280   1      
+ 281   1      #if(_DDC_TYPE != _DDC_NONE)
+                  DDCInit();
+              #endif    
+ 284   1      
+ 285   1      #if(_NEW_OSD_FUNC == 1)
+ 286   1          CheckLanguage();
+ 287   1      #endif
+ 288   1          
+ 289   1          // Enable IR interrupt
+ 290   1      #if(_IR_ENABLE)
+ 291   1          gmi_CStartIR();
+ 292   1      #endif
+ 293   1      
+ 294   1      #if(IR_Test_EN== _ON)    
+                         _SET_INPUT_SOURCE(_SOURCE_VIDEO_TV);
+                        SET_POWERSTATUS();
+              #endif
+ 298   1      
+ 299   1               CAdjustColorPalette(tPALETTE_0);
+ 300   1              // _SET_INPUT_SOURCE(_SOURCE_VIDEO_TV);//_SOURCE_VIDEO_AV;//_SOURCE_VGA; //_SOURCE_VIDEO_AV
+C51 COMPILER V8.16   MAIN                                                                  04/05/2012 11:15:22 PAGE 6   
+
+ 301   1               _SET_OSD_DOUBLE_STATE(_OSD_NORMAL_STATE);//_OSD_DOUBLE_STATE, _OSD_NORMAL_STATE
+ 302   1               SET_FAC_STATE(0);
+ 303   1        if(GET_BURNIN_STATE()==BURNIN_ON&&GET_POWERSTATUS()==0)
+ 304   1              {
+ 305   2              SET_NOSIGNAL_INFO(0);
+ 306   2              SET_POWERSWITCH();
+ 307   2              }       
+ 308   1      if(_GET_FAC_POWER_SET()==0)
+ 309   1                      CLR_POWERSTATUS();
+ 310   1      else if (_GET_FAC_POWER_SET()==1)
+ 311   1      {
+ 312   2         if(!GET_POWERSTATUS())
+ 313   2                    SET_POWERSWITCH();
+ 314   2      }
+ 315   1      
+ 316   1                SET_MUTE_STATE(STATE_MUTEOFF);
+ 317   1                SET_BURNIN_STATE(BURNIN_OFF);
+ 318   1                 SET_DO_SHOW_NOTE(0);
+ 319   1                 _SET_CHANNEL_FOR_AUDIO(0);
+ 320   1                         _SET_INPUT_SOURCE(_SOURCE_VIDEO_TV);
+ 321   1      
+ 322   1      }
+ 323          //--------------------------------------------------
+ 324          // Main Process
+ 325          //--------------------------------------------------
+ 326          void main(void)
+ 327          {
+ 328   1              bit temp = 0;
+ 329   1          do
+ 330   1          {
+ 331   2              CMainSystemInitial();
+ 332   2              //-----------------------------------------------------------------------------
+ 333   2              MCU_PORT6_OE_FF04 = MCU_PORT6_OE_FF04 &(~_BIT7);
+ 334   2         //------------------------------------------------------------------------------                             
+ 335   2              while(CMainDetectSystemPower() && CMainResetCheck()) //V306 modify
+ 336   2              {
+ 337   3                  //CMiscIspDebugProc();
+ 338   3      
+ 339   3                  #if(_DDC_TYPE != _DDC_NONE)
+                          DDCProc();
+                          #endif
+ 342   3      
+ 343   3                  CTimerHandler();
+ 344   3                  CKeyHandler();
+ 345   3                  CMiscIspDebugProc();
+ 346   3                              
+ 347   3      #if(_VIDEO_SUPPORT && _VIDEO_CHIP != _VDC_TB1334)
+                          if (_GET_INPUT_SOURCE() != _SOURCE_VGA && 
+                              _GET_INPUT_SOURCE() != _SOURCE_DVI && 
+                              _GET_INPUT_SOURCE() != _SOURCE_HDMI && 
+                              _GET_INPUT_SOURCE() != _SOURCE_YPBPR)
+                          {        
+                              CVideoModeHandler();
+                          }
+                          else
+              #endif
+ 357   3                                      if (temp)
+ 358   3                                              {
+ 359   4                  CModeHandler();
+ 360   4                  COsdHandler();
+ 361   4                                              }
+ 362   3      
+C51 COMPILER V8.16   MAIN                                                                  04/05/2012 11:15:22 PAGE 7   
+
+ 363   3              }
+ 364   2      
+ 365   2          }
+ 366   1          while(_TRUE);
+ 367   1      }
+ 368          //--------------------------------------------------
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    458    ----
+   CONSTANT SIZE    =   4609    ----
+   XDATA SIZE       =    233    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     18    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----       2
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
