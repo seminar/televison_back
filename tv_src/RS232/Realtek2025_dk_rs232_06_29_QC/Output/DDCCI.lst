@@ -1,0 +1,1224 @@
+C51 COMPILER V8.16   DDCCI                                                                 04/05/2012 11:15:33 PAGE 1   
+
+
+C51 COMPILER V8.16, COMPILATION OF MODULE DDCCI
+OBJECT MODULE PLACED IN .\Output\DDCCI.obj
+COMPILER INVOKED BY: D:\安装文件\keil\C51\BIN\C51.EXE Lib\DDCCI.C OPTIMIZE(9,SIZE) BROWSE DEFINE(CMOS_CHIP_TYPE=PCB_2025
+                    -LV13) PRINT(.\Output\DDCCI.lst) OBJECT(.\Output\DDCCI.obj)
+
+line level    source
+
+   1          #define __DDCCI__
+   2          #include <string.h>
+   3          #include "Header\Include.h"
+   4          
+   5          #define _MODE_FIRST                 252
+   6          #define _MODE_EXIST                 253
+   7          #define _MODE_NOSUPPORT             254
+   8          #define _MODE_NOSIGNAL              255
+   9          
+  10          #define GET_COLOR_TEMP_TYPE()           (stSystemData.ColorTemp & (_BIT3 | _BIT2 | _BIT1 | _BIT0))
+  11          #define SET_COLOR_TEMP_TYPE(x)          (stSystemData.ColorTemp = ((stSystemData.ColorTemp & ~(_BIT3 | _BI
+             -T2 | _BIT1 | _BIT0)) | x))
+  12          
+  13          sbit bDDCSCLVGA = P3^0;
+  14          #define bDDCSCLDVI    (_MCU_PORT56)
+  15           //---------------------------------------------------------------------------------------
+  16          void Init_DDCCI()
+  17          {
+  18   1      
+  19   1      #if(_MCU_TYPE == _MYSON_MTV312 || _MCU_TYPE == _MYSON_MTV512)
+              
+                      MCU_IICCTR_F00         = 0x00;    // Enable IIC Interface and define ddc2 active at HSDA/HSCL
+                      MCU_INTEN_F04          = 0xc0;    // Detect WslvA1 IIC Stop Condition
+                      MCU_INTFLG_F48         = 0x00;    // Clear IIC Interrupt register
+                      MCU_CTRSLVB_F0A        = 0x00;    // Define IIC Protocal Slave Address Bit
+                  // Mark by eric 0615  move to initial mcu to initial this port
+                      MCU_DDCCTRA1_F06       = 0x00;    // Disable DDC1
+                      MCU_SLVA1ADR_F07       = 0x80 | (0xa0>>1);  // DDC Slave A1 address
+                      MCU_DDCCTRA2_F86       = 0x50;    // Enable DDC1 and DDCRAM 128 Access
+                      MCU_SLVA2ADR_F87       = 0x80 | (0xa0>>1);     // DDC Slave A2 address  
+                      MCU_SLVBADR_F09        = 0x80 | (0x6e>>1);
+              
+              #elif(_MCU_TYPE == _RTD_2120)
+  33   1      
+  34   1              MCU_I2C_STATUS_FF2B    = 0x00;
+  35   1              MCU_I2C_IRQ_CTRL_FF2C  = 0x0c;
+  36   1              MCU_I2C_SET_SLAVE_FF27 = 0x6E;
+  37   1          MCU_OPTION_FF38        = 0x80; 
+  38   1      
+  39   1      #endif
+  40   1      
+  41   1              EX1 = 1;
+  42   1      }
+  43          //---------------------------------------------------------------------------------------
+  44          #if(_MCU_TYPE == _MYSON_MTV312 || _MCU_TYPE == _MYSON_MTV512)
+              void ReceiveEDIDINT1(void) interrupt 2
+              {
+                     unsigned char tempflag;
+              
+                     tempflag = M512_IIC_INTFLG;
+              
+                     EA  = 0;
+                     EX1 = 0;                    
+                     if(tempflag & RCBI)          // SLAVEB Interrupt
+C51 COMPILER V8.16   DDCCI                                                                 04/05/2012 11:15:33 PAGE 2   
+
+                     {
+                          DDCCI_RxInt();
+                          M512_IIC_INTFLG = tempflag & (~RCBI);  //Clear DDCRAMA IIC Stop Interrupt detect
+                     }
+                     else if(tempflag & TXBI)     // SLAVEB Interrupt
+                     {
+                          DDCCI_TxInt();
+                          M512_IIC_INTFLG = tempflag & (~TXBI);  //Clear DDCRAMA IIC Stop Interrupt detect
+                     }
+              
+                     EX1 = 1;
+                     EA  = 1;
+              }
+              //---------------------------------------------------------------------------------------------
+              #elif(_MCU_TYPE == _RTD_2120)
+  69          
+  70          void ReceiveEDIDINT1(void) interrupt 2
+  71          {
+  72   1              BYTE tempflag;
+  73   1              
+  74   1              tempflag = MCU_I2C_STATUS_FF2B;
+  75   1              EA  = 0;
+  76   1      
+  77   1      
+  78   1          if(tempflag & DINI)     // SLAVEB Interrupt
+  79   1              {
+  80   2                      DDCCI_RxInt();
+  81   2                      MCU_I2C_STATUS_FF2B = tempflag & (~DINI);  //Clear DDCRAMA IIC Stop Interrupt detect
+  82   2              }
+  83   1              else if(tempflag & DOUTI)           // SLAVEB Interrupt
+  84   1              {
+  85   2                      DDCCI_TxInt();
+  86   2                      MCU_I2C_STATUS_FF2B = tempflag & (~DOUTI);  //Clear DDCRAMA IIC Stop Interrupt detect
+  87   2          }
+  88   1          EA  = 1;
+  89   1      }
+  90          #endif
+  91          
+  92          void DDCCI_RxInt()
+  93          {
+  94   1      #if(_MCU_TYPE == _MYSON_MTV312 || _MCU_TYPE == _MYSON_MTV512)
+                   unsigned char rxByte = M512_IIC_TXRCBBUF;
+              #elif(_MCU_TYPE == _RTD_2120)
+  97   1           unsigned char rxByte = MCU_I2C_DATA_IN_FF29;
+  98   1      #endif
+  99   1      
+ 100   1           switch(rxStatus)
+ 101   1           {
+ 102   2                  case DDC2B_CLEAR:
+ 103   2      
+ 104   2      #if(_MCU_TYPE == _MYSON_MTV312 || _MCU_TYPE == _MYSON_MTV512)
+                              if (rxByte == DDC2B_SRC_ADDRESS)
+                              {
+                                   rxStatus = DDC2B_SRCADDRESS;
+                                   ucDDCCI_CheckSum = INITRxCK;
+                                   ucDDCCI_RxIndex  = 0;
+                              }
+              
+                              break;
+              
+              #elif(_MCU_TYPE == _RTD_2120)
+ 115   2      
+C51 COMPILER V8.16   DDCCI                                                                 04/05/2012 11:15:33 PAGE 3   
+
+ 116   2                      if ( MCU_I2C_SUB_IN_FF28 == DDC2B_SRC_ADDRESS )
+ 117   2                      {
+ 118   3                          rxStatus = DDC2B_SRCADDRESS;
+ 119   3                          ucDDCCI_CheckSum = INITRxCK;
+ 120   3                      }
+ 121   2                      else
+ 122   2                      {
+ 123   3                          DDCCI_InitRx();
+ 124   3                          break;
+ 125   3                      }
+ 126   2      
+ 127   2      #endif
+ 128   2                  // getting the length...
+ 129   2                  case DDC2B_SRCADDRESS:
+ 130   2                      // get the length
+ 131   2                      ucDDCCI_RxCount = rxByte & (~DDC2Bi_CONTROL_STATUS_FLAG);
+ 132   2                      // ...and if yes save the received byte in the rxBuffer
+ 133   2                      // and update the pointers...
+ 134   2                      ucDDCCI_RxBuf[ucDDCCI_RxIndex++] = rxByte;
+ 135   2                      ucDDCCI_CheckSum ^= rxByte;
+ 136   2                      // ...set the receive body state...
+ 137   2                      rxStatus = DDC2B_COMMAND;
+ 138   2                      //...and if it is a NULL message...
+ 139   2                      if (ucDDCCI_RxCount == 0)
+ 140   2                      {
+ 141   3                              // ...wait for CK
+ 142   3                              //rxStatus++;// = DDC2B_RECBODY;
+ 143   3                              //rxStatus++;// = DDC2B_WAITFORCK;
+ 144   3                              rxStatus = DDC2B_WAITFORCK; 
+ 145   3                      }
+ 146   2      
+ 147   2                      else if(ucDDCCI_RxCount > RX_BUFFER_SIZE)
+ 148   2                      {
+ 149   3                           DDCCI_InitRx();
+ 150   3                      }
+ 151   2                      break;
+ 152   2                  // ...here we are getting the command...
+ 153   2                  case DDC2B_COMMAND:
+ 154   2                      // ...go to the recbody state
+ 155   2                      rxStatus = DDC2B_RECBODY;
+ 156   2                      // ...here we are getting the message body...
+ 157   2                  case DDC2B_RECBODY:
+ 158   2                      ucDDCCI_RxBuf[ucDDCCI_RxIndex++] = rxByte;
+ 159   2                      ucDDCCI_CheckSum ^= rxByte;
+ 160   2                      ucDDCCI_RxCount--;
+ 161   2                      // ...and if this is the last byte in the message body...
+ 162   2                      if (ucDDCCI_RxCount == 0)
+ 163   2                      // ...set the wait for checksum flag
+ 164   2                          rxStatus = DDC2B_WAITFORCK;
+ 165   2                      break;
+ 166   2                  case DDC2B_WAITFORCK:
+ 167   2                      // ...and if we have a checksum match...
+ 168   2                      if (ucDDCCI_CheckSum == rxByte)
+ 169   2                      {
+ 170   3                              // ...raise the completed flag - the buffer will be
+ 171   3                              // processed by the parser...
+ 172   3                              rxStatus = DDC2B_COMPLETED;
+ 173   3                      }
+ 174   2                      // ..else we have a checksum error...
+ 175   2                      else
+ 176   2                      {
+ 177   3                              // ...clear the rxState and the current buffer for a new message
+C51 COMPILER V8.16   DDCCI                                                                 04/05/2012 11:15:33 PAGE 4   
+
+ 178   3                              DDCCI_InitRx();
+ 179   3                      }
+ 180   2                      break;
+ 181   2                  default:
+ 182   2                      DDCCI_InitRx();
+ 183   2                      break;
+ 184   2      
+ 185   2           }
+ 186   1      }
+ 187          //---------------------------------------------------------------------------------------
+ 188          void DDCCI_TxInt()
+ 189          {
+ 190   1          WORD i = 0x200;
+ 191   1      
+ 192   1      #if(DEBUG_ONLY)
+ 193   1      
+ 194   1          do
+ 195   1          {
+ 196   2              Delay5us();
+ 197   2          }
+ 198   1          while(bDDCSCLVGA && --i);
+ 199   1      
+ 200   1      #else
+              
+                  if(stSystemData.InputSource == _SOURCE_DVI)
+                  {
+                      do
+                      {
+                          Delay5us();
+                      }
+                      while(bDDCSCLDVI && --i);
+                  }
+                  else// if(GET_INPUTSOURCE_TYPE()==_SOURCE_VGA)
+                  {
+                      do
+                      {
+                          Delay5us();
+                      }
+                      while(bDDCSCLVGA && --i);   // For other source 
+                  }
+              
+              #endif
+ 220   1      
+ 221   1          if (ucDDCCI_TxCount == 0)
+ 222   1          {
+ 223   2                  txBufferPtr = &ucDDCCI_NullStr[0];
+ 224   2                  ucDDCCI_TxCount = sizeof (ucDDCCI_NullStr);
+ 225   2          }
+ 226   1          // ...send out the current byte
+ 227   1          #if(_MCU_TYPE == _MYSON_MTV312 || _MCU_TYPE == _MYSON_MTV512)
+                  M512_IIC_TXRCBBUF = *txBufferPtr++;
+              
+                  #elif(_MCU_TYPE == _RTD_2120)
+ 231   1          
+ 232   1          MCU_I2C_DATA_OUT_FF2A = *txBufferPtr++;
+ 233   1          #endif
+ 234   1      
+ 235   1          ucDDCCI_TxCount--;
+ 236   1      }
+ 237          //---------------------------------------------------------------------------------------
+ 238          void DDCCI_InitRx(void)
+ 239          {
+C51 COMPILER V8.16   DDCCI                                                                 04/05/2012 11:15:33 PAGE 5   
+
+ 240   1              // clear the rxState...
+ 241   1              rxStatus = DDC2B_CLEAR;
+ 242   1              // ...and the current buffer for a new message
+ 243   1              ucDDCCI_RxIndex = 0;
+ 244   1      }
+ 245          //---------------------------------------------------------------------------------------
+ 246          void DDC2Bi_InitTx (void)
+ 247          {
+ 248   1              // initialize the transmit communication, so that either a valid...
+ 249   1              // ...or a NULL message is sent on a request from host
+ 250   1              txBufferPtr = &ucDDCCI_NullStr[0];
+ 251   1              ucDDCCI_TxCount = sizeof(ucDDCCI_NullStr) - 1;
+ 252   1      
+ 253   1      #if(_MCU_TYPE == _MYSON_MTV312 || _MCU_TYPE == _MYSON_MTV512)
+                      M512_IIC_TXRCBBUF = *txBufferPtr++;
+              #elif(_MCU_TYPE == _RTD_2120)
+ 256   1          MCU_I2C_DATA_OUT_FF2A = *txBufferPtr++;
+ 257   1      #endif
+ 258   1      }
+ 259          //---------------------------------------------------------------------------------------
+ 260          void DDCCI_Command()
+ 261          {
+ 262   1          do
+ 263   1              {
+ 264   2                      if(rxStatus == DDC2B_COMPLETED)
+ 265   2                      {
+ 266   3                              DDCCI_Command_Do();
+ 267   3                              DDCCI_InitRx();
+ 268   3                      }
+ 269   2              }
+ 270   1              while(fDDCCI_Loop);
+ 271   1      }
+ 272          //---------------------------------------------------------------------------------------
+ 273          void DDCCI_Command_Do()
+ 274          {
+ 275   1          switch(ucDDCCI_RxBuf[COMMAND])
+ 276   1          {
+ 277   2                      #if(DEBUG_ONLY == 0)
+                      case DDC2B_CMD_GetVCPFeature:             GetVCPFeature();             break;
+                      case DDC2B_CMD_SetVCPFeature:             SetVCPFeature();             break;
+                      case DDC2B_CMD_CapabilitiesRequest:       DDCCI_GetCapabilitiesRequest(); break;                  
+             -          break;
+                      case DDC2B_CMD_GetTimingReport:           DDCCI_GetTimingReport();     break;
+                      //case DDC2B_CMD_NMV_GetVCPPage:                      DDCCI_GetVCPPage();              break;
+                      //case DDC2B_CMD_NMV_GetPagedVCP:                     DDCCI_GetPagedVCP();             break;
+                      //case DDC2B_CMD_NMV_SetPagedVCP:                     DDCCI_SetPagedVCP();             break;
+                      //case DDC2B_CMD_SaveCurrentSettings:       DDCCI_SaveSetting();         break;
+                      //case DDC2B_CMD_NMV_EEPROM:                DDCCI_EEPRom_Cmd();        break;
+                              #endif    //end debug only
+ 288   2              case DDC2B_CMD_DEBUG:                     DDCCI_Debug();               break;
+ 289   2              default:                                  DDC2Bi_InitTx();                 break;
+ 290   2      
+ 291   2          }
+ 292   1      }
+ 293          //---------------------------------------------------------------------------------------
+ 294          void TxCommandReady()
+ 295          {
+ 296   1           unsigned char ucChecksum,i,count;
+ 297   1           count = ucDDCCI_TxBuf[CI_LENGTH];
+ 298   1           ucDDCCI_TxBuf[CI_LENGTH] = count | 0x80;
+ 299   1           //ucDDCCI_TxCount += 2;
+ 300   1           ucChecksum = INITTxCK;
+C51 COMPILER V8.16   DDCCI                                                                 04/05/2012 11:15:33 PAGE 6   
+
+ 301   1           for(i=0;i<=count;i++)
+ 302   1               ucChecksum ^= ucDDCCI_TxBuf[i];
+ 303   1      
+ 304   1           count++;
+ 305   1      
+ 306   1           ucDDCCI_TxBuf[count] = ucChecksum;
+ 307   1           count++;
+ 308   1      
+ 309   1           ucDDCCI_TxBuf[count] = 0x6e;
+ 310   1           count ++;
+ 311   1           
+ 312   1           ucDDCCI_TxBuf[count] = 0x6e;
+ 313   1           count ++;
+ 314   1           EA = 0;
+ 315   1      
+ 316   1           txBufferPtr = &ucDDCCI_TxBuf[CI_LENGTH];
+ 317   1           ucDDCCI_TxCount = count;
+ 318   1           // clear the expected flag
+ 319   1           //readExpected = 0;
+ 320   1           // set messageReady flag
+ 321   1      #if(_MCU_TYPE == _RTD_2120)
+ 322   1      
+ 323   1           MCU_I2C_DATA_OUT_FF2A = 0x6e;
+ 324   1      
+ 325   1      #else      // mtv512 
+                   M512_IIC_TXRCBBUF = 0x6e;
+              #endif
+ 328   1      
+ 329   1           messageReady = 1;
+ 330   1           EA = 1;
+ 331   1      
+ 332   1      }
+ 333          //---------------------------------------------------------------------------------------
+ 334          
+ 335          #if(DEBUG_ONLY == 0)
+              void TxCommandGetTimingReportReady()
+              {
+                   unsigned char ucChecksum,i,count;
+                   count = ucDDCCI_TxBuf[CI_LENGTH];
+                  // ucDDCCI_TxBuf[CI_LENGTH] = count | 0x80;
+                   //ucDDCCI_TxCount += 2;
+                   ucChecksum = INITTxCK;
+                   for(i=0;i<=count;i++)
+                       ucChecksum ^= ucDDCCI_TxBuf[i];
+              
+                   count++;
+              
+                   ucDDCCI_TxBuf[count] = ucChecksum;
+                   count ++;
+              
+                   ucDDCCI_TxBuf[count] = 0x6e;
+                   count ++;
+              
+                   ucDDCCI_TxBuf[count] = 0x6e;
+                   count ++;
+              
+                   EA = 0;
+              
+                   txBufferPtr = &ucDDCCI_TxBuf[CI_LENGTH];
+                   ucDDCCI_TxCount = count;
+                   // clear the expected flag
+                   //readExpected = 0;
+C51 COMPILER V8.16   DDCCI                                                                 04/05/2012 11:15:33 PAGE 7   
+
+                   // set messageReady flag
+              
+                  count++;
+              
+                  for(i=count;i>0;i--)
+                      ucDDCCI_TxBuf[i] = ucDDCCI_TxBuf[i - 1];
+                  
+                  ucDDCCI_TxBuf[0] = 0x6e;
+              
+              #if(_MCU_TYPE == _RTD_2120)
+              
+                  MCU_I2C_DATA_OUT_FF2A = *txBufferPtr++;
+              
+              #else      // mtv512 
+              
+                  M512_IIC_TXRCBBUF = *txBufferPtr++;
+              
+              #endif
+              
+              
+                  //messageReady = 1;
+                  // re enable interrupts
+                  EA = 1;
+              }
+              #endif
+ 388          //---------------------------------------------------------------------------------------
+ 389          #define GETVCP_CMD     2
+ 390          
+ 391          
+ 392          #if(DEBUG_ONLY == 0)
+              
+              void GetVCPFeature()
+              {
+                   //ucVPC_Page = 0;
+                   ucDDCCI_TxBuf[CI_LENGTH]   = 0x08;
+                   ucDDCCI_TxBuf[COMMAND]     = DDC2B_CMD_GetVCPFeature_Reply;
+                   ucDDCCI_TxBuf[2]           = 0;                            // RC
+                   ucDDCCI_TxBuf[3]           = ucDDCCI_RxBuf[PARAMETER];     // CP
+                   ucDDCCI_TxBuf[4]           = 0;                            // TP
+                   switch(ucDDCCI_RxBuf[PARAMETER])
+                   {
+                       case DDC2B_CMD_VCP_Clock:              GetVPC_Clock(5);              break;
+                       case DDC2B_CMD_VCP_Brightness:         GetVPC_Bright(5);             break;
+                       case DDC2B_CMD_VCP_Contrast:           GetVPC_Contrast(5);           break;
+                       case DDC2B_CMD_VCP_RedGain:            GetVPC_RedGain(5);            break;
+                       case DDC2B_CMD_VCP_GreenGain:          GetVPC_GreenGain(5);          break;
+                       case DDC2B_CMD_VCP_BlueGain:           GetVPC_BlueGain(5);           break;
+                       case DDC2B_CMD_VCP_HPosition:          GetVPC_HPosition(5);          break;
+                       case DDC2B_CMD_VCP_VPosition:          GetVPC_VPosition(5);          break;
+                       case DDC2B_CMD_VCP_ClockPhase:         GetVPC_Phase(5);              break;
+                       case DDC2B_CMD_VCP_SelectColorPreset:  GetVPC_ColorTmp(5);           break;
+                       //case DDC2B_CMD_VCP_MonitorType:        GetMonitorType(5);            break;
+                         
+                       //case DDC2B_CMD_VCP_Language:       GetVPC_Language(5);           break;
+                       //case DDC2B_CMD_VCP_AudioVolume:        GetVPC_Volume(5);             break;
+                       //case DDC2B_CMD_VCP_SSP:                        GetVPC_Specturm(5);           break;//Extend for DDL
+                       default:
+                            ucDDCCI_TxBuf[2]           = 1;                            // RC cmd not support
+                            ucDDCCI_TxBuf[4]           = 1;
+                            TxCommandReady();
+                            break;
+                   }
+C51 COMPILER V8.16   DDCCI                                                                 04/05/2012 11:15:33 PAGE 8   
+
+              
+              }
+              //---------------------------------------------------------------------------------------
+              void GetVPC_Clock(unsigned char BassAddr)            // Range : 78 ~ 178
+              {
+                   ucVPC_Page = 0;
+                   ucDDCCI_TxBuf[BassAddr]        = 0;                              // MH
+                   ucDDCCI_TxBuf[BassAddr + 1]    = 100;                            // ML
+                   ucDDCCI_TxBuf[BassAddr + 2]    = 0;
+                       ucDDCCI_TxBuf[BassAddr + 3]    = ClockGuage();                   // SL
+                   TxCommandReady();
+              }
+              //---------------------------------------------------------------------------------------
+              void GetVPC_Bright(unsigned char BassAddr)           // Range : 0 ~ 100
+              {
+                   ucVPC_Page = 0;
+                   ucDDCCI_TxBuf[BassAddr]           = 0;                              // MH
+                   ucDDCCI_TxBuf[BassAddr + 1]           = 100;                            // ML
+                   ucDDCCI_TxBuf[BassAddr + 2]           = 0;                              // SH
+                   
+                       ucDDCCI_TxBuf[BassAddr + 3] = stSystemData.BackLight;
+                   TxCommandReady();
+              }
+              //---------------------------------------------------------------------------------------
+              void GetVPC_Contrast(unsigned char BassAddr)         // Range : 0 ~ 100
+              {
+                   ucVPC_Page = 0;
+                   ucDDCCI_TxBuf[BassAddr]           = 0;                              // MH
+                   ucDDCCI_TxBuf[BassAddr + 1]           = 100;                            // ML
+                   ucDDCCI_TxBuf[BassAddr + 2]           = 0;                              // SH
+              
+                   ucDDCCI_TxBuf[BassAddr + 3] = stConBriData.Contrast;
+                   TxCommandReady();
+              }
+              //---------------------------------------------------------------------------------------
+              void GetVPC_RedGain(unsigned char BassAddr)          // Range : 0 ~ 255
+              {
+                      ucVPC_Page = 0;
+                      ucDDCCI_TxBuf[BassAddr] = 0;                                    // MH
+                      ucDDCCI_TxBuf[BassAddr + 1]     = 0xff;                 // ML
+                      ucDDCCI_TxBuf[BassAddr + 2]     = 0;                            // SH
+                      ucDDCCI_TxBuf[BassAddr + 3]     = stColorTempData.ColorTemp[_RED];
+                  TxCommandReady();
+              }
+              //---------------------------------------------------------------------------------------
+              void GetVPC_GreenGain(unsigned char BassAddr)        // Range : 0 ~ 255
+              {
+                      ucVPC_Page = 0;
+                      ucDDCCI_TxBuf[BassAddr] = 0;                                    // MH
+              
+                  ucDDCCI_TxBuf[BassAddr + 1] = 0xff;                 // ML
+                  ucDDCCI_TxBuf[BassAddr + 2] = 0;                    // SH
+                  ucDDCCI_TxBuf[BassAddr + 3] = stColorTempData.ColorTemp[_GREEN];
+              
+                  TxCommandReady();
+              }
+              //---------------------------------------------------------------------------------------
+              void GetVPC_BlueGain(unsigned char BassAddr)         // Range : 0 ~ 255
+              {
+                      ucVPC_Page = 0;
+                      ucDDCCI_TxBuf[BassAddr] = 0;                            // MH
+              
+C51 COMPILER V8.16   DDCCI                                                                 04/05/2012 11:15:33 PAGE 9   
+
+                  ucDDCCI_TxBuf[BassAddr + 1] = 0xff;                 // ML
+                  ucDDCCI_TxBuf[BassAddr + 2] = 0;                    // SH
+                  ucDDCCI_TxBuf[BassAddr + 3] = stColorTempData.ColorTemp[_BLUE];
+                  TxCommandReady();
+              }
+              //---------------------------------------------------------------------------------------
+              void GetVPC_HPosition(unsigned char BassAddr)        // Range : ucH_Min_Margin ~ ucH_Max_Margin
+              {
+                  WORD usTemp = _HPOSITION_BIAS * 2;
+                      ucVPC_Page = 0;
+                      ucDDCCI_TxBuf[BassAddr] = (usTemp >> 8);                                        // MH
+                      ucDDCCI_TxBuf[BassAddr + 1]     = (usTemp & 0xff);                              // ML
+                      ucDDCCI_TxBuf[BassAddr + 2]     = 0;                            // SH
+                      ucDDCCI_TxBuf[BassAddr + 3] = stModeUserData.HPosition - (stModeUserCenterData.CenterHPos - _HPOSITION_BI
+             -AS);
+                  TxCommandReady();
+              }
+              //---------------------------------------------------------------------------------------
+              void GetVPC_VPosition(unsigned char BassAddr)        // Range : ucV_Min_Margin ~ (unsigned int)256 - ucV_M
+             -in_Margin
+              {
+                  WORD usTemp = _HPOSITION_BIAS * 2;
+                      
+                      ucVPC_Page = 0;
+                      ucDDCCI_TxBuf[BassAddr] = (usTemp >> 8);                                        // MH
+                      ucDDCCI_TxBuf[BassAddr + 1]     = (usTemp & 0xff);
+                      ucDDCCI_TxBuf[BassAddr + 2]     = 0;                            // SH
+                  ucDDCCI_TxBuf[BassAddr + 3] = stModeUserData.VPosition - (stModeUserCenterData.CenterVPos - _VPOSITION
+             -_BIAS);
+                      TxCommandReady();
+              }
+              //---------------------------------------------------------------------------------------
+              void GetVPC_Phase(unsigned char BassAddr)            // Range : 0 ~ 31
+              {
+                      //WORD Phasetemp;
+              
+                      ucVPC_Page = 0;
+                      ucDDCCI_TxBuf[BassAddr] = 0;                                    // MH
+                      ucDDCCI_TxBuf[BassAddr + 1]     = 100;                          // ML
+                      ucDDCCI_TxBuf[BassAddr + 2]     = 0;                            // SH
+                      //Phasetemp = stModeUserData.Phase;
+                      ucDDCCI_TxBuf[BassAddr + 3]     = PHASE_GUAGE;
+                      TxCommandReady();
+              }
+              //---------------------------------------------------------------------------------------
+              void GetVPC_ColorTmp(unsigned char BassAddr)
+              {
+                      ucVPC_Page = 0;
+                      ucDDCCI_TxBuf[BassAddr] = 0;                                    // MH
+                      ucDDCCI_TxBuf[BassAddr + 1]     = 0x0b;                         // ML
+                      ucDDCCI_TxBuf[BassAddr + 2]     = 0;                            // SH
+                      switch(GET_COLOR_TEMP_TYPE() )
+                      { 
+                      case _CT_5800:  ucDDCCI_TxBuf[BassAddr + 3] = 0x04;             break;
+                              case _CT_USER:  ucDDCCI_TxBuf[BassAddr + 3] = 0x0b;             break;
+                              case _CT_6500:  ucDDCCI_TxBuf[BassAddr + 3] = 0x08;             break;
+                              case _CT_9300:  ucDDCCI_TxBuf[BassAddr + 3] = 0x05;             break;
+                              default:                ucDDCCI_TxBuf[BassAddr + 3] = 0x0b;             break;
+                      }
+                      TxCommandReady();
+              }
+              //---------------------------------------------------------------------------------------
+C51 COMPILER V8.16   DDCCI                                                                 04/05/2012 11:15:33 PAGE 10  
+
+              
+              /*
+              void GetVPC_Language(unsigned char BassAddr)
+              {
+              
+              
+                   ucVPC_Page = 0;
+                   ucDDCCI_TxBuf[BassAddr]           = 0;                                 // MH
+                   ucDDCCI_TxBuf[BassAddr + 1]           = 0x0b;
+                   ucDDCCI_TxBuf[BassAddr + 2]           = 0;                                 // SH
+                   #if(DDCCI_ALL)
+                       switch(GET_LANGUAGE)
+                   {
+                        case ENGLISH:         ucDDCCI_TxBuf[BassAddr + 3] = 0x01;     break;
+                        case CHINESE_S:       ucDDCCI_TxBuf[BassAddr + 3] = 0x0a;     break;
+                        case FRE:             ucDDCCI_TxBuf[BassAddr + 3] = 0x03;     break;
+                        case GER:             ucDDCCI_TxBuf[BassAddr + 3] = 0x02;     break;
+                        case ITA:             ucDDCCI_TxBuf[BassAddr + 3] = 0x06;     break;
+                        case SPA:             ucDDCCI_TxBuf[BassAddr + 3] = 0x04;     break;
+                        case POR:             ucDDCCI_TxBuf[BassAddr + 3] = 0x07;     break;
+                        case Pol:             ucDDCCI_TxBuf[BassAddr + 3] = 0x08;     break;
+                        case Russian:         ucDDCCI_TxBuf[BassAddr + 3] = 0x09;     break;
+                        case CHINESE_T:       ucDDCCI_TxBuf[BassAddr + 3] = 0x0b;     break;
+                        case JAPANESS:        ucDDCCI_TxBuf[BassAddr + 3] = 0x05;     break;
+                        default:              ucDDCCI_TxBuf[BassAddr + 3] = 0x01;     break;
+                   }
+                       #endif
+              
+                   TxCommandReady();
+              }
+              //---------------------------------------------------------------------------------------
+              /*
+              void GetVPC_Volume(unsigned char BassAddr)
+              {
+                      ucDDCCI_TxBuf[BassAddr]           = 0;                                 // MH
+                      ucDDCCI_TxBuf[BassAddr + 1]           = 100;
+                      ucDDCCI_TxBuf[BassAddr + 2]           = 0;                                 // SH
+                      ucDDCCI_TxBuf[BassAddr + 3] = stOsdUserData.Volume;
+                      TxCommandReady();
+              
+              }
+              //---------------------------------------------------------------------------------------
+              void GetVPC_Specturm(unsigned char BassAddr)
+              {
+                      ucDDCCI_TxBuf[BassAddr]           = 0;                                 // MH
+                      ucDDCCI_TxBuf[BassAddr + 1]           = 15;
+                      ucDDCCI_TxBuf[BassAddr + 2]           = 0;                                 // SH
+                      ucDDCCI_TxBuf[BassAddr + 3] = 0;//stOsdUserData.OsdManagementFlag & 0x0f;
+                      TxCommandReady();
+              
+              }
+              //---------------------------------------------------------------------------------------
+              */
+              #define SETVCP_PARAM    4
+              void SetVCPFeature()
+              {
+                   switch(ucDDCCI_RxBuf[PARAMETER])
+                   {
+                       case DDC2B_CMD_VCP_ALLReset:           
+                                    //AnwerDDCCISet();
+                                        //SetVPC_ALLReset(ucDDCCI_RxBuf[SETVCP_PARAM]);         
+                                        break;
+C51 COMPILER V8.16   DDCCI                                                                 04/05/2012 11:15:33 PAGE 11  
+
+                       case DDC2B_CMD_VCP_ColorReset:         
+                                    //AnwerDDCCISet();
+                                    //SetVPC_ColorReset(ucDDCCI_RxBuf[SETVCP_PARAM]);         
+                                        break;
+                       case DDC2B_CMD_VCP_Clock:
+                            //EA = 0;
+                            SetVPC_Clock(ucDDCCI_RxBuf[SETVCP_PARAM]);
+                            SetVPC_ClockDo();
+                            //EA = 1;
+                            break;
+                       case DDC2B_CMD_VCP_Brightness:
+                            SetVPC_Bright(ucDDCCI_RxBuf[SETVCP_PARAM]);
+                            SetVPC_BrightDo();
+                            break;
+                       case DDC2B_CMD_VCP_Contrast:
+                            SetVPC_Contrast(ucDDCCI_RxBuf[SETVCP_PARAM]);
+                            SetVPC_ContrastDo();
+                            break;
+                       case DDC2B_CMD_VCP_RedGain:
+                            SetVPC_RedGain(ucDDCCI_RxBuf[SETVCP_PARAM]);
+                            SetVPC_RedGainDo(ucDDCCI_RxBuf[SETVCP_PARAM]);
+                            break;
+                       case DDC2B_CMD_VCP_GreenGain:
+                            SetVPC_GreenGain(ucDDCCI_RxBuf[SETVCP_PARAM]);
+                            SetVPC_GreenGainDo(ucDDCCI_RxBuf[SETVCP_PARAM]);
+                            break;
+                       case DDC2B_CMD_VCP_BlueGain:
+                            SetVPC_BlueGain(ucDDCCI_RxBuf[SETVCP_PARAM]);
+                            SetVPC_BlueGainDo(ucDDCCI_RxBuf[SETVCP_PARAM]);
+                            break;
+              
+                       case DDC2B_CMD_VCP_AutoSetUp:
+                            //CAutoDoAutoConfig();
+                            // Repeat
+                            ucOsdEventMsg = _DO_AUTO_CONFIG;
+                            break;
+              
+                       case DDC2B_CMD_VCP_HPosition:
+                            SetVPC_HPosition(ucDDCCI_RxBuf[SETVCP_PARAM]);
+                            SetVPC_HPositionDo();
+                            break;
+                       case DDC2B_CMD_VCP_VPosition:
+                            SetVPC_VPosition(ucDDCCI_RxBuf[SETVCP_PARAM]);
+                            SetVPC_VPositionDo();
+                            break;
+                       case DDC2B_CMD_VCP_ClockPhase:
+                            SetVPC_Phase(ucDDCCI_RxBuf[SETVCP_PARAM]);
+                            SetVPC_PhaseDo();
+                            break;
+                       case DDC2B_CMD_VCP_SelectColorPreset:
+                            SetVPC_ColorTmp(ucDDCCI_RxBuf[SETVCP_PARAM]);
+                            SetVPC_ColorTmpDo();
+                            break;
+                       case DDC2B_CMD_VCP_Language:           
+                                    //SetVPC_Language(ucDDCCI_RxBuf[SETVCP_PARAM]);           
+                                        break;
+                   }
+              }
+              //---------------------------------------------------------------------------------------
+              /*
+              void SetVPC_ALLReset(unsigned char ucValue)
+              {
+C51 COMPILER V8.16   DDCCI                                                                 04/05/2012 11:15:33 PAGE 12  
+
+                   ucVPC_Page = 0;
+                   //AnwerDDCCISet();
+              
+                   if(ucValue)
+                   {
+                               #if(DDCCI_ALL)
+                       Reset_Fac();
+                               #endif
+                   }
+              }
+              //---------------------------------------------------------------------------------------
+              void SetVPC_ColorReset(unsigned char ucValue)
+              {
+                   ucVPC_Page = 0;
+                   //AnwerDDCCISet();
+                   if(ucValue)
+                   {
+                       #if(DDCCI_ALL)
+                               Reset_User();
+                               #endif
+                   }
+              }
+              //---------------------------------------------------------------------------------------
+              */
+              void SetVPC_Clock(unsigned char ucValue)
+              {
+                      DWORD wClocktemp;
+                  WORD usClockMax = COsdFxGetAdcClockRange(_GET_CLOCKRANGE_MAX);
+                  WORD usClockMin = COsdFxGetAdcClockRange(_GET_CLOCKRANGE_MIN);
+              
+                  ucVPC_Page = 0;
+                      
+                      wClocktemp = ucValue;
+                      wClocktemp = wClocktemp * ((DWORD)usClockMax - (DWORD)usClockMin) / (DWORD)100;
+                      stModeUserData.Clock = wClocktemp + usClockMin;
+              }
+              //---------------------------------------------------------------------------------------
+              void SetVPC_ClockDo()
+              {
+                      CAdjustAdcClock(stModeUserData.Clock);
+                  ucOsdEventMsg = _SAVE_EE_OSDUSERDATA_MSG;
+              }
+              //---------------------------------------------------------------------------------------
+              void SetVPC_Bright(unsigned char ucValue)           // Range : 0 ~ 100
+              {
+                   ucVPC_Page = 0;
+                   if(ucValue > 100)    return;
+                   stSystemData.BackLight = ucValue;
+                   stConBriData.Brightness = ucValue;
+              }
+              //---------------------------------------------------------------------------------------
+              void SetVPC_BrightDo()
+              {
+                  CAdjustBacklight();
+                  ucOsdEventMsg = _SAVE_EE_SYSTEMDATA_MSG;
+              }
+              //---------------------------------------------------------------------------------------
+              void SetVPC_Contrast(unsigned char ucValue)         // Range : 0 ~ 100
+              {
+                   ucVPC_Page = 0;
+                   if(ucValue > 100)    return;
+                   stConBriData.Contrast = ucValue;
+C51 COMPILER V8.16   DDCCI                                                                 04/05/2012 11:15:33 PAGE 13  
+
+              }
+              //---------------------------------------------------------------------------------------
+              void SetVPC_ContrastDo()         // Range : 0 ~ 100
+              {
+                      CAdjustContrast();
+                  ucOsdEventMsg = _SAVE_EE_BriConHueSat_MSG;
+              }
+              //---------------------------------------------------------------------------------------
+              void SetVPC_RedGain(unsigned char ucValue)          // Range : 0 ~ 255
+              {
+                   ucVPC_Page = 0;
+                   stColorTempData.ColorTemp[_RED] = ucValue;
+              }
+              //---------------------------------------------------------------------------------------
+              void SetVPC_RedGainDo(unsigned char ucValue)          // Range : 0 ~ 255
+              {
+                      CAdjustContrast();
+                      ucValue = ucValue;
+                  ucOsdEventMsg = _SAVE_EE_COLORPROC1_MSG;
+              }
+              //---------------------------------------------------------------------------------------
+              void SetVPC_GreenGain(unsigned char ucValue)        // Range : 0 ~ 255
+              {
+                   ucVPC_Page = 0;
+                   stColorTempData.ColorTemp[_GREEN] = ucValue;
+              }
+              //---------------------------------------------------------------------------------------
+              void SetVPC_GreenGainDo(unsigned char ucValue)        // Range : 0 ~ 255
+              {
+                      CAdjustContrast();
+                      ucValue = ucValue;
+                  ucOsdEventMsg = _SAVE_EE_COLORPROC1_MSG;
+              }
+              //---------------------------------------------------------------------------------------
+              void SetVPC_BlueGain(unsigned char ucValue)         // Range : 0 ~ 255
+              {
+                   ucVPC_Page = 0;
+              
+                   stColorTempData.ColorTemp[_BLUE] = ucValue;
+              }
+              //---------------------------------------------------------------------------------------
+              void SetVPC_BlueGainDo(unsigned char ucValue)         // Range : 0 ~ 255
+              {
+                      CAdjustContrast();
+                      ucValue = ucValue;
+                  ucOsdEventMsg = _SAVE_EE_COLORPROC1_MSG;
+              }
+              //---------------------------------------------------------------------------------------
+              void SetVPC_HPosition(WORD ucValue)
+              {
+                      if(ucValue > 100)               return;
+                      ucVPC_Page = 0;
+              
+                  stModeUserData.HPosition = ucValue + (stModeUserCenterData.CenterHPos - _HPOSITION_BIAS);
+              }
+              //---------------------------------------------------------------------------------------
+              void SetVPC_HPositionDo()        // Range : ucH_Min_Margin ~ ucH_Max_Margin
+              {
+                      CAdjustHPosition();
+                  ucOsdEventMsg = _SAVE_EE_MODEUSERDATA_MSG;
+              }
+              //---------------------------------------------------------------------------------------
+C51 COMPILER V8.16   DDCCI                                                                 04/05/2012 11:15:33 PAGE 14  
+
+              void SetVPC_VPosition(WORD ucValue)        // Range : ucV_Min_Margin ~ (unsigned int)256 - ucV_Min_Margin
+              {
+                      if(ucValue > 100)               return;
+                      ucVPC_Page = 0;
+                  
+                  stModeUserData.VPosition = ucValue + (stModeUserCenterData.CenterVPos - _VPOSITION_BIAS);
+              }
+              //---------------------------------------------------------------------------------------
+              void SetVPC_VPositionDo()        // Range : ucV_Min_Margin ~ (unsigned int)256 - ucV_Min_Margin
+              {
+                      CAdjustVPosition();
+                  ucOsdEventMsg = _SAVE_EE_MODEUSERDATA_MSG;
+              }
+              //---------------------------------------------------------------------------------------
+              void SetVPC_Phase(unsigned char ucValue)            // Range : 0 ~ 31
+              {
+                      WORD Phasetemp;
+                      if(ucValue > 100)               return;
+              
+                      ucVPC_Page = 0;
+                      Phasetemp = (WORD)ucValue * 63 / 100;
+                      stModeUserData.Phase = Phasetemp;
+              }
+              //---------------------------------------------------------------------------------------
+              void SetVPC_PhaseDo()            // Range : 0 ~ 31
+              {
+                      CAdjustPhase(stModeUserData.Phase);
+                  ucOsdEventMsg = _SAVE_EE_MODEUSERDATA_MSG;
+              }
+              //---------------------------------------------------------------------------------------
+              void SetVPC_ColorTmp(unsigned char ucValue)
+              {
+                   ucVPC_Page = 0;
+                   ucValue=ucValue;
+                       #if(DDCCI_ALL)
+                   switch(ucValue)
+                   {
+                        case 0x05:        SET_COLOR_TEMP_TYPE(_CT_6500);      break;
+                        case 0x04:        SET_COLOR_TEMP_TYPE(_CT_5800);      break;
+                        case 0x08:        SET_COLOR_TEMP_TYPE(_CT_9300);      break;
+                        case 0x0b:        SET_COLOR_TEMP_TYPE(_CT_USER);      break;
+                        default:          SET_COLOR_TEMP_TYPE(_CT_USER);      break;
+                   }
+                       #endif
+              }
+              //---------------------------------------------------------------------------------------
+              void SetVPC_ColorTmpDo()
+              {
+                  CEepromLoadColorTempData();
+                  CAdjustContrast();
+                  ucOsdEventMsg = _SAVE_EE_SYSTEMDATA_MSG;
+              }
+              //---------------------------------------------------------------------------------------
+              unsigned char code sCpReqStr[] =
+              //"vcp(04 08 0E 10 12 14(04 05 08) 16 18 1A 20 30 3E 54 62 68 B6 C0 DF) type(LCD) mccs_ver(1.1) asset_eep(
+             -32) mpu(0.04) "; // accroding to HP John's SPEC removed 1E
+              "vcp(0E 10 12 14(04 05 08 0B) 16 18 1A 20 30 3E 54 62 68 B6 C0 DF) type(LCD) mccs_ver(1.1) asset_eep(32) m
+             -pu(0.04) "; // accroding to HP John's SPEC removed 1E
+              
+              void DDCCI_GetCapabilitiesRequest()
+              {
+              
+C51 COMPILER V8.16   DDCCI                                                                 04/05/2012 11:15:33 PAGE 15  
+
+                  BYTE ucSendLen;
+                  BYTE i;
+                  WORD usStrLength,usOffset;
+              
+                  usOffset = ucDDCCI_RxBuf[2];
+                  usOffset = (usOffset << 8) | ucDDCCI_RxBuf[3];
+                  
+                  usStrLength = sizeof(sCpReqStr);
+                  if (usOffset >= usStrLength)
+                  {
+                      ucSendLen = 0;
+                  }
+                  else
+                  {
+                      if(usStrLength >= usOffset + 12)
+                          ucSendLen = 12;
+                      else 
+                          ucSendLen = usStrLength - usOffset;
+                  }
+                      
+                  ucDDCCI_TxBuf[CI_LENGTH]    = ucSendLen;
+                  ucDDCCI_TxBuf[COMMAND]      = 0xe3;
+                  ucDDCCI_TxBuf[2]            = (unsigned char)(usOffset >> 8);
+                  ucDDCCI_TxBuf[3]            = (unsigned char)(usOffset );
+                  
+                  for(i=0;i<ucSendLen;i++)
+                  {
+                      ucDDCCI_TxBuf[4 + i] = sCpReqStr[i + usOffset];
+                  }
+              
+                  TxCommandReady();
+              }
+              //---------------------------------------------------------------------------------------
+              
+              
+              void DDCCI_GetTimingReport()
+              {
+                      WORD dwTemp0 = stModeInfo.IHFreq * 10;
+                      WORD dwTemp2 = stModeInfo.IVFreq * 10;
+              
+                      ucDDCCI_TxBuf[CI_LENGTH]        = 0x06;
+                      ucDDCCI_TxBuf[COMMAND]      = 0x4e;
+                      ucDDCCI_TxBuf[2]                = 0x00;
+                      // Calc SS : timing status byte
+                      if(_MODE_NOSUPPORT <= stModeInfo.ModeCurr)   ucDDCCI_TxBuf[2] |= 0x80;
+                      if((stModeInfo.Polarity & _BIT1))            ucDDCCI_TxBuf[2] |= 0x02;
+                      if((stModeInfo.Polarity & _BIT0))            ucDDCCI_TxBuf[2] |= 0x01;
+                      
+                      ucDDCCI_TxBuf[3]                = HIBYTE(dwTemp0);
+                      ucDDCCI_TxBuf[4]                = LOBYTE(dwTemp0);
+                      ucDDCCI_TxBuf[5]                = HIBYTE(dwTemp2);
+                      ucDDCCI_TxBuf[6]                = LOBYTE(dwTemp2);
+              
+                      TxCommandGetTimingReportReady();
+              }
+              //---------------------------------------------------------------------------------------
+              /*
+              void DDCCI_GetVCPPage()
+              {
+                   ucDDCCI_TxBuf[CI_LENGTH]   = 0x03;
+                   ucDDCCI_TxBuf[COMMAND]     = 0xc5;
+                   ucDDCCI_TxBuf[2]           = ucVPC_Page;
+C51 COMPILER V8.16   DDCCI                                                                 04/05/2012 11:15:33 PAGE 16  
+
+                   ucDDCCI_TxBuf[3]           = 2;
+                   TxCommandReady();
+              }
+              //---------------------------------------------------------------------------------------
+              void DDCCI_GetPagedVCP()
+              {
+                   //ucVPC_Page = 2;
+                   ucDDCCI_TxBuf[CI_LENGTH]   = 0x09;
+                   ucDDCCI_TxBuf[COMMAND]     = 0xc7;
+                   ucDDCCI_TxBuf[2]           = 0;                            // RC
+                   ucDDCCI_TxBuf[3]           = ucDDCCI_RxBuf[2];                            // VCCP
+                   ucDDCCI_TxBuf[4]           = ucDDCCI_RxBuf[3];             // CP
+                   ucDDCCI_TxBuf[5]           = 0;                            // TP  Momentary
+                   switch(ucDDCCI_RxBuf[3])
+                   {
+                       case DDC2B_CMD_VCP_Clock:              GetVPC_Clock(6);              break;
+                       case DDC2B_CMD_VCP_Brightness:         GetVPC_Bright(6);             break;
+                       case DDC2B_CMD_VCP_Contrast:           GetVPC_Contrast(6);           break;
+                       case DDC2B_CMD_VCP_RedGain:            GetVPC_RedGain(6);            break;
+                       case DDC2B_CMD_VCP_GreenGain:          GetVPC_GreenGain(6);          break;
+                       case DDC2B_CMD_VCP_BlueGain:           GetVPC_BlueGain(6);           break;
+                       case DDC2B_CMD_VCP_HPosition:          GetVPC_HPosition(6);          break;
+                       case DDC2B_CMD_VCP_VPosition:          GetVPC_VPosition(6);          break;
+                       case DDC2B_CMD_VCP_ClockPhase:         GetVPC_Phase(6);              break;
+                       case DDC2B_CMD_VCP_SelectColorPreset:  GetVPC_ColorTmp(6);           break;
+                       case DDC2B_CMD_VCP_MonitorType:        GetMonitorType(6);            break;
+                       //case DDC2B_CMD_VCP_Language:           GetVPC_Language(6);           break;
+                       //case DDC2B_CMD_VCP_OSDHPosition:       GetNMVVPC_OSDH();              break;
+                       //case DDC2B_CMD_VCP_OSDVPosition:       GetNMVVPC_OSDV();              break;
+                       default:
+                            ucDDCCI_TxBuf[2]           = 1;                            // RC cmd not support
+                            ucDDCCI_TxBuf[5]               = 1;
+                                        TxCommandReady();
+                            break;
+                   }
+              }
+              //---------------------------------------------------------------------------------------
+              void DDCCI_SetPagedVCP()
+              {
+                   //ucVPC_Page = 2;
+                   ucDDCCI_TxBuf[CI_LENGTH]   = 0x09;
+                   ucDDCCI_TxBuf[COMMAND]             = 0xc7;
+                   ucDDCCI_TxBuf[2]           = 0;                            // RC
+                   ucDDCCI_TxBuf[3]           = ucDDCCI_RxBuf[2];                     // VCCP
+                   ucDDCCI_TxBuf[4]           = ucDDCCI_RxBuf[3];             // CP
+                   ucDDCCI_TxBuf[5]           = 0;                            // TP  Set parameter
+                   switch(ucDDCCI_RxBuf[3])
+                   {
+                       case DDC2B_CMD_VCP_ALLReset:
+                            AnwerDDCCISet();
+                            //SetVPC_ALLReset(ucDDCCI_RxBuf[5]);
+                            break;
+                       case DDC2B_CMD_VCP_ColorReset:
+                            AnwerDDCCISet();
+                            //SetVPC_ColorReset(ucDDCCI_RxBuf[5]);
+                            break;
+                       case DDC2B_CMD_VCP_Clock:
+                            SetVPC_Clock(ucDDCCI_RxBuf[5]);
+                            GetVPC_Clock(6);
+                            SetVPC_ClockDo();
+                            break;
+                       case DDC2B_CMD_VCP_Brightness:
+C51 COMPILER V8.16   DDCCI                                                                 04/05/2012 11:15:33 PAGE 17  
+
+                            SetVPC_Bright(ucDDCCI_RxBuf[5]);
+                            GetVPC_Bright(6);
+                            SetVPC_BrightDo();
+                            break;
+                       case DDC2B_CMD_VCP_Contrast:
+                            SetVPC_Contrast(ucDDCCI_RxBuf[5]);
+                            GetVPC_Contrast(6);
+                            SetVPC_ContrastDo();
+                            break;
+                       case DDC2B_CMD_VCP_RedGain:
+                            SetVPC_RedGain(ucDDCCI_RxBuf[5]);
+                            GetVPC_RedGain(6);
+                            SetVPC_RedGainDo(ucDDCCI_RxBuf[5]);
+                            break;
+                       case DDC2B_CMD_VCP_GreenGain:
+                            SetVPC_GreenGain(ucDDCCI_RxBuf[5]);
+                            GetVPC_GreenGain(6);
+                            SetVPC_GreenGainDo(ucDDCCI_RxBuf[5]);
+                            break;
+                       case DDC2B_CMD_VCP_BlueGain:
+                            SetVPC_BlueGain(ucDDCCI_RxBuf[5]);
+                            GetVPC_BlueGain(6);
+                            SetVPC_BlueGainDo(ucDDCCI_RxBuf[5]);
+                            break;
+                       case DDC2B_CMD_VCP_AutoSetUp:
+                            CAutoDoAutoConfig();
+                            // Repeat
+                            break;
+                       case DDC2B_CMD_VCP_HPosition:
+                            SetVPC_HPosition((ucDDCCI_RxBuf[4] << 8) | ucDDCCI_RxBuf[5]);
+                            GetVPC_HPosition(6);
+                            SetVPC_HPositionDo();
+                            break;
+                       case DDC2B_CMD_VCP_VPosition:
+                            SetVPC_VPosition((ucDDCCI_RxBuf[4] << 8) | ucDDCCI_RxBuf[5]);
+                            GetVPC_VPosition(6);
+                            SetVPC_VPositionDo();
+                            break;
+                       case DDC2B_CMD_VCP_ClockPhase:
+                            SetVPC_Phase(ucDDCCI_RxBuf[5]);
+                            GetVPC_Phase(6);
+                            SetVPC_PhaseDo();
+                            break;
+                       case DDC2B_CMD_VCP_SelectColorPreset:
+                            SetVPC_ColorTmp(ucDDCCI_RxBuf[5]);
+                            //GetVPC_ColorTmp(6);
+                            SetVPC_ColorTmpDo();
+                            //SetVPC_PhaseDo();
+                            break;
+                       case DDC2B_CMD_VCP_Language:
+                            //SetVPC_Language(ucDDCCI_RxBuf[5]);
+                            //GetVPC_Language(6);
+                            break;
+                       case DDC2B_CMD_VCP_SAVECOLORTMPSTATE:
+                            AnwerDDCCISet();
+                            //SetVPC_SaveColorTmpState();
+                            break;
+                       case DDC2B_CMD_VCP_STOP:
+                            AnwerDDCCISet();
+                            fDDCCI_Loop = 1;
+                            break;
+                       case DDC2B_CMD_VCP_START:
+C51 COMPILER V8.16   DDCCI                                                                 04/05/2012 11:15:33 PAGE 18  
+
+                            AnwerDDCCISet();
+                            fDDCCI_Loop = 0;
+                            break;
+                       case DDC2B_CMD_VCP_ContrastAuto:
+                            AnwerDDCCISet();
+                            //SetNMVVPC_Auto();
+                            break;
+                       case DDC2B_CMD_VCP_OSDHPosition:
+                            //SetNMVVPC_OSDH();
+                            //GetNMVVPC_OSDH();
+                            break;
+                       case DDC2B_CMD_VCP_OSDVPosition:
+                            //SetNMVVPC_OSDV();
+                            //GetNMVVPC_OSDV();
+                            break;
+              
+                       default:
+                            ucDDCCI_TxBuf[2] = 1;                            // RC cmd not support
+                            ucDDCCI_TxBuf[5] = 1;
+                            TxCommandReady();
+                            break;
+                   }
+              }
+              
+              //---------------------------------------------------------------------------------------
+              
+              void AnwerDDCCISet()
+              {
+                   ucDDCCI_TxBuf[6]           = 0x00;
+                   ucDDCCI_TxBuf[7]           = 1;
+                   ucDDCCI_TxBuf[8]           = ucDDCCI_RxBuf[4];
+                   ucDDCCI_TxBuf[9]           = ucDDCCI_RxBuf[5];
+                   TxCommandReady();
+              }
+              
+              //---------------------------------------------------------------------------------------
+              void GetMonitorType(unsigned char BassAddr)
+              {
+                   ucVPC_Page = 0;
+                   ucDDCCI_TxBuf[BassAddr]               = 0;                                 // MH
+                   ucDDCCI_TxBuf[BassAddr + 1]           = 3;
+                   ucDDCCI_TxBuf[BassAddr + 2]           = 0;                                 // SH
+                   ucDDCCI_TxBuf[BassAddr + 3]           = 3;                                 // TFT
+                   TxCommandReady();
+              }
+              //---------------------------------------------------------------------------------------
+              
+              
+              */
+              
+              /*
+              void GetNMVVPC_OSDH()          // Range : Data[0] ~ Data[1]
+              {
+                   ucVPC_Page = 2;
+                       #if(DDCCI_ALL)
+                   Get_OSD_Margin();   
+                   ucDDCCI_TxBuf[6]           = 0x00;
+                   ucDDCCI_TxBuf[7]           = Data[1] - Data[0];
+                   ucDDCCI_TxBuf[8]           = 0x00;
+                   ucDDCCI_TxBuf[9]           = stGUD1.OSD_POSH - Data[0];
+                       #endif
+                   TxCommandReady();
+C51 COMPILER V8.16   DDCCI                                                                 04/05/2012 11:15:33 PAGE 19  
+
+              }
+              //---------------------------------------------------------------------------------------
+              void GetNMVVPC_OSDV()           // Range : OSD_MIN ~ OSD_MAX
+              {
+                     ucVPC_Page = 2;
+              //     ucDDCCI_TxBuf[6]           = 0x00;
+              //     ucDDCCI_TxBuf[7]           = OSD_MAX - OSD_MIN;
+              //     ucDDCCI_TxBuf[8]           = 0x00;
+              //     ucDDCCI_TxBuf[9]           = stGUD1.OSD_POSV - OSD_MIN;
+                     TxCommandReady();
+              }
+              //---------------------------------------------------------------------------------------
+              void SetNMVVPC_Auto()
+              {
+                   ucVPC_Page = 2;
+              //     Auto_Balance();
+              }
+              //---------------------------------------------------------------------------------------
+              void SetNMVVPC_OSDH()          // Range : Data[0] ~ Data[1]
+              {
+                   ucVPC_Page = 2;
+                       #if(DDCCI_ALL)
+                   Get_OSD_Margin();
+                   if(ucDDCCI_RxBuf[5] > Data[1] - Data[0])     return;
+                   stGUD1.OSD_POSH = ucDDCCI_RxBuf[5] + Data[0];
+                       #endif
+              }
+              //---------------------------------------------------------------------------------------
+              void SetNMVVPC_OSDV()           // Range : OSD_MIN ~ OSD_MAX
+              {
+                   ucVPC_Page = 2;
+              //     if(ucDDCCI_RxBuf[5] > OSD_MAX - OSD_MIN)     return;
+              //     ucDDCCI_TxBuf[6]           = 0x00;
+              //     ucDDCCI_TxBuf[7]           = OSD_MAX - OSD_MIN;
+              //     ucDDCCI_TxBuf[8]           = 0x00;
+              //     ucDDCCI_TxBuf[9]           = stGUD1.OSD_POSV - OSD_MIN;
+              //     stGUD1.OSD_POSV = ucDDCCI_RxBuf[5] + OSD_MIN;
+              }
+              //---------------------------------------------------------------------------------------
+              
+              void SetVPC_SaveColorTmpState()
+              {
+                   ucVPC_Page = 2;
+                   #if(DDCCI_ALL)
+                       SET_SAVECOLORTMP(COLORTMP_SAVE);
+                   SAVE_COLORTMPSATE;
+                       #endif
+              }
+              //---------------------------------------------------------------------------------------
+              */
+              
+              #endif  //end of DEBUG_ONLY
+1154          
+1155          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    510    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =     75    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      2       4
+C51 COMPILER V8.16   DDCCI                                                                 04/05/2012 11:15:33 PAGE 20  
+
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      4    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
