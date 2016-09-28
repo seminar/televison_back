@@ -1,0 +1,133 @@
+C51 COMPILER V8.16   LANGAGE                                                               04/05/2012 11:15:29 PAGE 1   
+
+
+C51 COMPILER V8.16, COMPILATION OF MODULE LANGAGE
+OBJECT MODULE PLACED IN .\Output\Langage.obj
+COMPILER INVOKED BY: D:\安装文件\keil\C51\BIN\C51.EXE Language\Langage.c OPTIMIZE(9,SIZE) BROWSE DEFINE(CMOS_CHIP_TYPE=P
+                    -CB_2025LV13) PRINT(.\Output\Langage.lst) OBJECT(.\Output\Langage.obj)
+
+line level    source
+
+   1          #include "Header\Include.h"
+   2          
+   3          
+   4          #if(_NEW_OSD_FUNC)
+   5          
+   6          //----------------------------------------------------------------------------
+   7          BYTE GetNextLanguage(BYTE CurrIndex)
+   8          {
+   9   1           BYTE i;
+  10   1           WORD iMask = usLANGUAGE_MASK;
+  11   1      
+  12   1           iMask >>= (CurrIndex+1);
+  13   1      
+  14   1           for(i=CurrIndex+1;i<16;i++)
+  15   1           {
+  16   2               if(iMask&0x01)
+  17   2               {
+  18   3                   return i;
+  19   3               }
+  20   2               iMask >>= 1;
+  21   2           }
+  22   1      
+  23   1           //???????????Next Langage
+  24   1           iMask = usLANGUAGE_MASK;
+  25   1           for(i=0;i<CurrIndex;i++)
+  26   1           {
+  27   2               if(iMask&0x01)
+  28   2               {
+  29   3                   return i;
+  30   3               }
+  31   2               iMask >>= 1;
+  32   2           }
+  33   1           return CurrIndex;
+  34   1      }
+  35          
+  36          //----------------------------------------------------------------------------
+  37          BYTE GetPrevLanguage(BYTE CurrIndex)
+  38          {
+  39   1           char i;
+  40   1           WORD iMask = usLANGUAGE_MASK;
+  41   1      
+  42   1           iMask <<= (16 - CurrIndex);
+  43   1      
+  44   1           for(i=CurrIndex - 1;i>=0;i--)
+  45   1           {
+  46   2               if(iMask & 0x8000)
+  47   2               {
+  48   3                   return i;
+  49   3               }
+  50   2               iMask <<= 1;
+  51   2           }
+  52   1      
+  53   1           //???????????Prev Langage
+  54   1           iMask = usLANGUAGE_MASK;
+C51 COMPILER V8.16   LANGAGE                                                               04/05/2012 11:15:29 PAGE 2   
+
+  55   1           for(i=15;i>=CurrIndex;i--)
+  56   1           {
+  57   2               if(iMask & 0x8000)
+  58   2               {
+  59   3                   return i;
+  60   3               }
+  61   2               iMask <<= 1;
+  62   2           }
+  63   1           return CurrIndex;
+  64   1      }
+  65          
+  66          //----------------------------------------------------------------------------
+  67          BYTE CheckLanguage()
+  68          {
+  69   1           BYTE ucLanguage = GET_LANGUAGE;
+  70   1           WORD iMask      = usLANGUAGE_MASK;
+  71   1      
+  72   1           iMask >>= ucLanguage;
+  73   1      
+  74   1           if(iMask & 0x01)
+  75   1           {
+  76   2               return ucLanguage;
+  77   2           }
+  78   1           else
+  79   1           {
+  80   2               ucLanguage = FirstLanguage();
+  81   2               SET_LANGUAGE(ucLanguage);
+  82   2      
+  83   2               return ucLanguage;
+  84   2           }
+  85   1      }
+  86          
+  87          //----------------------------------------------------------------------------
+  88          BYTE FirstLanguage()
+  89          {
+  90   1           BYTE i;
+  91   1           WORD iMask = usLANGUAGE_MASK;
+  92   1      
+  93   1           for(i=0;i<16;i++)
+  94   1           {
+  95   2               if(iMask&0x01)
+  96   2               {
+  97   3                   return i;
+  98   3               }
+  99   2               iMask >>= 1;
+ 100   2           }
+ 101   1           return 255;
+ 102   1      }
+ 103          
+ 104          //----------------------------------------------------------------------------
+ 105          #endif //#if(NEW_OSD_FUNC)
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    241    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+C51 COMPILER V8.16   LANGAGE                                                               04/05/2012 11:15:29 PAGE 3   
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
