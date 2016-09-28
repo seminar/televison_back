@@ -1,0 +1,32 @@
+C51 COMPILER V8.16   ALIGN                                                                 07/15/2011 14:39:48 PAGE 1   
+
+
+C51 COMPILER V8.16, COMPILATION OF MODULE ALIGN
+OBJECT MODULE PLACED IN .\Output\Align.obj
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE Code\Align.c OPTIMIZE(9,SIZE) BROWSE DEFINE(CMOS_CHIP_TYPE=PCB_2025LV13) PR
+                    -INT(.\Output\Align.lst) OBJECT(.\Output\Align.obj)
+
+line level    source
+
+   1          //----------------------------------------------------------------------------------------------------
+   2          // ID Code      : Align.c No.0000
+   3          // Update Note  : 
+   4          //
+   5          //----------------------------------------------------------------------------------------------------
+   6          
+   7          #define __ALIGN__
+   8          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   ----    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
