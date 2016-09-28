@@ -1,0 +1,10 @@
+MAPP_TV.
+
+key_ttx:gointo TTX. SET TTX MODE->
+
+MApp_TTX_Idle_ProcessUserInput())
+{
+	DO KEY action;
+	u8KeyCode = KEY_NULL;
+
+}
