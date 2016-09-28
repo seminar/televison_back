@@ -1,0 +1,3026 @@
+C51 COMPILER V8.16   MODE                                                                  04/05/2012 11:15:23 PAGE 1   
+
+
+C51 COMPILER V8.16, COMPILATION OF MODULE MODE
+OBJECT MODULE PLACED IN .\Output\Mode.obj
+COMPILER INVOKED BY: D:\安装文件\keil\C51\BIN\C51.EXE Code\Mode.c OPTIMIZE(9,SIZE) BROWSE DEFINE(CMOS_CHIP_TYPE=PCB_2025
+                    -LV13) PRINT(.\Output\Mode.lst) OBJECT(.\Output\Mode.obj)
+
+line level    source
+
+   1          //----------------------------------------------------------------------------------------------------
+   2          // ID Code      : Mode.c No.0004
+   3          // Update Note  : 
+   4          //
+   5          //----------------------------------------------------------------------------------------------------
+   6          
+   7          #define __MODE__
+   8          
+   9          #include "Header\Include.h"
+  10          
+  11          #if(_VIDEO_SUPPORT && _VIDEO_CHIP == _VDC_TB1334)
+  12          extern void CTB1334VideoMode(BYTE ucVideoMode, BYTE ucScalerType);
+  13          bit TVLockSignalFlag = 0;
+  14          #endif
+  15          
+  16          
+  17          //--------------------------------------------------
+  18          // Description  : Mode handler, the main control flow
+  19          // Input Value  : None
+  20          // Output Value : None
+  21          //--------------------------------------------------
+  22          void CModeHandler(void)
+  23          {  
+  24   1          if(CPowerHandler())
+  25   1          {
+  26   2              ucCurrState = GET_POWERSTATUS() ? _INITIAL_STATE : _PWOFF_STATE;
+  27   2          }
+  28   1              
+  29   1      #if(_VIDEO_SUPPORT && _VIDEO_CHIP == _VDC_TB1334)
+  30   1          if (bSourceVideo())
+  31   1             CVideoModeHandler();
+  32   1      #endif
+  33   1      
+  34   1      
+  35   1      
+  36   1          switch(ucCurrState)
+  37   1              {
+  38   2              case _PWOFF_STATE:
+  39   2                  ucCurrState = GET_POWERSTATUS() ? _INITIAL_STATE : _PWOFF_STATE;
+  40   2                  break;
+  41   2      
+  42   2              case _INITIAL_STATE:
+  43   2      #if(_LOGO_EN && _LOGO_TYPE == _LOGO_TYPE0)
+                         if(GET_LOGO_EN())
+                         DrawLogo();
+              #endif
+  47   2                  SET_FIRST_SHOW_NOTE();
+  48   2                  ucCurrState = _SEARCH_STATE; 
+  49   2                  break;
+  50   2      
+  51   2              case _SOURCE_CHANGE_STATE:
+  52   2      #if(_CHANGE_SOURCE_METHOD == _CHANGE_SOURCE_METHOD_0)
+  53   2                  CTimerDelayXms(20);
+  54   2      #endif
+C51 COMPILER V8.16   MODE                                                                  04/05/2012 11:15:23 PAGE 2   
+
+  55   2                  break;
+  56   2      
+  57   2              case _SEARCH_STATE:
+  58   2                  if(CSyncHandler())
+  59   2                  {     
+  60   3                      // Source and sync OK
+  61   3                      if(CModeDetect())
+  62   3                      {
+  63   4      
+  64   4      #if(_SCALER_TYPE == _RTD2547D)
+                                  CModeInterlaceCheck();
+              #endif                
+  67   4                          // Mode stable. Initial display settings  switch to active/nosignal/nosupport state
+  68   4                          SET_READYFORDISPLAY();
+  69   4                          if(stModeInfo.ModeCurr == _MODE_NOSIGNAL)
+  70   4                          {
+  71   5                              ucCurrState = _NOSIGNAL_STATE;
+  72   5                          }
+  73   4      #if(_SCALER_TYPE == _RTD2547D)
+                  #if(_FRC_SUPPORT == _ON)
+                                  else if((stModeInfo.ModeCurr == _MODE_NOSUPPORT) || ((stModeInfo.ModeCurr > _MODE_1440
+             -x900_75HZ) && (stModeInfo.IVFreq > (_PANEL_MAX_FRAME_RATE + 5))))
+                  #else
+                                  else if(stModeInfo.ModeCurr == _MODE_NOSUPPORT)
+                  #endif
+              #else
+  80   4                          else if(stModeInfo.ModeCurr == _MODE_NOSUPPORT)
+  81   4      #endif
+  82   4                          {
+  83   5                              CModeAutoMeasureOn();
+  84   5                              ucCurrState = _NOSUPPORT_STATE;
+  85   5                          }
+  86   4                          else
+  87   4                          {   
+  88   5      #if(_SCALER_TYPE == _RTD2547D)
+                  #if((_OD_SUPPORT == _ON) || (_FRC_SUPPORT == _ON))
+                                      CMemorySDRAMReset();
+                  #endif
+              #endif
+  93   5      
+  94   5      #if(_VIDEO_SUPPORT && _VIDEO_CHIP == _VDC_TB1334)
+  95   5                          if (bSourceVideo())
+  96   5                              CLoadVideoModeData();
+  97   5      #endif
+  98   5      
+  99   5                              CModeDisplayActiveMode();
+ 100   5                              CModeAutoMeasureOn();
+ 101   5      #if(_SCALER_TYPE == _RTD2547D)
+                  #if(_HDMI_SUPPORT == _ON)
+                                      if(CHdmiFormatDetect() && (CGetSourcePortType(stSystemData.InputSource) == _HDMI_P
+             -ORT))//Input source is the HDMI format.
+                                      {
+                                          CHdmiAudioFirstTracking();
+                                      }
+                                      CTimerActiveTimerEvent(SEC(0.5), CHdmiAudioWaitingFlagReadyEven);
+                  #endif
+              #endif
+ 110   5                              ucCurrState = _ACTIVE_STATE;
+ 111   5                          }
+ 112   4                      }
+ 113   3                      else
+ 114   3                      {
+C51 COMPILER V8.16   MODE                                                                  04/05/2012 11:15:23 PAGE 3   
+
+ 115   4                          // Still in search state
+ 116   4                      }
+ 117   3      
+ 118   3                      ucEvent0 = _INACTIVE_COUNTDOWN_EVENT;
+ 119   3                  }
+ 120   2                  else
+ 121   2                  {
+ 122   3                      CTimerCountDownEventProc(&ucEvent0, 5, CModeSyncTimeoutCountDownEvent);
+ 123   3                  }
+ 124   2              /*
+ 125   2                  if(GET_FIRST_LOADFONT() == _TRUE)
+ 126   2                  {
+ 127   2                      CLR_FIRST_LOADFONT();
+ 128   2                      COsdDispFirstTimeLoadFont();
+ 129   2                  } */
+ 130   2      #if(_DDC_TYPE != _DDC_NONE)
+                          DDCInit();
+              #endif    
+ 133   2                  break;
+ 134   2      
+ 135   2              case _ACTIVE_STATE:
+ 136   2         #if(_SCALER_TYPE == _RTD2547D)
+                          if(bFrameSyncDet() &&  (!GET_FRCTATUS()))
+                 #else
+ 139   2                  if(bFrameSyncDet())
+ 140   2         #endif
+ 141   2                  {
+ 142   3                      CModeResetMode();
+ 143   3                  }
+ 144   2                  else
+ 145   2                  {
+ 146   3                              
+ 147   3                      if(bModeIsChange())
+ 148   3                      {
+ 149   4                          CModeResetMode();
+ 150   4                      }
+ 151   3                      else
+ 152   3                      { 
+ 153   4                          CModeSetDisplayReady();                                                               
+             -   
+ 154   4                      }
+ 155   3                        #if(_VIDEO_SUPPORT && _VIDEO_CHIP == _VDC_TB1334)
+ 156   3                            if(_GET_INPUT_SOURCE()==_SOURCE_VIDEO_TV)
+ 157   3                                {
+ 158   4                                           if (gmi_CModeLocked())   //with signal
+ 159   4                                              {
+ 160   5                                                    MUTE_OFF();
+ 161   5                                                      if(GET_BURNIN_STATE() != BURNIN_ON)
+ 162   5                                                              {
+ 163   6                                                   CAdjustBackgroundColor(0x00, 0x00,0x00);   
+ 164   6                                                    CScalerSetBit(_VDISP_CTRL_28, ~(_BIT5 | _BIT3), (_BIT3)); //
+             - Set normal display
+ 165   6                                                              }
+ 166   5                                                   gmi_CI2CWrite9886(ucTVType, _TUNER_MUTE_OFF, _NORMAL_MODE);
+ 167   5                                                   TVLockSignalFlag = 1;
+ 168   5                                              }
+ 169   4                                         else
+ 170   4                                              {
+ 171   5                                                   MUTE_ON();
+ 172   5                                                  if(GET_BURNIN_STATE() != BURNIN_ON)
+ 173   5                                                      {
+ 174   6                                                            if(_GET_BLUE_BACKGROUND())
+C51 COMPILER V8.16   MODE                                                                  04/05/2012 11:15:23 PAGE 4   
+
+ 175   6                                                              {
+ 176   7                                                           CAdjustBackgroundColor(0x00, 0x00, 0xff);   
+ 177   7                                                               CScalerSetBit(_VDISP_CTRL_28, ~(_BIT5 | _BIT3), (_BIT5)); 
+ 178   7                                                              }
+ 179   6                                                        else
+ 180   6                                                              {
+ 181   7                                                              CAdjustBackgroundColor(0x00, 0x00, 0x00);                               
+ 182   7                                                              CScalerSetBit(_VDISP_CTRL_28, ~(_BIT5 |_BIT3),  0x00 );                 
+ 183   7                                                              }
+ 184   6                                                      }
+ 185   5                                                    gmi_CI2CWrite9886(ucTVType, _TUNER_MUTE_ON, _NORMAL_MODE);
+ 186   5                                                   TVLockSignalFlag = 0;
+ 187   5                                               }
+ 188   4                                }
+ 189   3                         #endif
+ 190   3                                      
+ 191   3                  }
+ 192   2      #if(_VIDEO_SUPPORT && _VIDEO_CHIP == _VDC_TB1334)
+ 193   2                  if (bSourceVideo())
+ 194   2                     CSetVideoBackLight();
+ 195   2             if(_GET_INPUT_SOURCE() == _SOURCE_VIDEO_TV)
+ 196   2             {
+ 197   3              if (gmi_CModeLocked() )//with signal
+ 198   3                    {  MUTE_OFF();
+ 199   4                        if(!TVLockSignalFlag)
+ 200   4                              {
+ 201   5                       CModeResetMode();
+ 202   5                       TVLockSignalFlag = 1;
+ 203   5                              }
+ 204   4                                                                      
+ 205   4                      MUTE_OFF();                             
+ 206   4                      gmi_CSetVDCFreeRunMode(_VDC_FREE_RUN_MODE_TO_AUTO);
+ 207   4                      gmi_CI2CWrite9886(ucTVType, _TUNER_MUTE_OFF, _NORMAL_MODE);
+ 208   4                    }
+ 209   3                    
+ 210   3                    else
+ 211   3                    {
+ 212   4                        if(TVLockSignalFlag)
+ 213   4                              {
+ 214   5                     CModeResetMode();
+ 215   5                      TVLockSignalFlag = 0;
+ 216   5                              }
+ 217   4                      MUTE_ON();
+ 218   4                      gmi_CSetVDCFreeRunMode((CHECK60HZ()) ? _VDC_FREE_RUN_MODE_TO_60HZ : _VDC_FREE_RUN_MODE_TO_
+             -50HZ);
+ 219   4                      gmi_CI2CWrite9886(ucTVType, _TUNER_MUTE_ON, _NORMAL_MODE);
+ 220   4                    }
+ 221   3                                
+ 222   3                     if(CHECK60HZ())
+ 223   3                         SAW_HIGH();
+ 224   3                      else
+ 225   3                         SAW_LOW();
+ 226   3               }
+ 227   2      
+ 228   2      #endif
+ 229   2      
+ 230   2                  break;
+ 231   2      
+ 232   2              case _NOSUPPORT_STATE:
+ 233   2                  if(GET_READYFORDISPLAY() == _TRUE)
+ 234   2                  {
+ 235   3                      CLR_READYFORDISPLAY();
+C51 COMPILER V8.16   MODE                                                                  04/05/2012 11:15:23 PAGE 5   
+
+ 236   3                      SET_OSD_READYFORDISPLAY();
+ 237   3                      CModeSetFreeRun();
+ 238   3                  }
+ 239   2      
+ 240   2                  if(CModeConnectIsChange() || CModeIsChange())
+ 241   2                      CModeResetMode();
+ 242   2      
+ 243   2                  break;
+ 244   2      
+ 245   2              case _NOSIGNAL_STATE:
+ 246   2                  if(GET_READYFORDISPLAY() == _TRUE)
+ 247   2                  {
+ 248   3                      CLR_READYFORDISPLAY();
+ 249   3                      SET_OSD_READYFORDISPLAY();
+ 250   3                      CModeSetFreeRun();
+ 251   3      #if(_SCALER_TYPE == _RTD2547D && _HDMI_SUPPORT)
+                                              if ((CGetSourcePortType(stSystemData.InputSource) == _HDMI_PORT)) 
+                                              {
+                                                      CScalerPageSelect(_PAGE2);
+                                                      CScalerSetBit(_P2_Z0_CALIBRATION_CTRL_AC, ~_BIT6, 0x00);
+                                                      CTimerDelayXms(500);
+                                                      CScalerSetBit(_P2_Z0_CALIBRATION_CTRL_AC, ~_BIT6, _BIT6);
+                                              }
+              #endif                          
+ 260   3                  }
+ 261   2      
+ 262   2      #if(_VIDEO_SUPPORT && _VIDEO_CHIP == _VDC_TB1334)
+ 263   2                  if (bSourceVideo()) 
+ 264   2                  {
+ 265   3                      if (gmi_CSourceScanInputPortVideo())
+ 266   3                      {
+ 267   4        #if(_VIDEO_TV_SUPPORT)
+ 268   4                          ucVideoNoModeTime = 253;
+ 269   4        #endif
+ 270   4                          CModeResetMode();
+ 271   4                      }
+ 272   3                  }        
+ 273   2                  else
+ 274   2      #endif
+ 275   2                  {
+ 276   3                      if(CModeConnectIsChange() || CSourceHandler())
+ 277   3                          CModeResetMode();
+ 278   3                  }
+ 279   2      
+ 280   2                  break;
+ 281   2      
+ 282   2              case _SLEEP_STATE:
+ 283   2      #if(_VIDEO_SUPPORT && _VIDEO_CHIP == _VDC_TB1334)
+ 284   2                  if (bSourceVideo()) 
+ 285   2                  {
+ 286   3                      if(gmi_CSourceScanInputPortVideo())
+ 287   3                      {
+ 288   4                          CPowerLVDSOn();
+ 289   4              
+ 290   4                          CModeResetMode();
+ 291   4                      }        
+ 292   3                  }        
+ 293   2                  else
+ 294   2      #endif
+ 295   2                  {
+ 296   3                      if(CModeConnectIsChange() || CSourceHandler())
+ 297   3                      {
+C51 COMPILER V8.16   MODE                                                                  04/05/2012 11:15:23 PAGE 6   
+
+ 298   4          #if (_OUTPUT_BUS == _PANEL_TTL)   // For sleep up color error bug
+                                  CPowerLVDSOn();
+                  #endif
+ 301   4          
+ 302   4                          CModeResetMode();
+ 303   4                      }
+ 304   3                  }
+ 305   2                  break;
+ 306   2      
+ 307   2              default:
+ 308   2                  break;
+ 309   2          }
+ 310   1      }
+ 311          
+ 312          //----------------------------------------------------------------------------------------------------
+ 313          // Measure Functions
+ 314          //----------------------------------------------------------------------------------------------------
+ 315          
+ 316          //--------------------------------------------------
+ 317          // Description  : Check measure ready process
+ 318          // Input Value  : None
+ 319          // Output Value : Return _TRUE if measure finished, _FALSE if timeout
+ 320          //--------------------------------------------------
+ 321          bit CModeMeasureReady(void)
+ 322          {
+ 323   1          CScalerSetBit(_SYNC_SELECT_47, ~_BIT0, 0x00);
+ 324   1          CAdjustSyncProcessorMeasureStart();
+ 325   1      
+ 326   1          if(CTimerPollingEventProc(60, CMiscModeMeasurePollingEvent))
+ 327   1          {
+ 328   2              return _TRUE;
+ 329   2          }
+ 330   1          else
+ 331   1          {
+ 332   2              CScalerSetBit(_MEAS_HS_PERIOD_H_52, ~_BIT5, 0x00);
+ 333   2              return _FALSE;
+ 334   2          }
+ 335   1      }
+ 336          //--------------------------------------------------
+ 337          // Description  : Get measure data and convert into system information
+ 338          // Input Value  : None
+ 339          // Output Value : Return _TRUE if success, _FALSE if the measurement result is wrong
+ 340          //--------------------------------------------------
+ 341          bit CModeMeasureData(void)
+ 342          {
+ 343   1          // Read measurement status bit
+ 344   1          CScalerRead(_MEAS_HS_PERIOD_H_52, 3, &pData[8], _AUTOINC);
+ 345   1      
+ 346   1          if((bit)(pData[8] & _BIT4) || (bit)(pData[10] & _BIT4) || (bit)(pData[10] & _BIT5))
+ 347   1              return _FALSE;
+ 348   1      
+ 349   1          // Pop up measurement result
+ 350   1          CScalerSetBit(_MEAS_HS_PERIOD_H_52, ~_BIT6, _BIT6);
+ 351   1      
+ 352   1      #if((_SCALER_TYPE == _RTD2553V) || (_SCALER_TYPE == _RTD2546N)) 
+              
+                  CScalerRead(_MEAS_HS_PERIOD_H_52, 7, &pData[8], _AUTOINC);
+                  // Calculate measurement result
+                  ((WORD *)pData)[0] = ((pData[8] & 0x1f) << 8) | pData[9];
+                  ((WORD *)pData)[1] = ((pData[10] & 0x1f) << 8) | pData[11];
+                  ((WORD *)pData)[2] = ((pData[12] & 0x0f) << 8) | pData[13];
+                  ((WORD *)pData)[3] = ((pData[12] & 0xf0) << 4) | pData[14];
+C51 COMPILER V8.16   MODE                                                                  04/05/2012 11:15:23 PAGE 7   
+
+              
+              #elif(_SCALER_TYPE == _RTD2525L || _SCALER_TYPE == _RTD2547D)
+ 362   1      
+ 363   1          CScalerSetBit(_MEAS_VS_HIGH_PERIOD_L_58, ~_BIT0, 0x00); //V305 modify 
+ 364   1          CScalerRead(_MEAS_HS_PERIOD_H_52, 6, &pData[8], _AUTOINC);
+ 365   1          // Calculate measurement result
+ 366   1          ((WORD *)pData)[0] = ((pData[8] & 0x1f) << 8) | pData[9]; //V305 modify 
+ 367   1          ((WORD *)pData)[1] = ((pData[10] & 0x1f) << 8) | pData[11]; //V305 modify 
+ 368   1          ((WORD *)pData)[2] = ((pData[12] & 0xf0) << 4) | pData[13]; //V305 modify 
+ 369   1      
+ 370   1      #else
+              
+                  // Pop up measurement result
+                  CScalerRead(_MEAS_HS_PERIOD_H_52, 7, &pData[8], _AUTOINC);
+              
+                  // Calculate measurement result
+                  ((WORD *)pData)[0] = ((pData[8] & 0x1f) << 8) | pData[9];
+                  ((WORD *)pData)[1] = ((pData[10] & 0x1f) << 8) | pData[11];
+                  ((WORD *)pData)[2] = ((pData[12] & 0x0f) << 8) | pData[13];
+                  ((WORD *)pData)[3] = ((pData[12] & 0xf0) << 4) | pData[14];
+              
+              #endif  // End of #if((_SCALER_TYPE == _RTD2553V) || (_SCALER_TYPE == _RTD2546N))
+ 382   1      
+ 383   1      
+ 384   1          if((((WORD *)pData)[0] >=  0x07ff) || (((WORD *)pData)[1] >= 0x07ff) || (((WORD *)pData)[0] == 0) || (
+             -((WORD *)pData)[1] == 0))
+ 385   1          {
+ 386   2              // The measurement result is out of range
+ 387   2              return _FALSE;
+ 388   2          }
+ 389   1          else
+ 390   1          {
+ 391   2              // Store measurement results in global system variable
+ 392   2              stModeInfo.Polarity = (pData[10] & 0xc0) >> 6;
+ 393   2              stModeInfo.IHCount = ((WORD *)pData)[0];
+ 394   2              stModeInfo.IHFreq = (WORD)((DWORD)_RTD_XTAL * 10 * 2 / stModeInfo.IHCount);
+ 395   2              stModeInfo.IHFreq = (stModeInfo.IHFreq >> 1) + (stModeInfo.IHFreq & 0x01);
+ 396   2              stModeInfo.IVTotal = ((WORD *)pData)[1];
+ 397   2              stModeInfo.IVFreq = (WORD)((DWORD)(stModeInfo.IHFreq) * 1000 * 2 / stModeInfo.IVTotal);
+ 398   2              stModeInfo.IVFreq = (stModeInfo.IVFreq >> 1) + (stModeInfo.IVFreq & 0x01);
+ 399   2              stModeInfo.IHSyncPulseCount = ((WORD *)pData)[2];
+ 400   2      
+ 401   2              return _TRUE;
+ 402   2          }
+ 403   1      } 
+ 404          //----------------------------------------------------------------------------------------------------
+ 405          // Mode Detect Functions
+ 406          //----------------------------------------------------------------------------------------------------
+ 407          
+ 408          
+ 409          //--------------------------------------------------
+ 410          // Description  : Mode detect process
+ 411          // Input Value  : None
+ 412          // Output Value : Return _TRUE if we get a stable mode
+ 413          //--------------------------------------------------
+ 414          bit CModeDetect(void)
+ 415          {
+ 416   1          switch(CGetSourcePortType(_GET_INPUT_SOURCE()))
+ 417   1          {
+ 418   2              case _DSUB_A0_PORT:
+ 419   2              case _DSUB_A1_PORT:
+ 420   2      #if((_TMDS_SUPPORT == _ON) || (_HDMI_SUPPORT == _ON))
+C51 COMPILER V8.16   MODE                                                                  04/05/2012 11:15:23 PAGE 8   
+
+                      case _DVI_PORT:
+                      case _DVI_I_A0_PORT:
+                      case _DVI_I_A1_PORT:
+                      case _HDMI_PORT:
+              #endif
+ 426   2      
+ 427   2      #if(_YPBPR_SUPPORT == _ON)
+                      case _YPBPR_A0_PORT:
+                      case _YPBPR_A1_PORT:
+              #endif
+ 431   2                              
+ 432   2      #if(_VIDEO_SUPPORT && _VIDEO_CHIP == _VDC_TB1334)
+ 433   2                  if (bSourceVideo())
+ 434   2                  {
+ 435   3                      if (gmi_CVideoModeChange())
+ 436   3                      {               
+ 437   4                          switch(VideoType)
+ 438   4                          {
+ 439   5                          case _60HZ:     
+ 440   5                              stModeInfo.ModeCurr = 0;    
+ 441   5                              break;
+ 442   5      
+ 443   5                          case _50HZ:
+ 444   5                              stModeInfo.ModeCurr = 1;    
+ 445   5                              break;
+ 446   5                          }
+ 447   4                      
+ 448   4                      
+ 449   4                          stModeUserData.HPosition    = tVIDEO_INPUTMODE_PRESET_TABLE[stModeInfo.ModeCurr].IHSta
+             -rtPos;
+ 450   4                          stModeUserData.VPosition    = tVIDEO_INPUTMODE_PRESET_TABLE[stModeInfo.ModeCurr].IVSta
+             -rtPos;
+ 451   4                          stModeUserData.Clock        = tVIDEO_INPUTMODE_PRESET_TABLE[stModeInfo.ModeCurr].IHTot
+             -al;
+ 452   4                          stModeUserData.Phase        = 0;
+ 453   4      
+ 454   4                          return _TRUE;
+ 455   4                      }
+ 456   3                  }
+ 457   2                  else
+ 458   2      #endif   
+ 459   2      
+ 460   2                  {
+ 461   3                      if(CModeDetectCommon()) 
+ 462   3                          return _TRUE;
+ 463   3                  }
+ 464   2                  break;
+ 465   2      
+ 466   2       /*       case _SOURCE_VIDEO8: 
+ 467   2      
+ 468   2      #if(_VIDEO_SUPPORT)
+ 469   2                  if (CModeDetectCommon())
+ 470   2                  {
+ 471   2                      if (gmi_CVideoModeChange())
+ 472   2                                      return _TRUE;
+ 473   2                  }
+ 474   2      #endif
+ 475   2                              break;*/
+ 476   2          }
+ 477   1      
+ 478   1          return _FALSE;
+ 479   1      }
+C51 COMPILER V8.16   MODE                                                                  04/05/2012 11:15:23 PAGE 9   
+
+ 480          
+ 481          //--------------------------------------------------
+ 482          // Description  : Mode detect process for VGA and DVI
+ 483          // Input Value  : None
+ 484          // Output Value : Return _TRUE if we get a stable mode
+ 485          //--------------------------------------------------
+ 486          bit CModeDetectCommon(void)
+ 487          {
+ 488   1          BYTE modetemp = _MODE_NOSIGNAL;
+ 489   1          BYTE polaritytemp;
+ 490   1          WORD hcount, vtotal;
+ 491   1      
+ 492   1          if(CModeMeasureReady())
+ 493   1          {
+ 494   2              polaritytemp    = stModeInfo.Polarity;
+ 495   2              hcount          = stModeInfo.IHCount;
+ 496   2              vtotal          = stModeInfo.IVTotal;
+ 497   2      
+ 498   2              // Get measure results and decide " modetemp = _MODE_NOSIGNAL/_MODE_NOSUPPORT/_MODE_EXIST "
+ 499   2              if(CModeMeasureData())
+ 500   2              {
+ 501   3                  CSyncModifyPolarityVGA();
+ 502   3      
+ 503   3                  stModeInfo.ModeCurr = _MODE_NOSIGNAL;
+ 504   3      
+ 505   3                  if(abs(stModeInfo.IHCount - hcount) <= 1)
+ 506   3                      stModeInfo.IHCount = hcount;
+ 507   3      
+ 508   3                  if(abs(stModeInfo.IVTotal - vtotal) <= 2) 
+ 509   3                      stModeInfo.IVTotal = vtotal;
+ 510   3      
+ 511   3                  if((stModeInfo.IHCount != hcount) || (stModeInfo.IVTotal != vtotal) || (stModeInfo.Polarity !=
+             - polaritytemp))
+ 512   3                  {
+ 513   4                      modetemp    = _MODE_NOSIGNAL;
+ 514   4                  }
+ 515   3                  else
+ 516   3                  {
+ 517   4                      if((stModeInfo.IHFreq < Panel.H_FREQ_Min) || (stModeInfo.IHFreq > Panel.H_FREQ_Max) || (st
+             -ModeInfo.IVFreq < Panel.V_FREQ_Min) || (stModeInfo.IVFreq >Panel.V_FREQ_Max))
+ 518   4                      //if((stModeInfo.IHFreq < _H_FREQ_MIN) || (stModeInfo.IHFreq > _H_FREQ_MAX) || (stModeInfo.IVFreq < _V_F
+             -REQ_MIN) || (stModeInfo.IVFreq > _V_FREQ_MAX))
+ 519   4                      {
+ 520   5                          modetemp    = _MODE_NOSUPPORT;
+ 521   5                      }
+ 522   4                      else
+ 523   4                      {
+ 524   5      //                    if(((GET_INPUTPORT_TYPE(_GET_INPUT_SOURCE()) == _YPBPR_A0_PORT) || (GET_INPUTPORT_TY
+             -PE(_GET_INPUT_SOURCE()) == _YPBPR_A1_PORT)) && ((bit)CScalerGetBit(_SYNC_SELECT_47, _BIT6)))
+ 525   5      //                        modetemp    = _MODE_NOSUPPORT;
+ 526   5      //                    else
+ 527   5                              modetemp    = _MODE_EXIST;
+ 528   5                      }
+ 529   4                  }
+ 530   3              }
+ 531   2              else
+ 532   2              {
+ 533   3                  modetemp    = _MODE_NOSIGNAL;
+ 534   3              }
+ 535   2      
+ 536   2              // Wait mode stable and decide the mode type for current source
+ 537   2              if(modetemp != ucModeFound)
+C51 COMPILER V8.16   MODE                                                                  04/05/2012 11:15:23 PAGE 10  
+
+ 538   2              {
+ 539   3                  ucModeFound = modetemp;
+ 540   3                  ucEvent1 = _INACTIVE_COUNTDOWN_EVENT;
+ 541   3                  CLR_MODESTABLE();
+ 542   3                  CTimerCountDownEventProc(&ucEvent1, 3, CModeStableCountDownEvent);
+ 543   3      
+ 544   3                  return _FALSE;
+ 545   3              }
+ 546   2              else
+ 547   2              {
+ 548   3                  CTimerCountDownEventProc(&ucEvent1, 3, CModeStableCountDownEvent);
+ 549   3      
+ 550   3                  if(GET_MODESTABLE())
+ 551   3                  {
+ 552   4                      if(ucModeFound == _MODE_EXIST)
+ 553   4                      {
+ 554   5                          stModeInfo.ModeCurr = CModeSearchDisplayMode();
+ 555   5                      }
+ 556   4                      else
+ 557   4                      {
+ 558   5                          stModeInfo.ModeCurr = ucModeFound;
+ 559   5                      }
+ 560   4      
+ 561   4                      return _TRUE;
+ 562   4                  }
+ 563   3                  else
+ 564   3                  {
+ 565   4                      return _FALSE;
+ 566   4                  }
+ 567   3              }
+ 568   2          }
+ 569   1          else
+ 570   1          {
+ 571   2              return _FALSE;
+ 572   2          }
+ 573   1      }
+ 574          
+ 575          //--------------------------------------------------
+ 576          // Description  : Check if mode is changed
+ 577          // Input Value  : None
+ 578          // Output Value : Return _TRUE if mode is changed
+ 579          //--------------------------------------------------
+ 580          bit CModeIsChange(void)
+ 581          {
+ 582   1          BYTE polaritytemp;
+ 583   1          WORD hcount, vtotal;
+ 584   1      
+ 585   1          polaritytemp    = stModeInfo.Polarity;
+ 586   1          hcount          = stModeInfo.IHCount;
+ 587   1          vtotal          = stModeInfo.IVTotal;
+ 588   1      
+ 589   1          if((CGetSourcePortType(_GET_INPUT_SOURCE()) == _DSUB_A0_PORT || CGetSourcePortType(_GET_INPUT_SOURCE()
+             -) == _DSUB_A1_PORT))
+ 590   1          {
+ 591   2      #if (_SCALER_TYPE == _RTD2553V || _SCALER_TYPE == _RTD2546N || _SCALER_TYPE == _RTD2525L || _SCALER_TYPE =
+             -= _RTD2547D)
+ 592   2              if(CScalerGetBit(_HSYNC_TYPE_DETECTION_FLAG_4E, _BIT6 | _BIT5))
+ 593   2      #else
+                      if(CScalerGetBit(_STABLE_PERIOD_H_50, _BIT6 | _BIT5))
+              #endif
+ 596   2                  return _TRUE;
+ 597   2          }
+C51 COMPILER V8.16   MODE                                                                  04/05/2012 11:15:23 PAGE 11  
+
+ 598   1          if(CModeMeasureData())
+ 599   1          {
+ 600   2              if(abs(stModeInfo.IHCount - hcount) <= 1)
+ 601   2                  stModeInfo.IHCount = hcount;
+ 602   2      
+ 603   2              if(abs(stModeInfo.IVTotal - vtotal) <= 2)
+ 604   2                  stModeInfo.IVTotal = vtotal;
+ 605   2      
+ 606   2              if((stModeInfo.IHCount != hcount) || (stModeInfo.IVTotal != vtotal) || (stModeInfo.Polarity != pol
+             -aritytemp))
+ 607   2              {
+ 608   3                  return _TRUE;
+ 609   3              }
+ 610   2              else
+ 611   2              {
+ 612   3                  return _FALSE;
+ 613   3              }
+ 614   2          }
+ 615   1          else
+ 616   1          {
+ 617   2              return _TRUE;
+ 618   2          }
+ 619   1      }
+ 620          
+ 621          //--------------------------------------------------
+ 622          // Description  : Search display mode process
+ 623          // Input Value  : None
+ 624          // Output Value : Mode number
+ 625          //--------------------------------------------------
+ 626          BYTE CModeSearchDisplayMode(void)
+ 627          {
+ 628   1          BYTE modetemp;
+ 629   1      
+ 630   1          switch(CGetSourcePortType(_GET_INPUT_SOURCE()))
+ 631   1          {
+ 632   2              case _DSUB_A0_PORT:
+ 633   2              case _DSUB_A1_PORT:
+ 634   2                  modetemp    = CModeSearchModeVGA();
+ 635   2                  break;
+ 636   2      
+ 637   2      #if(_YPBPR_SUPPORT == _ON)
+              
+                      case _YPBPR_A0_PORT:
+                      case _YPBPR_A1_PORT:
+                          modetemp    = CYPbPrSearchMode();
+                          break;
+              
+              #endif
+ 645   2      
+ 646   2      #if((_TMDS_SUPPORT == _ON) || (_HDMI_SUPPORT == _ON))
+              
+                      case _DVI_PORT:
+                      case _DVI_I_A0_PORT:
+                      case _DVI_I_A1_PORT:
+                      case _HDMI_PORT:
+                          modetemp    = CModeSearchModeDVI();
+                          break;
+              
+              #endif
+ 656   2          //    case _SOURCE_VIDEO8:
+ 657   2              //    break;
+ 658   2          }
+C51 COMPILER V8.16   MODE                                                                  04/05/2012 11:15:23 PAGE 12  
+
+ 659   1      
+ 660   1          return modetemp;
+ 661   1      }
+ 662          
+ 663          //--------------------------------------------------
+ 664          // Description  : Search mode for VGA
+ 665          // Input Value  : None
+ 666          // Output Value : Mode number
+ 667          //--------------------------------------------------
+ 668          BYTE CModeSearchModeVGA(void)
+ 669          {
+ 670   1          BYTE modecnt;
+ 671   1      
+ 672   1          SET_MODE_SEARCH_TYPE(_PRESET_MODE_TYPE);
+ 673   1            
+ 674   1          for(modecnt=0;modecnt<_MAX_PRESET_MODE;modecnt++)
+ 675   1          {
+ 676   2              if(CModeComparePresetModeVGA(modecnt))
+ 677   2              {
+ 678   3      
+ 679   3                              
+ 680   3                 if(modecnt==_MODE_1024x768_60HZ&&(stModeInfo.IHSyncPulseCount>=30&&stModeInfo.IHSyncPulseCount<
+             -=38))
+ 681   3                          return _MODE_1360X768_60HZ;
+ 682   3                         else
+ 683   3                  return modecnt;
+ 684   3              }
+ 685   2          }
+ 686   1      
+ 687   1      #if(_VIDEO_SUPPORT && _VIDEO_CHIP == _VDC_TB1334)
+ 688   1          if (!bSourceVideo())        
+ 689   1      #endif
+ 690   1          {
+ 691   2              modecnt = CModeSearchAcceptiveModeVGA();
+ 692   2          }
+ 693   1      
+ 694   1          if((modecnt == _MODE_NOSIGNAL) || (modecnt == _MODE_NOSUPPORT))
+ 695   1              return modecnt;
+ 696   1       
+ 697   1          SET_MODE_SEARCH_TYPE(_USER_MODE_TYPE);
+ 698   1      
+ 699   1      #if(_VIDEO_SUPPORT && _VIDEO_CHIP == _VDC_TB1334)
+ 700   1          if (!bSourceVideo())
+ 701   1      #endif
+ 702   1          {
+ 703   2              modecnt = CModeCheckFIFOModeVGA(modecnt);
+ 704   2          }
+ 705   1      
+ 706   1          return modecnt;
+ 707   1      }
+ 708          
+ 709          //--------------------------------------------------
+ 710          // Description  : Compare preset VGA mode
+ 711          // Input Value  : Mode number
+ 712          // Output Value : Return _TRUE if the input mode number is correspondence
+ 713          //--------------------------------------------------
+ 714          bit CModeComparePresetModeVGA(BYTE ucModeCnt)
+ 715          {
+ 716   1          BYTE polarity, polaritytemp;
+ 717   1      
+ 718   1      #if (_SCALER_TYPE == _RTD2553V || _SCALER_TYPE == _RTD2546N || _SCALER_TYPE == _RTD2525L || _SCALER_TYPE =
+             -= _RTD2547D)
+C51 COMPILER V8.16   MODE                                                                  04/05/2012 11:15:23 PAGE 13  
+
+ 719   1      
+ 720   1      #if(_VIDEO_SUPPORT && _VIDEO_CHIP == _VDC_TB1334)
+ 721   1          if (bSourceVideo())
+ 722   1          {
+ 723   2              polarity = stModeInfo.Polarity;
+ 724   2              if((bit)CScalerGetBit(_SYNC_INVERT_48, _BIT3))
+ 725   2                  polarity = (polarity ^ _BIT0);
+ 726   2          }
+ 727   1          else
+ 728   1      #endif  // #if(_VIDEO_SUPPORT && _VIDEO_CHIP == _VDC_TB1334)
+ 729   1          {
+ 730   2        #if(_HSYNC_TYPE_DETECTION == _AUTO_RUN)
+ 731   2      
+ 732   2              polarity = (stModeInfo.Polarity & ~_BIT0) | (ucStablePol & _BIT0);
+ 733   2      
+ 734   2        #endif        //End of #if(_HSYNC_TYPE_DETECTION == _AUTO_RUN)
+ 735   2      
+ 736   2      
+ 737   2        #if(_HSYNC_TYPE_DETECTION == _NORMAL_RUN)
+                  
+                      polarity = stModeInfo.Polarity;
+                      if((bit)CScalerGetBit(_SYNC_INVERT_48, _BIT3))
+                          polarity = (polarity ^ _BIT0);
+              
+                #endif        // End of #if(_HSYNC_TYPE_DETECTION == _NORMAL_RUN)
+ 744   2          }
+ 745   1      
+ 746   1      #else
+                  polarity = stModeInfo.Polarity;
+              
+                  if((bit)CScalerGetBit(_SYNC_INVERT_48, _BIT3))
+                      polarity = (polarity ^ _BIT0);
+              #endif
+ 752   1      
+ 753   1      #if(_VIDEO_SUPPORT && _VIDEO_CHIP == _VDC_TB1334)
+ 754   1          if (!bSourceVideo())
+ 755   1      #endif
+ 756   1          {        
+ 757   2              if(abs(stModeInfo.IVFreq - tINPUTMODE_PRESET_TABLE[ucModeCnt].IVFreq) > tINPUTMODE_PRESET_TABLE[uc
+             -ModeCnt].IVFreqTolerance)
+ 758   2              {
+ 759   3                  return _FALSE;
+ 760   3              }
+ 761   2          }
+ 762   1      #if(_VIDEO_SUPPORT && _VIDEO_CHIP == _VDC_TB1334)
+ 763   1          else
+ 764   1          {
+ 765   2              if(abs(stModeInfo.IVFreq - tVIDEO_INPUTMODE_PRESET_TABLE[ucModeCnt].IVFreq) > tVIDEO_INPUTMODE_PRE
+             -SET_TABLE[ucModeCnt].IVFreqTolerance)
+ 766   2              {
+ 767   3                  return _FALSE;
+ 768   3              }
+ 769   2          }
+ 770   1      #endif
+ 771   1      
+ 772   1      #if(_VIDEO_SUPPORT && _VIDEO_CHIP == _VDC_TB1334)
+ 773   1          if (!bSourceVideo())
+ 774   1      #endif
+ 775   1          {        
+ 776   2              if(abs(stModeInfo.IHFreq - tINPUTMODE_PRESET_TABLE[ucModeCnt].IHFreq) > tINPUTMODE_PRESET_TABLE[uc
+             -ModeCnt].IHFreqTolerance)
+ 777   2              {
+C51 COMPILER V8.16   MODE                                                                  04/05/2012 11:15:23 PAGE 14  
+
+ 778   3                  return _FALSE;
+ 779   3              }
+ 780   2          }
+ 781   1      #if(_VIDEO_SUPPORT && _VIDEO_CHIP == _VDC_TB1334)
+ 782   1          else
+ 783   1          {
+ 784   2              if(abs(stModeInfo.IHFreq - tVIDEO_INPUTMODE_PRESET_TABLE[ucModeCnt].IHFreq) > tVIDEO_INPUTMODE_PRE
+             -SET_TABLE[ucModeCnt].IHFreqTolerance)
+ 785   2              {
+ 786   3                  return _FALSE;
+ 787   3              }
+ 788   2          }
+ 789   1      #endif
+ 790   1      
+ 791   1          if((bit)(polarity & _BIT0))
+ 792   1          {
+ 793   2              if((bit)(polarity & _BIT1))
+ 794   2                  polaritytemp    = _SYNC_HP_VP;
+ 795   2              else
+ 796   2                  polaritytemp    = _SYNC_HP_VN;
+ 797   2          }
+ 798   1          else
+ 799   1          {
+ 800   2              if((bit)(polarity & _BIT1))
+ 801   2                  polaritytemp    = _SYNC_HN_VP;
+ 802   2              else
+ 803   2                  polaritytemp    = _SYNC_HN_VN;
+ 804   2          }
+ 805   1      
+ 806   1      #if(_VIDEO_SUPPORT && _VIDEO_CHIP == _VDC_TB1334)
+ 807   1          if (!bSourceVideo())
+ 808   1      #endif
+ 809   1          {        
+ 810   2              if((polaritytemp & tINPUTMODE_PRESET_TABLE[ucModeCnt].PolarityFlag) == 0x00)
+ 811   2                  return _FALSE;
+ 812   2          }
+ 813   1      #if(_VIDEO_SUPPORT && _VIDEO_CHIP == _VDC_TB1334)
+ 814   1          else
+ 815   1          {
+ 816   2              if((polaritytemp & tVIDEO_INPUTMODE_PRESET_TABLE[ucModeCnt].PolarityFlag) == 0x00)
+ 817   2                  return _FALSE;
+ 818   2          }
+ 819   1      #endif
+ 820   1      
+ 821   1          return _TRUE;
+ 822   1      
+ 823   1      }
+ 824          
+ 825          //--------------------------------------------------
+ 826          // Description  : Search an acceptive mode
+ 827          // Input Value  : None
+ 828          // Output Value : Mode number
+ 829          //--------------------------------------------------
+ 830          BYTE CModeSearchAcceptiveModeVGA(void)
+ 831          {
+ 832   1          BYTE acceptivemode = _MODE_NOSUPPORT;
+ 833   1      
+ 834   1          if(stModeInfo.IVTotal < 420)
+ 835   1          {
+ 836   2      
+ 837   2          }
+ 838   1          else if(stModeInfo.IVTotal < 488)                   // 720x400 Mode : Vertical Line < 488
+C51 COMPILER V8.16   MODE                                                                  04/05/2012 11:15:23 PAGE 15  
+
+ 839   1          {
+ 840   2              if(stModeInfo.IVFreq < 740)
+ 841   2                  acceptivemode = _MODE_720x400_70HZ;
+ 842   2              else if(stModeInfo.IVFreq < 790)
+ 843   2                  acceptivemode = _MODE_720x400_70HZ;
+ 844   2              else
+ 845   2                  acceptivemode = _MODE_720x400_85HZ;
+ 846   2          }
+ 847   1          else if(stModeInfo.IVTotal < 610)              // 640x480 Mode : 488 <= Vertical Line < 610
+ 848   1          {
+ 849   2              if(stModeInfo.IVFreq < 640)
+ 850   2                  acceptivemode = _MODE_640x480_60HZ;
+ 851   2              else if(stModeInfo.IVFreq < 690)
+ 852   2                  acceptivemode = _MODE_640x480_66HZ;
+ 853   2              else if(stModeInfo.IVFreq < 740)
+ 854   2                  acceptivemode = _MODE_640x480_72HZ;
+ 855   2              else if(stModeInfo.IVFreq < 790)
+ 856   2                  acceptivemode = _MODE_640x480_75HZ;
+ 857   2              else
+ 858   2                  acceptivemode = _MODE_640x480_85HZ;
+ 859   2              }
+ 860   1          else if(stModeInfo.IVTotal < 660)              // 800x600 Mode : 610 <= Vertical Line < 660
+ 861   1          {
+ 862   2              if(stModeInfo.IVFreq < 580)
+ 863   2                  acceptivemode = _MODE_800x600_56HZ;
+ 864   2              else if(stModeInfo.IVFreq < 660)
+ 865   2                  acceptivemode = _MODE_800x600_60HZ;
+ 866   2              else if(stModeInfo.IVFreq < 740)
+ 867   2                  acceptivemode = _MODE_800x600_72HZ;
+ 868   2              else if(stModeInfo.IVFreq < 790)
+ 869   2                  acceptivemode = _MODE_800x600_75HZ;
+ 870   2              else
+ 871   2                  acceptivemode = _MODE_800x600_85HZ;
+ 872   2              }
+ 873   1          else if(stModeInfo.IVTotal < 732)              // 832x624 Mode : 660 <= Vertical Line < 732
+ 874   1          {
+ 875   2              if(stModeInfo.IVFreq < 740)
+ 876   2                  acceptivemode = _MODE_800x600_72HZ;
+ 877   2              else
+ 878   2                  acceptivemode = _MODE_832x624_75HZ;
+ 879   2              }
+ 880   1          else if(stModeInfo.IVTotal < 780)              // 1280x720 Mode : 732 <= Vertical Line < 780
+ 881   1          {
+ 882   2              if(stModeInfo.IVFreq < 740)
+ 883   2                  acceptivemode = _MODE_1280x720_60HZ;
+ 884   2              else
+ 885   2                  acceptivemode = _MODE_1280x720_75HZ;
+ 886   2              }
+ 887   1          else if(stModeInfo.IVTotal < 881)              // 1024x768 Mode : 780 <= Vertical Line < 881
+ 888   1          {
+ 889   2              if(stModeInfo.IVFreq < 650)
+ 890   2                  //acceptivemode = _MODE_1024x768_60HZ;
+ 891   2                  acceptivemode = _MODE_1280x768_60HZ;
+ 892   2              else if(stModeInfo.IVFreq < 730)
+ 893   2                  acceptivemode = _MODE_1024x768_70HZ;
+ 894   2              else if(stModeInfo.IVFreq < 790)
+ 895   2                  acceptivemode = _MODE_1024x768_75HZ;
+ 896   2              else
+ 897   2                  acceptivemode = _MODE_1024x768_85HZ;
+ 898   2              }
+ 899   1          else if(stModeInfo.IVTotal < 932)              // 1152x864/870 Mode : 881 <= Vertical Line < 932
+ 900   1          {
+C51 COMPILER V8.16   MODE                                                                  04/05/2012 11:15:23 PAGE 16  
+
+ 901   2              if((stModeInfo.IHFreq > 679) && (stModeInfo.IHFreq < 697))
+ 902   2              {
+ 903   3                  acceptivemode = _MODE_1152x870_75HZ;
+ 904   3              }
+ 905   2              else
+ 906   2              {
+ 907   3                  if(stModeInfo.IVFreq < 650)
+ 908   3                      acceptivemode = _MODE_1152x864_60HZ;
+ 909   3                  else if(stModeInfo.IVFreq < 740)
+ 910   3                      acceptivemode = _MODE_1152x864_70HZ;
+ 911   3                  else if(stModeInfo.IVFreq < 790)
+ 912   3                      acceptivemode = _MODE_1152x864_75HZ;
+ 913   3                  else
+ 914   3                      acceptivemode = _MODE_1152x864_85HZ;
+ 915   3              }
+ 916   2          }
+ 917   1          else if(stModeInfo.IVTotal < 975)
+ 918   1          {
+ 919   2              if(stModeInfo.IVFreq < 680)
+ 920   2                  acceptivemode = _MODE_1152x900_66HZ;
+ 921   2              }
+ 922   1          else if(stModeInfo.IVTotal < 1040)
+ 923   1          {
+ 924   2              if(stModeInfo.IVFreq < 650)
+ 925   2                  acceptivemode = _MODE_1280x960_60HZ;
+ 926   2              else
+ 927   2                  acceptivemode = _MODE_1280x960_75HZ;
+ 928   2              }
+ 929   1          else if(stModeInfo.IVTotal < 1100)             // 1280x1024 Mode :
+ 930   1          {
+ 931   2              if(stModeInfo.IVFreq < 680)
+ 932   2                  acceptivemode = _MODE_1280x1024_60HZ;
+ 933   2              else if(stModeInfo.IVFreq < 720)
+ 934   2                  acceptivemode = _MODE_1280x1024_70HZ;
+ 935   2              else if(stModeInfo.IVFreq < 780)
+ 936   2                  acceptivemode = _MODE_1280x1024_75HZ;
+ 937   2              else
+ 938   2                  acceptivemode = _MODE_1280x1024_85HZ;
+ 939   2              }
+ 940   1          else if(stModeInfo.IVTotal < 1300)             // 1600x1200 Mode :
+ 941   1          {
+ 942   2              if(stModeInfo.IVFreq < 630)
+ 943   2                  acceptivemode = _MODE_1600x1200_60HZ;
+ 944   2              else if(stModeInfo.IVFreq < 680)
+ 945   2                  acceptivemode = _MODE_1600x1200_65HZ;
+ 946   2              else if(stModeInfo.IVFreq < 720)
+ 947   2                  acceptivemode = _MODE_1600x1200_70HZ;
+ 948   2              else if(stModeInfo.IVFreq < 780)
+ 949   2                  acceptivemode = _MODE_1600x1200_75HZ;
+ 950   2              else
+ 951   2                  acceptivemode = _MODE_1600x1200_85HZ;
+ 952   2          }
+ 953   1      
+ 954   1          return acceptivemode;
+ 955   1      }
+ 956          
+ 957          //--------------------------------------------------
+ 958          // Description  : Check FIFO mode for VGA
+ 959          // Input Value  : Mode number
+ 960          // Output Value : FIFO mode number
+ 961          //--------------------------------------------------
+ 962          BYTE CModeCheckFIFOModeVGA(BYTE ucModeCnt)
+C51 COMPILER V8.16   MODE                                                                  04/05/2012 11:15:23 PAGE 17  
+
+ 963          {
+ 964   1          BYTE cnt0, cnt1;
+ 965   1          StructModeUserFIFODataType stFIFOModeTemp;
+ 966   1      
+ 967   1          for(cnt0=0;cnt0<4;cnt0++)
+ 968   1          {
+ 969   2              CEepromLoadUserFIFOModeData(cnt0, pData);
+ 970   2      
+ 971   2              for(cnt1=0;cnt1<4;cnt1++)
+ 972   2              {
+ 973   3                  if(CModeCompareFIFOModeVGA(cnt1, ucModeCnt) == _TRUE)
+ 974   3                  {
+ 975   4                      return (cnt0 * 4 + cnt1);
+ 976   4                  }
+ 977   3              }
+ 978   2          }
+ 979   1      
+ 980   1          if(stSystemData.UserFIFOMode >= 15)
+ 981   1              stSystemData.UserFIFOMode = 0;
+ 982   1          else
+ 983   1              stSystemData.UserFIFOMode++;
+ 984   1      
+ 985   1          stFIFOModeTemp.ModeNum = ucModeCnt;
+ 986   1          stFIFOModeTemp.IHFreq  = stModeInfo.IHFreq;
+ 987   1          stFIFOModeTemp.IVFreq  = stModeInfo.IVFreq;
+ 988   1          CEepromSaveUserFIFOModeData(stFIFOModeTemp);
+ 989   1      
+ 990   1          stModeUserData.FirstAuto    = 0;
+ 991   1          stModeUserData.HPosition    = tINPUTMODE_PRESET_TABLE[ucModeCnt].IHStartPos;
+ 992   1          stModeUserData.VPosition    = tINPUTMODE_PRESET_TABLE[ucModeCnt].IVStartPos;
+ 993   1          stModeUserData.Clock        = tINPUTMODE_PRESET_TABLE[ucModeCnt].IHTotal;
+ 994   1          stModeUserData.Phase        = 0;
+ 995   1          CEepromSaveModeData(stSystemData.UserFIFOMode);
+ 996   1      
+ 997   1          CEepromSaveSystemData();
+ 998   1      
+ 999   1          return stSystemData.UserFIFOMode;
+1000   1      }
+1001          
+1002          //--------------------------------------------------
+1003          // Description  : Compare mode in FIFO memory
+1004          // Input Value  : Mode number and FIFO mode number
+1005          // Output Value : _TRUE if both are correspondence
+1006          //--------------------------------------------------
+1007          bit CModeCompareFIFOModeVGA(BYTE ucNum, BYTE ucModeCnt)
+1008          {
+1009   1          StructModeUserFIFODataType stFIFOModeTemp;
+1010   1      
+1011   1          stFIFOModeTemp.ModeNum = (pData[ucNum * 4]);
+1012   1          stFIFOModeTemp.IHFreq  = ((WORD)(pData[ucNum * 4 + 1] & 0x0f) << 8) | pData[ucNum * 4 + 2];
+1013   1          stFIFOModeTemp.IVFreq  = ((WORD)(pData[ucNum * 4 + 1] & 0xf0) << 4) | pData[ucNum * 4 + 3];
+1014   1      
+1015   1          if(stFIFOModeTemp.ModeNum != ucModeCnt)
+1016   1              return _FALSE;
+1017   1      
+1018   1          if(abs(stModeInfo.IVFreq - stFIFOModeTemp.IVFreq) > tINPUTMODE_PRESET_TABLE[ucModeCnt].IVFreqTolerance
+             -)
+1019   1              return _FALSE;
+1020   1      
+1021   1          if(abs(stModeInfo.IHFreq - stFIFOModeTemp.IHFreq) > tINPUTMODE_PRESET_TABLE[ucModeCnt].IHFreqTolerance
+             -)
+1022   1              return _FALSE;
+C51 COMPILER V8.16   MODE                                                                  04/05/2012 11:15:23 PAGE 18  
+
+1023   1      
+1024   1          return _TRUE;
+1025   1      }
+1026          
+1027          #if((_TMDS_SUPPORT == _ON) || (_HDMI_SUPPORT == _ON))
+              //--------------------------------------------------
+              // Description  : Search mode for DVI
+              // Input Value  : None
+              // Output Value : Mode number
+              //--------------------------------------------------
+              BYTE CModeSearchModeDVI(void)
+              {
+                  BYTE modecnt = 0;
+              
+                  CScalerSetBit(_SYNC_SELECT_47, ~_BIT0, _BIT0);
+                  CAdjustSyncProcessorMeasureStart();
+              
+                  if(CTimerPollingEventProc(60, CMiscModeMeasurePollingEvent))
+                  {          
+                      CScalerSetBit(_MEAS_HS_PERIOD_H_52, ~_BIT6, _BIT6);
+              
+              #if((_SCALER_TYPE == _RTD2553V) || (_SCALER_TYPE == _RTD2546N)) 
+              
+                      CScalerRead(_MEAS_HS_PERIOD_H_52, 7, &pData[8], _AUTOINC);
+              
+                      ((WORD *)pData)[0] = ((WORD)(pData[8] & 0x1f) << 8) | pData[9];
+                      ((WORD *)pData)[1] = ((WORD)(pData[10] & 0x1f) << 8) | pData[11];
+                      ((WORD *)pData)[2] = ((WORD)(pData[12] & 0x0f) << 8) | pData[13];
+              
+              #elif(_SCALER_TYPE == _RTD2525L)
+              
+                      CScalerSetBit(_MEAS_VS_HIGH_PERIOD_L_58, ~_BIT0, 0x00); //V305 modify
+                      CScalerRead(_MEAS_HS_PERIOD_H_52, 6, &pData[8], _AUTOINC);
+              
+                      ((WORD *)pData)[0] = ((pData[8] & 0x1f) << 8) | pData[9]; //V305 modify 
+                      ((WORD *)pData)[1] = ((pData[10] & 0x1f) << 8) | pData[11]; //V305 modify 
+                      ((WORD *)pData)[2] = ((pData[12] & 0xf0) << 4) | pData[13];
+              
+              #elif(_SCALER_TYPE == _RTD2547D)
+              
+                      CScalerSetBit(_MEAS_VS_HIGH_PERIOD_L_58, ~_BIT0, 0x00);
+                      CScalerRead(_MEAS_HS_PERIOD_H_52, 6, &pData[8], _AUTOINC);
+              
+                      ((WORD *)pData)[0] = ((WORD)(pData[8] & 0x1f) << 8) | pData[9];
+                      ((WORD *)pData)[1] = ((WORD)(pData[10] & 0x1f) << 8) | pData[11];
+                      ((WORD *)pData)[2] = ((WORD)(pData[12] & 0xf0) << 4) | pData[13];
+              
+              #else
+              
+                      CScalerRead(_MEAS_HS_PERIOD_H_52, 7, &pData[8], _AUTOINC);
+              
+                      ((WORD *)pData)[0] = ((WORD)(pData[8] & 0x1f) << 8) | pData[9];
+                      ((WORD *)pData)[1] = ((WORD)(pData[10] & 0x1f) << 8) | pData[11];
+                      ((WORD *)pData)[2] = ((WORD)(pData[12] & 0x0f) << 8) | pData[13];
+              
+              #endif  // End of #if((_SCALER_TYPE == _RTD2553V) || (_SCALER_TYPE == _RTD2546N))
+              
+                      if((((WORD *)pData)[0] >=  0x0fff) || (((WORD *)pData)[1] >= 0x0fff) || (((WORD *)pData)[0] == 0) 
+             -|| (((WORD *)pData)[1] == 0)  || (bit)(pData[10] & _BIT5))
+                      {
+                          modecnt = _MODE_NOSUPPORT;
+                      }
+C51 COMPILER V8.16   MODE                                                                  04/05/2012 11:15:23 PAGE 19  
+
+                      else
+                      {
+                          // Save IH_TOTAL
+                          stModeInfo.IHTotal  = ((WORD *)pData)[0] + 1;
+              
+                          // Save input data enable width and height
+                          stModeInfo.IVHeight = ((WORD *)pData)[1] + 1;
+                          stModeInfo.IHWidth  = ((WORD *)pData)[2] + 1;
+              
+                          for(modecnt=0;modecnt<_MAX_PRESET_MODE;modecnt++)
+                          {                 
+                              if(CModeCompareModeDVI(modecnt))
+                              {
+              #if(_TMDS_SHRINK_SUPPORT == _ON) //Ming-Yen
+                                  if(CGetSourcePortType(_GET_INPUT_SOURCE()) == _HDMI_PORT)
+                                  {
+                                      stModeInfo.IVHeight = stModeInfo.IVHeight - (_TMDS_SHRINK_RANGE * 2); 
+                                      stModeInfo.IHWidth = stModeInfo.IHWidth - (_TMDS_SHRINK_RANGE * 2); 
+                                  }
+              #endif  // End of  #if(_TMDS_SHRINK_SUPPORT == _ON)
+                                  break;
+                              }
+                          }
+                      }
+                  }
+                  else
+                  {
+                      CScalerSetBit(_MEAS_HS_PERIOD_H_52, ~_BIT5, 0x00);
+                      modecnt = _MODE_NOSUPPORT;
+                  }
+              
+                  CScalerSetBit(_SYNC_SELECT_47, ~_BIT0, 0x00);
+              
+                  // We don't support input image less than 350 active lines
+                  if(stModeInfo.IVHeight < 350)
+                  {
+                      modecnt = _MODE_NOSUPPORT;
+                  }
+                  // If no mode found, set to mode 0
+                  else if(modecnt >= _MAX_PRESET_MODE)
+                  {
+                      modecnt = 0;
+                  }
+              
+              #if(_SCALER_TYPE == _RTD2547D)
+              
+                  // We don't support input image large than 2048 active pixel
+                  if((stModeInfo.IHWidth > 2048))
+                      modecnt = _MODE_NOSUPPORT;
+              
+                #if(_FRC_SUPPORT == _ON)
+                  ((DWORD *)pData)[0] = (DWORD)(stModeInfo.IHWidth) * (DWORD)(stModeInfo.IVHeight) * ((DWORD)stModeInfo.
+             -IVFreq + _PANEL_MAX_FRAME_RATE) / 10 / 85 * 100 / _MEMORY_BIT_NUM * 24;
+                  if(((DWORD *)pData)[0] > (DWORD)_MEMORY_SPEED * 1000000)//Frame Sync
+                      CLR_FRCTATUS();
+                  else//FRC
+                      SET_FRCTATUS();
+                #else
+                  CLR_FRCTATUS();
+                #endif  
+              
+              #endif
+C51 COMPILER V8.16   MODE                                                                  04/05/2012 11:15:23 PAGE 20  
+
+              
+                  return modecnt;
+              }
+                       
+              //--------------------------------------------------
+              // Description  : Compare mode for DVI
+              // Input Value  : Mode number
+              // Output Value : Retrun _TRUE if it's correspondence
+              //--------------------------------------------------
+              bit CModeCompareModeDVI(BYTE ucModeCnt)
+              {
+                  if(stModeInfo.IHWidth != tINPUTMODE_PRESET_TABLE[ucModeCnt].IHWidth)
+                      return _FALSE;
+              
+                  if(stModeInfo.IVHeight != tINPUTMODE_PRESET_TABLE[ucModeCnt].IVHeight)
+                      return _FALSE;
+              
+                  if(abs(stModeInfo.IVFreq - tINPUTMODE_PRESET_TABLE[ucModeCnt].IVFreq) > tINPUTMODE_PRESET_TABLE[ucMode
+             -Cnt].IVFreqTolerance)
+                      return _FALSE;
+              
+                  return _TRUE;
+              }                           
+              #endif  // End of #if((_TMDS_SUPPORT == _ON) || (_HDMI_SUPPORT == _ON))
+1168          
+1169          //----------------------------------------------------------------------------------------------------
+1170          // Mode Display Functions
+1171          //----------------------------------------------------------------------------------------------------
+1172          
+1173          //--------------------------------------------------
+1174          // Description  : Display active mode process
+1175          // Input Value  : None
+1176          // Output Value : None
+1177          //--------------------------------------------------
+1178          void CModeDisplayActiveMode(void)
+1179          {
+1180   1          switch(CGetSourcePortType(_GET_INPUT_SOURCE()))
+1181   1          {
+1182   2              case _DSUB_A0_PORT:
+1183   2      #if (_VIDEO_SUPPORT == _ON && _SCALER_TYPE == _RTD2553V)  // eric 1219 move
+                          CScalerSetBit(_VSYNC_COUNTER_LEVEL_MSB_4C, ~_BIT3, _BIT3);
+              #endif
+1186   2              case _DSUB_A1_PORT:
+1187   2                  CModeSetupModeVGA();
+1188   2                  break;
+1189   2      
+1190   2      #if(_YPBPR_SUPPORT == _ON)
+              
+                      case _YPBPR_A0_PORT:
+                      case _YPBPR_A1_PORT:
+                          CYPbPrSetupMode();
+                          break;
+              
+              #endif
+1198   2      
+1199   2      #if((_TMDS_SUPPORT == _ON) || (_HDMI_SUPPORT == _ON))
+              
+                      case _DVI_PORT:
+                      case _DVI_I_A0_PORT:
+                      case _DVI_I_A1_PORT:
+                      case _HDMI_PORT:
+                          CModeSetupModeDVI();
+C51 COMPILER V8.16   MODE                                                                  04/05/2012 11:15:23 PAGE 21  
+
+                          break;
+              #endif
+1208   2      
+1209   2      /*        case _SOURCE_VIDEO8:
+1210   2      #if(_VIDEO_SUPPORT)
+1211   2                  CVideoDisplaySet(1); 
+1212   2      #endif          
+1213   2                  break;*/
+1214   2          }
+1215   1      
+1216   1      }
+1217          
+1218          
+1219          //--------------------------------------------------
+1220          // Description  : Setup VGA mode
+1221          // Input Value  : None
+1222          // Output Value : None
+1223          //--------------------------------------------------
+1224          void CModeSetupModeVGA(void)
+1225          {
+1226   1          BYTE option = 0;
+1227   1          if (bSourceVideo())
+1228   1          {
+1229   2      #if(_VIDEO_SUPPORT && _VIDEO_CHIP == _VDC_TB1334)
+1230   2              CSetTB1334VideoMode();
+1231   2      #endif
+1232   2          }
+1233   1          // Get information from mode table, such as IHTotal, IHStartPos, IHWidth, IVStartPos, IVHeight.
+1234   1          CModeGetModeTableInfo();
+1235   1      
+1236   1          // Start up settings of VGA mode.
+1237   1          CModeStartUpVGA();
+1238   1      
+1239   1          // Get scaling option, Capture window setup, Scaling setup, Display setup
+1240   1          CModeSetupDisplay();
+1241   1      
+1242   1      #if(_VIDEO_SUPPORT && _VIDEO_CHIP == _VDC_TB1334)
+1243   1          if (bSourceVideo())
+1244   1              CLoadVideoModeData();
+1245   1          else
+1246   1      #endif
+1247   1          // Load mode user data from eeprom
+1248   1          CEepromLoadModeData(stModeInfo.ModeCurr);
+1249   1      
+1250   1      #if(_VIDEO_SUPPORT && _VIDEO_CHIP == _VDC_TB1334)
+1251   1          if (bSourceVideo())
+1252   1             CSetVideoColor();
+1253   1          else
+1254   1      #endif
+1255   1          {
+1256   2              // Setup color processing
+1257   2              CModeSetupColorProcess();
+1258   2          
+1259   2              CAdjustBacklight();
+1260   2              CEepromLoadAdcData(); // eric add
+1261   2              CAdjustAdcGainOffset();
+1262   2          }
+1263   1          CAdjustAdcClock(stModeUserData.Clock);
+1264   1      
+1265   1      //V308 modify
+1266   1      #if(_SCALER_TYPE == _RTD2525L)
+1267   1          if((bit)CScalerGetBit(_SYNC_SELECT_47, _BIT4))
+C51 COMPILER V8.16   MODE                                                                  04/05/2012 11:15:23 PAGE 22  
+
+1268   1          {
+1269   2              CScalerSetDataPortBit(_ADC_ACCESS_PORT_DC, 0x0c, ~_BIT7, _BIT7);
+1270   2              CScalerSetByte(_ADC_ACCESS_PORT_DC,0x8e); 
+1271   2              CScalerSetByte(_ADC_DATA_PORT_DD,0x00);
+1272   2              CTimerDelayXms(20);    
+1273   2          }
+1274   1      #endif
+1275   1      //V308 modify
+1276   1      
+1277   1          CAdjustPhase(stModeUserData.Phase);
+1278   1          CAdjustHPosition();
+1279   1          CModeModifyVTotal();
+1280   1          CAdjustVPosition();
+1281   1      
+1282   1      #if (_SCALER_TYPE == _RTD2553V || _SCALER_TYPE == _RTD2546N || _SCALER_TYPE == _RTD2525L || _SCALER_TYPE =
+             -= _RTD2547D)
+1283   1        #if (_SCALER_TYPE == _RTD2547D)
+                  CScalerPageSelect(_PAGE0); //V401 modify
+                  CScalerSetBit(_P0_ADC_CTRL_A1, ~(_BIT5 | _BIT4), (ucAdcPGA << 4) & 0x30); //V401 modify 
+                #else
+1287   1          CScalerSetDataPortBit(_ADC_ACCESS_PORT_DC, 0x00, ~(_BIT5 | _BIT4), (ucAdcPGA << 4) & 0x30); //V401 mod
+             -ify 
+1288   1        #endif
+1289   1      #if ((_ADC_OFFSET_ADJUSTING == _ADJUST_BY_HW_OFF_LINE) && (_SCALER_TYPE == _RTD2525L || _SCALER_TYPE == _R
+             -TD2547D))
+                  CAutoAdjustAdcOffset();
+                  CEepromSaveAdcData();
+              //    COsdDispShowFactoryModeValue();
+              #endif 
+1294   1      #else 
+                  CScalerSetBit(_ADC_RGB_CTRL_DC, ~(_BIT5 | _BIT4), (ucAdcPGA << 4) & 0x30); //V401 modify 
+              #endif
+1297   1      
+1298   1      #if(_VIDEO_SUPPORT && _VIDEO_CHIP == _VDC_TB1334)
+1299   1          if (bSourceVideo())
+1300   1          {
+1301   2             CTB1334VideoMode(VideoType, _SCALER_TYPE);              
+1302   2          }
+1303   1      #endif
+1304   1      
+1305   1      #if(_SCALER_TYPE == _RTD2547D)
+                  if(!GET_FRCTATUS())
+                  {
+                      CModeSetFIFOForFrameSync();
+              
+                      pData[0] = CFrameSyncDo();
+              #else
+1312   1          pData[0] = CFrameSyncDo();
+1313   1          {
+1314   2      #endif
+1315   2      
+1316   2      #if(_VIDEO_SUPPORT && _VIDEO_CHIP == _VDC_TB1334)
+1317   2          if (!bSourceVideo())
+1318   2      #endif
+1319   2              {
+1320   3                  if(pData[0] == 2)
+1321   3                  {
+1322   4                      CModeResetMode();
+1323   4                      return;
+1324   4                  }
+1325   3              }
+1326   2          }
+C51 COMPILER V8.16   MODE                                                                  04/05/2012 11:15:23 PAGE 23  
+
+1327   1      
+1328   1          CModeSetupEtcs(_FUNCTION_ENABLE);
+1329   1      }
+1330          
+1331          #if((_TMDS_SUPPORT == _ON) || (_HDMI_SUPPORT == _ON))
+              //--------------------------------------------------
+              // Description  : Setup mode DVI
+              // Input Value  : None
+              // Output Value : None
+              //--------------------------------------------------
+              void CModeSetupModeDVI(void)
+              {
+                  BYTE option = 0;
+              #if(_SCALER_TYPE == _RTD2547D)
+                  WORD ustemp;
+                  BYTE temp;
+              #endif
+              
+                  // Do initial settings of DVI mode.
+                  CModeStartUpDVI();
+              
+                  // Get scaling option, Capture window setup, Scaling setup, Display setup
+                  CModeSetupDisplay();
+              
+                  // Setup color processing
+                  CModeSetupColorProcess();
+              
+                  CAdjustBacklight();
+              
+              #if(_SCALER_TYPE == _RTD2547D)  
+              
+                  CAdjustPeakingFilterForVideo(0); // Disable HDMI peaking
+              
+                  //For Digital Interlace Mode Compensation
+                  CScalerPageSelect(_PAGE2);
+              
+                  //Issac 2006-09-12
+                  if(GET_INTERLACE_MODE())
+                  {
+                      CScalerSetBit(_SCALE_CTRL_32, ~(_BIT7 | _BIT6), (_BIT7 | _BIT6));
+                      CScalerPageSelect(_PAGE5);
+                      CScalerSetBit(_P5_SDRF_IN1_SDR_CTRL_B9, ~_BIT7, _BIT7);//For interlace mode odd field toggle
+              
+                      // Issac added for interlaced mode last-line compensation 2006-08-29
+                      CScalerRead(_IV_DV_DELAY_CLK_ODD_41, LENGTH(1), &temp, _NON_AUTOINC);
+                      ustemp = (WORD)temp * 16 + 16;
+                      ustemp += stModeInfo.IHTotal / 2;
+                      CScalerSetByte(_IV_DV_DELAY_CLK_EVEN_42, ((ustemp + 8) / 16) - 1);
+              
+                      CScalerSetBit(_FS_DELAY_FINE_TUNING_43, ~_BIT1, _BIT1);
+                      // End of Issac's modification
+                  }
+              
+                  if(!GET_FRCTATUS())
+                  {
+                      CModeSetFIFOForFrameSync();
+              
+              #else
+                  {
+              #endif
+                      pData[0] = CFrameSyncDo();
+                  
+C51 COMPILER V8.16   MODE                                                                  04/05/2012 11:15:23 PAGE 24  
+
+                      if(pData[0] == 2)
+                      {
+                          CModeResetMode();
+                          return;
+                      }
+                  }
+              
+              #if(((_TMDS_SUPPORT == _ON) || (_HDMI_SUPPORT == _ON)) && (_DVI_LONG_CABLE_SUPPORT == _ON))
+              
+                  CAdjustTMDSCRCCheck();
+              
+              #endif
+              
+                  CAdjustTMDSCaptureCheck();
+              
+              #if(_TMDS_SHRINK_SUPPORT == _ON) //Ming-Yen
+                  if(CGetSourcePortType(_GET_INPUT_SOURCE()) == _HDMI_PORT && stModeInfo.ModeCurr != 0)
+                  {
+               #if(_SCALER_TYPE == _RTD2547D)
+                      CScalerSetByte(_IPH_ACT_STA_L_15, _TMDS_SHRINK_RANGE);
+                      CScalerSetByte(_IPV_ACT_STA_L_19, _TMDS_SHRINK_RANGE);
+                      CScalerSetByte(_IVS2DVS_DELAY_LINES_40, _TMDS_SHRINK_RANGE);
+               #else
+                      CScalerSetByte(_IPH_ACT_STA_L_0A, _TMDS_SHRINK_RANGE);
+                      CScalerSetByte(_IPV_ACT_STA_L_0E, _TMDS_SHRINK_RANGE);
+                      CScalerSetByte(_IVS2DVS_DELAY_LINES_40, _TMDS_SHRINK_RANGE);
+               #endif
+                  }
+              
+              #endif  // End of #if(_TMDS_SHRINK_SUPPORT == _ON)
+              
+                  CModeSetupEtcs(_FUNCTION_DISABLE);
+              }
+              #endif  // End of #if((_TMDS_SUPPORT == _ON) || (_HDMI_SUPPORT == _ON))
+1423          
+1424          //--------------------------------------------------
+1425          // Description  : Setup display
+1426          // Input Value  : None
+1427          // Output Value : None
+1428          //--------------------------------------------------
+1429          void CModeSetupDisplay(void)
+1430          {
+1431   1          BYTE option = 0;
+1432   1      
+1433   1          // Get scaling option
+1434   1          option = CModeGetScaleSetting();
+1435   1      
+1436   1          // Capture window setup
+1437   1          CModeSetCaptureWindow(option);
+1438   1      
+1439   1          // Scaling setup
+1440   1          CModeSetScaling(option);
+1441   1      
+1442   1          // Display setup
+1443   1          CModeSetDisplay(option);
+1444   1      }
+1445          
+1446          //--------------------------------------------------
+1447          // Description  : Setup contrast and brightness
+1448          // Input Value  : None
+1449          // Output Value : None
+1450          //--------------------------------------------------
+C51 COMPILER V8.16   MODE                                                                  04/05/2012 11:15:23 PAGE 25  
+
+1451          void CModeSetupColorProcess(void)
+1452          {
+1453   1          if(_GET_INPUT_SOURCE() == _SOURCE_VGA)
+1454   1              CEepromLoadAdcData(); //V403 modify  
+1455   1      
+1456   1          CEepromLoadBriConData();
+1457   1          CEepromLoadColorTempData();
+1458   1          CAdjustBrightness();
+1459   1          CAdjustContrast();
+1460   1      #if(_OSD_TYPE == _OSD007)
+1461   1        #if(_IMAGE_COLOR_MODE)
+1462   1          CSetColorMode(_GET_IMAGE_COLOR_MODE());
+1463   1        #endif
+1464   1      #endif
+1465   1      
+1466   1      #if(_SCALER_TYPE == _RTD2547D && _VGA_COLOR_SUPPORT)
+              
+                  CScalerSetDataPortBit(_HW_ACCESS_PORT_60, _HW_WINDOW_CTRL0_0C, ~(_BIT7 | _BIT6 | _BIT3 | _BIT2), (_BIT
+             -7 | _BIT6 | _BIT2));
+                  CScalerSetDataPortBit(_HW_ACCESS_PORT_60, _HW_WINDOW_CTRL1_0D, ~(_BIT7 | _BIT6), _BIT6);
+                  CAdjustHLWindowBrightness(stOsdUserData.MZBright);
+                  CAdjustHLWindowContrast(stOsdUserData.MZContrast);
+              
+                  if(GET_MZ_WINDOW_CFG_TYPE() == _MZ_WINDOW_CFG_WINDOW)
+                      CAdjustNormalizeFactor(stOsdUserData.MZHWidth, stOsdUserData.MZVHeight);
+              
+                  CAdjustHLWindow();
+              
+              #else
+1479   1      
+1480   1      #if (_SCALER_TYPE == _RTD2553V || _SCALER_TYPE == _RTD2546N || _SCALER_TYPE == _RTD2525L)
+1481   1      #if (_VGA_COLOR_SUPPORT)
+                  CScalerSetDataPortBit(_HW_ACCESS_PORT_60, 0x0c, ~(_BIT7 | _BIT6 | _BIT3 | _BIT2), (_BIT7 | _BIT6 | _BI
+             -T2));
+                  CAdjustHLWindowBrightness(stOsdUserData.MZBright);
+                  CAdjustHLWindowContrast(stOsdUserData.MZContrast);
+              
+              //    if(GET_MZ_WINDOW_CFG_TYPE() == _MZ_WINDOW_CFG_WINDOW)
+              //        CAdjustNormalizeFactor(stOsdUserData.MZHWidth, stOsdUserData.MZVHeight);
+              
+              //    CAdjustHLWindow();
+              
+                  CSetSACMode(GET_SAC_DCC_TYPE());
+              
+                  if((GET_MZ_ICM_ON_OFF_TYPE() == _ON) && (GET_SAC_DCC_TYPE() == _SAC_DCC_USER))
+                  {
+                      CAdjustMZHueSat(0);
+                      CAdjustMZHueSat(1);
+                      CAdjustMZHueSat(2);
+                      CAdjustMZHueSat(3);
+                      CAdjustMZHueSat(4);
+                      CAdjustMZHueSat(5);
+                  }     
+              
+                  if(GET_MZ_PEAKING_ON_OFF_TYPE() == _ON)
+                      CAdjustHLWindowPeaking(stOsdUserData.MZPeaking);   
+              
+              #else
+1507   1          
+1508   1          // Disable vivid color
+1509   1          CScalerSetByte(0x26, 0x00);  // Disable peaking
+1510   1          CScalerSetByte(0xE4, 0x00);  // Disable DCC
+C51 COMPILER V8.16   MODE                                                                  04/05/2012 11:15:23 PAGE 26  
+
+1511   1      
+1512   1      #endif // end #if (_VGA_COLOR_SUPPORT)
+1513   1      #endif // #if (_SCALER_TYPE == _RTD2553V || _SCALER_TYPE == _RTD2546N || _SCALER_TYPE == _RTD2525L)
+1514   1              
+1515   1      #endif // #if(_SCALER_TYPE == _RTD2547D)
+1516   1      
+1517   1      }
+1518          
+1519          //--------------------------------------------------
+1520          // Description  : Get mode information from mode table
+1521          // Input Value  : None
+1522          // Output Value : None
+1523          //--------------------------------------------------
+1524          void CModeGetModeTableInfo(void)
+1525          {
+1526   1          BYTE modetemp;
+1527   1      
+1528   1      #if(_VIDEO_SUPPORT && _VIDEO_CHIP == _VDC_TB1334)
+1529   1          if(GET_MODE_SEARCH_TYPE() == _PRESET_MODE_TYPE || bSourceVideo())
+1530   1      #else
+                  if(GET_MODE_SEARCH_TYPE() == _PRESET_MODE_TYPE)
+              #endif
+1533   1          {
+1534   2              modetemp = stModeInfo.ModeCurr;
+1535   2          }
+1536   1          else if(GET_MODE_SEARCH_TYPE() == _USER_MODE_TYPE)
+1537   1          {
+1538   2              CEepromLoadUserFIFOModeData((stModeInfo.ModeCurr / 4), pData);
+1539   2      
+1540   2              modetemp = pData[(stModeInfo.ModeCurr % 4) * 4];
+1541   2          }
+1542   1      
+1543   1      #if(_VIDEO_SUPPORT && _VIDEO_CHIP == _VDC_TB1334)
+1544   1          if (!bSourceVideo())
+1545   1      #endif
+1546   1          {        
+1547   2              stModeInfo.IHTotal = tINPUTMODE_PRESET_TABLE[modetemp].IHTotal;
+1548   2              stModeInfo.IHStartPos = tINPUTMODE_PRESET_TABLE[modetemp].IHStartPos;
+1549   2              stModeInfo.IHWidth = tINPUTMODE_PRESET_TABLE[modetemp].IHWidth;
+1550   2          
+1551   2              stModeInfo.IVStartPos = tINPUTMODE_PRESET_TABLE[modetemp].IVStartPos;
+1552   2              stModeInfo.IVHeight = tINPUTMODE_PRESET_TABLE[modetemp].IVHeight;
+1553   2              CEepromLoadCenterModeData(stModeInfo.ModeCurr);
+1554   2          }
+1555   1      #if(_VIDEO_SUPPORT && _VIDEO_CHIP == _VDC_TB1334)
+1556   1          else
+1557   1          {
+1558   2              stModeInfo.IHTotal = tVIDEO_INPUTMODE_PRESET_TABLE[modetemp].IHTotal;
+1559   2              stModeInfo.IHStartPos = tVIDEO_INPUTMODE_PRESET_TABLE[modetemp].IHStartPos;
+1560   2              stModeInfo.IHWidth = tVIDEO_INPUTMODE_PRESET_TABLE[modetemp].IHWidth;
+1561   2          
+1562   2              stModeInfo.IVStartPos = tVIDEO_INPUTMODE_PRESET_TABLE[modetemp].IVStartPos;
+1563   2              stModeInfo.IVHeight = tVIDEO_INPUTMODE_PRESET_TABLE[modetemp].IVHeight;
+1564   2      
+1565   2              stModeUserCenterData.CenterHPos     = stModeInfo.IHStartPos;
+1566   2              stModeUserCenterData.CenterVPos     = stModeInfo.IVStartPos;
+1567   2              stModeUserCenterData.CenterClock    = stModeInfo.IHTotal;
+1568   2          }
+1569   1      #endif
+1570   1      
+1571   1      
+1572   1      #if(_SCALER_TYPE == _RTD2547D)
+C51 COMPILER V8.16   MODE                                                                  04/05/2012 11:15:23 PAGE 27  
+
+              
+                #if(_FRC_SUPPORT == _ON)
+                  ((DWORD *)pData)[0] = (DWORD)(stModeInfo.IHWidth) * (DWORD)(stModeInfo.IVHeight) * ((DWORD)stModeInfo.
+             -IVFreq + _PANEL_MAX_FRAME_RATE) / 10 / 85 * 100 / _MEMORY_BIT_NUM * 24;
+                  if(((DWORD *)pData)[0] > (DWORD)_MEMORY_SPEED * 1000000)//Frame Sync
+                      CLR_FRCTATUS();
+                  else//FRC
+                      SET_FRCTATUS();
+                #else
+                  CLR_FRCTATUS();
+                #endif
+              #endif
+1584   1      }
+1585           
+1586          #if((_TMDS_SUPPORT == _ON) || (_HDMI_SUPPORT == _ON))
+              //--------------------------------------------------
+              // Description  : Startup settings for DVI
+              // Input Value  : None
+              // Output Value : None
+              //--------------------------------------------------
+              void CModeStartUpDVI(void)
+              {
+              #if(_SCALER_TYPE == _RTD2525L)
+                  CScalerSetBit(_VSYNC_COUNTER_LEVEL_MSB_4C, ~_BIT3, _BIT3);
+              #endif
+              
+              #if(_SCALER_TYPE == _RTD2547D)
+                  CScalerSetBit(_VGIP_HV_DELAY_1E, 0x0f, 0x00);
+              
+                  CScalerSetBit(_VGIP_CTRL_10, ~(_BIT3 | _BIT2 | _BIT0), (_BIT2 | _BIT0));
+              #else
+                  CScalerSetBit(_VGIP_HV_DELAY_13, 0x0f, 0x00);
+              
+                  CScalerSetBit(_VGIP_CTRL_05, ~(_BIT3 | _BIT2 | _BIT0), (_BIT2 | _BIT0));
+              #endif
+              
+                  CTimerWaitForEvent(_EVENT_IVS);
+              
+                  pData[0]    = HIBYTE(stModeInfo.IHTotal - 2);
+                  pData[1]    = 0x02;
+                  pData[2]    = LOBYTE(stModeInfo.IHTotal - 2);
+                  pData[3]    = HIBYTE(stModeInfo.IVTotal - 2);
+                  pData[4]    = 0x02;
+                  pData[5]    = LOBYTE(stModeInfo.IVTotal - 2);
+                  pData[6]    = 0x00;
+                  pData[7]    = 0x00;
+                  pData[8]    = 0x00;
+                  pData[9]    = 0x00;
+                  pData[10]   = 0x03;
+                  pData[11]   = 0x00;
+                  pData[12]   = 0x00;
+                  pData[13]   = 0x81;
+                  CScalerWrite(_H_BOUNDARY_H_70, 14, pData, _AUTOINC);
+              
+                  if(CTimerPollingEventProc(255, CMiscAutoMeasurePollingEvent))
+                  {
+                      CScalerRead(_V_START_END_H_7E, 6, pData, _AUTOINC);
+              
+                      // IDEN horizontal Start
+              #if (_SCALER_TYPE == _RTD2553V || _SCALER_TYPE == _RTD2546N || _SCALER_TYPE == _RTD2525L)
+                      stModeInfo.IHStartPos = ((((WORD)pData[3] & 0xf0) << 4) | (WORD)pData[4]) - ((CScalerGetBit(_POWER
+             -_ON_OFF_CTRL_C2, _BIT7) == _BIT7) ? 16-14 : 18-14);
+C51 COMPILER V8.16   MODE                                                                  04/05/2012 11:15:23 PAGE 28  
+
+              #elif(_SCALER_TYPE == _RTD2547D)
+                      CScalerPageSelect(_PAGE2);
+                      stModeInfo.IHStartPos = ((((WORD)pData[3] & 0xf0) << 4) | (WORD)pData[4]) - ((CScalerGetBit(_P2_PO
+             -WER_ON_OFF_CTRL_A7, _BIT7) == _BIT7) ? 16-14 : 18-14);
+              #else
+                      stModeInfo.IHStartPos = ((((WORD)pData[3] & 0xf0) << 4) | (WORD)pData[4]) - ((CScalerGetBit(_POWER
+             -_ON_OFF_CTRL_C2, _BIT7) == _BIT7) ? 16 : 18);
+              #endif
+              
+                      // IDEN vertical Start
+                      stModeInfo.IVStartPos = (((WORD)pData[0] & 0xf0) << 4) | (WORD)pData[1];
+                  }
+                  else
+                  {
+                      CScalerSetByte(_AUTO_ADJ_CTRL1_7D, 0x00);
+                      CModeResetMode();
+                  }
+              }
+              #endif  // End of #if((_TMDS_SUPPORT == _ON) || (_HDMI_SUPPORT == _ON)
+1650          
+1651          //--------------------------------------------------
+1652          // Description  : Get scaling information
+1653          // Input Value  : None
+1654          // Output Value : Scaling information
+1655          //--------------------------------------------------
+1656          BYTE CModeGetScaleSetting(void)
+1657          {
+1658   1          BYTE  option = 0;
+1659   1      #if(_SCALER_TYPE == _RTD2547D)
+                  DWORD ivheight;
+              #endif
+1662   1      
+1663   1      #if(_DISP_INFO_BY_MODE == _ON)
+              
+                  BYTE modetemp;
+              
+              
+              #if(_VIDEO_SUPPORT && _VIDEO_CHIP == _VDC_TB1334)
+                  if(GET_MODE_SEARCH_TYPE() == _PRESET_MODE_TYPE || bSourceVideo())
+              #else
+                  if(GET_MODE_SEARCH_TYPE() == _PRESET_MODE_TYPE)
+              #endif
+                  {
+                      modetemp = stModeInfo.ModeCurr;
+                  }
+                  else if(GET_MODE_SEARCH_TYPE() == _USER_MODE_TYPE)
+                  {
+                      CEepromLoadUserFIFOModeData((stModeInfo.ModeCurr / 4), pData);
+              
+                      modetemp = pData[(stModeInfo.ModeCurr % 4) * 4];
+                  }
+              
+                  stDisplayInfo = tDISPLAY_PRESET_TABLE[modetemp];
+              
+                  // Modify Display Vertical Start Position
+                  stDisplayInfo.DVStartPos = (DWORD)35 * 2 * stDisplayInfo.DVHeight / stModeInfo.IVHeight / 10;
+                  stDisplayInfo.DVStartPos = ((stDisplayInfo.DVStartPos >> 1) + (stDisplayInfo.DVStartPos & 0x01));
+                  if(stDisplayInfo.DVStartPos < 6)
+                      stDisplayInfo.DVStartPos = 6;
+              
+                  // Modify OSD Reference Position
+              #if(_SCALER_TYPE == _RTD2547D)
+C51 COMPILER V8.16   MODE                                                                  04/05/2012 11:15:23 PAGE 29  
+
+                  CScalerSetDataPortByte(_DISP_ACCESS_PORT_2A, _DISP_OSD_REFERENCE_DEN_21, stDisplayInfo.DVStartPos - 4)
+             -;
+              #else
+                  CScalerSetByte(_OSD_REFERENCE_DEN_1E, stDisplayInfo.DVStartPos - 4);
+              #endif
+              
+                  ((WORD *)pData)[4] = (Panel.DHWidth - stDisplayInfo.DHWidth) / 2 + Panel.DHStartPos;
+              
+                  pData[0]    = pData[8] & 0x0f;
+                  pData[1]    = pData[9];
+              
+                  ((WORD *)pData)[5] = ((WORD *)pData)[4] + stDisplayInfo.DHWidth;
+              
+                  pData[2]    = pData[10] & 0x0f;
+                  pData[3]    = pData[11];
+              
+                  CScalerWrite(_DH_ACT_STA_H_2F, 4, pData, _AUTOINC);
+              
+              #else
+1711   1          stDisplayInfo.DHWidth   = CCalcPanelWdith();//Panel[ucPanelSelect]->DHWidth;
+1712   1         // stDisplayInfo.DHWidth = Panel.DHWidth;
+1713   1          stDisplayInfo.DVHeight = Panel.DVHeight;
+1714   1         // stDisplayInfo.DHTotal = Panel.DHTotal;
+1715   1          stDisplayInfo.DHTotal = CCalcPanelDHTota();
+1716   1      
+1717   1          // Modify Display Vertical Start Position
+1718   1          stDisplayInfo.DVStartPos = (DWORD)35 * 2 * stDisplayInfo.DVHeight / stModeInfo.IVHeight / 10;
+1719   1          stDisplayInfo.DVStartPos = ((stDisplayInfo.DVStartPos >> 1) + (stDisplayInfo.DVStartPos & 0x01));
+1720   1          if(stDisplayInfo.DVStartPos < 6)
+1721   1              stDisplayInfo.DVStartPos = 6;
+1722   1      
+1723   1          // Modify OSD Reference Position
+1724   1      #if(_SCALER_TYPE == _RTD2547D)
+                  CScalerSetDataPortByte(_DISP_ACCESS_PORT_2A, _DISP_OSD_REFERENCE_DEN_21, stDisplayInfo.DVStartPos - 4)
+             -;
+              #else
+1727   1          CScalerSetByte(_OSD_REFERENCE_DEN_1E, stDisplayInfo.DVStartPos - 4);
+1728   1      #endif
+1729   1      
+1730   1      #endif
+1731   1      
+1732   1      /*   // eric 0228 mark for 1080i mode
+1733   1          // This F/W do not support V scale-up(or bypass) and H scale-down simultaneously
+1734   1          if((stDisplayInfo.DVHeight >= stModeInfo.IVHeight) && (stDisplayInfo.DHWidth < stModeInfo.IHWidth))
+1735   1          {
+1736   1              stModeInfo.IHWidth = stDisplayInfo.DHWidth;
+1737   1          } */
+1738   1      
+1739   1      #if(_SCALER_TYPE == _RTD2547D)
+              
+                #if(_FIELD_MERGE_SUPPORT == _ON)
+                  {
+                      DWORD imagesize = 0;
+                  
+                      if(GET_INTERLACE_MODE())
+                      {
+                          imagesize = (DWORD)stModeInfo.IHWidth * stModeInfo.IVHeight * 3 * 8 * 4 / 1000000;
+                          if(_MEMORY_SIZE > imagesize)
+                              SET_FIELDMERGE_MODE();
+                          else
+                              CLR_FIELDMERGE_MODE();      
+                      }
+C51 COMPILER V8.16   MODE                                                                  04/05/2012 11:15:23 PAGE 30  
+
+                      else
+                          CLR_FIELDMERGE_MODE();
+                  }
+                  if(GET_FIELDMERGE_MODE())
+                      ivheight = stModeInfo.IVHeight * 2;
+                  else
+                      ivheight = stModeInfo.IVHeight;
+                #else
+                      ivheight = stModeInfo.IVHeight;
+                #endif
+              
+                  if(ivheight < stDisplayInfo.DVHeight)                   option |= _BIT0;    // bit 0 : V scale-up
+                  if(ivheight > stDisplayInfo.DVHeight)                   option |= _BIT1;    // bit 1 : V scale-down
+              
+              #else
+1768   1      
+1769   1          if(stModeInfo.IVHeight < stDisplayInfo.DVHeight)        option |= _BIT0;    // bit 0 : V scale-up
+1770   1          if(stModeInfo.IVHeight > stDisplayInfo.DVHeight)        option |= _BIT1;    // bit 1 : V scale-down
+1771   1      #endif
+1772   1      
+1773   1          if(stModeInfo.IHWidth < stDisplayInfo.DHWidth)          option |= _BIT2;    // bit 2 : H scale-up
+1774   1          if(stModeInfo.IHWidth > stDisplayInfo.DHWidth)          option |= _BIT3;    // bit 3 : H scale-down
+1775   1      
+1776   1          return option;
+1777   1      }
+1778          
+1779          //--------------------------------------------------
+1780          // Description  : Set capture window
+1781          // Input Value  : Scaling information
+1782          // Output Value : None
+1783          //--------------------------------------------------
+1784          void CModeSetCaptureWindow(BYTE ucOption)
+1785          {
+1786   1          WORD ustemp;
+1787   1      
+1788   1          if(_GET_INPUT_SOURCE() == _SOURCE_VGA)
+1789   1              ucHStartBias = 100;
+1790   1          else if(_GET_INPUT_SOURCE() == _SOURCE_DVI || _GET_INPUT_SOURCE() == _SOURCE_HDMI)  //V306 modify
+1791   1              ucHStartBias = 50;
+1792   1          else
+1793   1              ucHStartBias = 100;
+1794   1      
+1795   1      #if(_SCALER_TYPE == _RTD2547D)
+                  if(GET_FRCTATUS())
+                  {
+                      ucVStartBias = stModeInfo.IVStartPos > (_PROGRAM_VDELAY + 4) ? stModeInfo.IVStartPos - (_PROGRAM_V
+             -DELAY + 4) : 0;
+                  }
+                  else
+              #endif
+1802   1          {
+1803   2              ucVStartBias = 0;
+1804   2              ucVStartBias = CAdjustIVS2DVSDelay(ucOption);
+1805   2          }
+1806   1      
+1807   1          if(ucVStartBias > stModeInfo.IVStartPos)
+1808   1              ucVStartBias = stModeInfo.IVStartPos;
+1809   1      
+1810   1          // Set capture window
+1811   1          ustemp = stModeInfo.IHStartPos + _CAPTURE_HDELAY - (ucHStartBias + _PROGRAM_HDELAY);
+1812   1      
+1813   1      #if(_SCALER_TYPE == _RTD2547D)
+C51 COMPILER V8.16   MODE                                                                  04/05/2012 11:15:23 PAGE 31  
+
+                  CScalerSetBit(_IPH_ACT_STA_H_14, ~(_BIT2 | _BIT1 | _BIT0), HIBYTE(ustemp) & (_BIT2 | _BIT1 | _BIT0));
+                  CScalerSetByte(_IPH_ACT_STA_L_15, LOBYTE(ustemp));
+                  CScalerSetBit(_IPH_ACT_WID_H_16, ~(_BIT2 | _BIT1 | _BIT0), HIBYTE(stModeInfo.IHWidth) & (_BIT2 | _BIT1
+             - | _BIT0));
+                  CScalerSetByte(_IPH_ACT_WID_L_17, LOBYTE(stModeInfo.IHWidth));
+              
+                  ustemp = stModeInfo.IVStartPos - (ucVStartBias + _PROGRAM_VDELAY);
+              
+                  CScalerSetBit(_IPV_ACT_STA_H_18, ~(_BIT2 | _BIT1 | _BIT0), HIBYTE(ustemp) & (_BIT2 | _BIT1 | _BIT0));
+                  CScalerSetByte(_IPV_ACT_STA_L_19, LOBYTE(ustemp));
+                  CScalerSetBit(_IPV_ACT_LEN_H_1A, ~(_BIT2 | _BIT1 | _BIT0), HIBYTE(stModeInfo.IVHeight) & (_BIT2 | _BIT
+             -1 | _BIT0));
+                  CScalerSetByte(_IPV_ACT_LEN_L_1B, LOBYTE(stModeInfo.IVHeight));
+              
+                  // Set internal input H sync delay
+                  CAdjustIHSDelay(ucHStartBias + _PROGRAM_HDELAY);
+              
+                  // Set internal input V sync delay
+                  CAdjustIVSDelay(ucVStartBias + _PROGRAM_VDELAY);
+              #else
+1832   1          CScalerSetBit(_IPH_ACT_STA_H_09, ~(_BIT2 | _BIT1 | _BIT0), HIBYTE(ustemp) & (_BIT2 | _BIT1 | _BIT0));
+1833   1          CScalerSetByte(_IPH_ACT_STA_L_0A, LOBYTE(ustemp));
+1834   1          CScalerSetBit(_IPH_ACT_WID_H_0B, ~(_BIT2 | _BIT1 | _BIT0), HIBYTE(stModeInfo.IHWidth) & (_BIT2 | _BIT1
+             - | _BIT0));
+1835   1          CScalerSetByte(_IPH_ACT_WID_L_0C, LOBYTE(stModeInfo.IHWidth));
+1836   1      
+1837   1          ustemp = stModeInfo.IVStartPos - (ucVStartBias + _PROGRAM_VDELAY);
+1838   1      
+1839   1          CScalerSetBit(_IPV_ACT_STA_H_0D, ~(_BIT2 | _BIT1 | _BIT0), HIBYTE(ustemp) & (_BIT2 | _BIT1 | _BIT0));
+1840   1          CScalerSetByte(_IPV_ACT_STA_L_0E, LOBYTE(ustemp));
+1841   1          CScalerSetBit(_IPV_ACT_LEN_H_0F, ~(_BIT2 | _BIT1 | _BIT0), HIBYTE(stModeInfo.IVHeight) & (_BIT2 | _BIT
+             -1 | _BIT0));
+1842   1          CScalerSetByte(_IPV_ACT_LEN_L_10, LOBYTE(stModeInfo.IVHeight));
+1843   1      #endif
+1844   1      
+1845   1          // Set internal input H sync delay
+1846   1          CAdjustIHSDelay(ucHStartBias + _PROGRAM_HDELAY);
+1847   1      
+1848   1          // Set internal input V sync delay
+1849   1          CAdjustIVSDelay(ucVStartBias + _PROGRAM_VDELAY);
+1850   1      }
+1851          
+1852          //--------------------------------------------------
+1853          // Description  : Set display
+1854          // Input Value  : Scaling information
+1855          // Output Value : None
+1856          //--------------------------------------------------
+1857          void CModeSetDisplay(BYTE ucOption)
+1858          {
+1859   1          // Disable spread spectrum
+1860   1      #if(_SCALER_TYPE == _RTD2547D)
+                  CAdjustDclkSpreadSpectrumRange(0);
+              #else
+1863   1          CAdjustSpreadSpectrumRange(0);
+1864   1      #endif
+1865   1      
+1866   1          // Calculate and set display clock frequency
+1867   1          ((DWORD *)pData)[0] = (DWORD)(stDisplayInfo.DHTotal) * (DWORD)stModeInfo.IHFreq * (DWORD)(stDisplayInf
+             -o.DVHeight) / stModeInfo.IVHeight / 10;
+1868   1      
+1869   1      #if(_SCALER_TYPE == _RTD2547D)
+              
+C51 COMPILER V8.16   MODE                                                                  04/05/2012 11:15:23 PAGE 32  
+
+              #if(_FRC_SUPPORT == _ON)
+                  if(GET_FRCTATUS())
+                  {
+                      // Calculate and set display clock frequency for FRC mode
+                      ((DWORD *)pData)[0] = (DWORD)(stDisplayInfo.DHTotal) * (DWORD)stModeInfo.IHFreq * (DWORD)(Panel.DV
+             -Total) / stModeInfo.IVTotal / 10;
+              
+                      if(stModeInfo.IVFreq > (_PANEL_MAX_FRAME_RATE + 5))
+                      {
+                          ((DWORD *)pData)[0] = (DWORD)(Panel.DHTotal) * (Panel.DVTotal) * (_PANEL_MAX_FRAME_RATE / 10) 
+             -/ 1000;
+                          CAdjustPLL(_DPLL, ((DWORD *)pData)[0]);
+                      }
+                      else if(((DWORD *)pData)[0] >= (DWORD)Panel.PixelClockMax * 1000)
+                          CAdjustPLL(_DPLL, (DWORD)Panel.PixelClockMax * 1000);
+                      else
+                          CAdjustPLL(_DPLL, ((DWORD *)pData)[0] - 100);
+                  }
+                  else
+                      CAdjustPLL(_DPLL, ((DWORD *)pData)[0]);
+              #else
+                  CAdjustPLL(_DPLL, ((DWORD *)pData)[0]);
+              #endif
+              
+                  // Set DH_TOTAL
+                  pData[0] = (HIBYTE(stDisplayInfo.DHTotal - 4) & 0x0f);
+                  pData[1] = (LOBYTE(stDisplayInfo.DHTotal - 4));
+                  CScalerSetByte(_DISP_ACCESS_PORT_2A, _DISP_DH_TOTAL_H_00);
+                  CScalerWrite(_DISP_DATA_PORT_2B, 2, pData, _NON_AUTOINC);
+              
+                  // Calculate DV_TOTAL setting for watchdog
+                  ((WORD *)pData)[2] = (DWORD)stModeInfo.IVTotal * (DWORD)(stDisplayInfo.DVHeight) / stModeInfo.IVHeight
+             - + 64;
+                  pData[0] = (HIBYTE(((WORD *)pData)[2]) & 0x0f);
+                  pData[1] = (LOBYTE(((WORD *)pData)[2]));
+                  CScalerSetByte(_DISP_ACCESS_PORT_2A, _DISP_DV_TOTAL_H_0B);
+                  CScalerWrite(_DISP_DATA_PORT_2B, 2, pData, _NON_AUTOINC);
+              
+              #else
+1907   1      
+1908   1          CAdjustDPLL(((DWORD *)pData)[0]);
+1909   1      
+1910   1          // Set DH_TOTAL
+1911   1          pData[0] = (HIBYTE(stDisplayInfo.DHTotal - 4) & 0x0f);
+1912   1          pData[1] = (LOBYTE(stDisplayInfo.DHTotal - 4));
+1913   1          CScalerWrite(_DH_TOTAL_H_2A, 2, pData, _AUTOINC);
+1914   1      
+1915   1          // Calculate DV_TOTAL setting for watchdog
+1916   1          ((WORD *)pData)[2] = (DWORD)stModeInfo.IVTotal * (DWORD)(stDisplayInfo.DVHeight) / stModeInfo.IVHeight
+             - + 64;
+1917   1              pData[0] = (HIBYTE(((WORD *)pData)[2]) & 0x0f);
+1918   1              pData[1] = (LOBYTE(((WORD *)pData)[2]));
+1919   1          CScalerWrite(_DV_TOTAL_H_35, 2, pData, _AUTOINC);
+1920   1      
+1921   1      #endif // #if(_SCALER_TYPE == _RTD2547D)
+1922   1      
+1923   1          // Display vertical start/end
+1924   1          // andy modify for panel
+1925   1          //((WORD *)pData)[4] = stDisplayInfo.DVStartPos;
+1926   1          ((WORD *)pData)[4] = Panel.DVStartPos;
+1927   1          ((WORD *)pData)[5] = ((WORD *)pData)[4] + stDisplayInfo.DVHeight;
+1928   1      
+C51 COMPILER V8.16   MODE                                                                  04/05/2012 11:15:23 PAGE 33  
+
+1929   1          pData[0] = HIBYTE(((WORD *)pData)[4]);
+1930   1          pData[1] = LOBYTE(((WORD *)pData)[4]);
+1931   1          pData[2] = HIBYTE(((WORD *)pData)[4]);
+1932   1          pData[3] = LOBYTE(((WORD *)pData)[4]);
+1933   1          pData[4] = HIBYTE(((WORD *)pData)[5]);
+1934   1          pData[5] = LOBYTE(((WORD *)pData)[5]);
+1935   1          pData[6] = HIBYTE(((WORD *)pData)[5]);
+1936   1          pData[7] = LOBYTE(((WORD *)pData)[5]);
+1937   1                                        
+1938   1      #if(_SCALER_TYPE == _RTD2547D)
+              
+                  CScalerSetByte(_DISP_ACCESS_PORT_2A, (0x80 | _DISP_DV_BKGD_STA_H_0E));
+                  CScalerWrite(_DISP_DATA_PORT_2B, 8, pData, _NON_AUTOINC);
+                  CScalerSetByte(_DISP_ACCESS_PORT_2A, 0x00);
+              
+                  // Turn off full-line buffer
+                  CScalerSetBit(_SCALE_CTRL_32, ~_BIT4, 0x00);
+              
+                  if(GET_FRCTATUS())
+                  {
+                      // Enable display timing
+                      CScalerSetBit(_VDISP_CTRL_28, ~(_BIT5 | _BIT3 | _BIT1 | _BIT0), (_BIT5 | _BIT1 | _BIT0));
+                  }
+                  else
+              
+              #else
+1955   1      
+1956   1          CScalerWrite(_DV_BKGD_STA_H_38, 8, pData, _AUTOINC);
+1957   1      
+1958   1          // Turn off full-line buffer
+1959   1          CScalerSetBit(_SCALE_CTRL_19, ~_BIT4, 0x00);
+1960   1      
+1961   1      #endif
+1962   1      
+1963   1          {
+1964   2              CAdjustIVS2DVSDelay(ucOption);
+1965   2          
+1966   2              // Enable display timing
+1967   2              CScalerSetBit(_VDISP_CTRL_28, ~(_BIT5 | _BIT3 | _BIT1 | _BIT0), (_BIT5 | _BIT3 | _BIT1 | _BIT0));
+1968   2          }
+1969   1      
+1970   1          CMiscClearStatusRegister();
+1971   1      }
+1972          
+1973          //--------------------------------------------------
+1974          // Description  : Modify IVTotal
+1975          // Input Value  : None
+1976          // Output Value : None
+1977          //--------------------------------------------------
+1978          void CModeModifyVTotal(void)
+1979          {
+1980   1      /*
+1981   1          BYTE ucTemp;
+1982   1      
+1983   1          // Force to stop auto-tracking function
+1984   1          CScalerSetByte(_AUTO_ADJ_CTRL_7F, 0x00);
+1985   1      
+1986   1          CScalerSetByte(_STATUS0_01, 0x00);   // Clear Status
+1987   1      
+1988   1          ucTemp  = 8;             // Tracking timeout 80ms
+1989   1          do
+1990   1          {
+C51 COMPILER V8.16   MODE                                                                  04/05/2012 11:15:23 PAGE 34  
+
+1991   1              CTimerDelayXms(10);
+1992   1              CScalerRead(_STATUS0_01, 1, pData, _NON_AUTOINC);  // Read Status
+1993   1      
+1994   1              // V101C corrected
+1995   1              if(pData[0] & 0x80)
+1996   1                  CScalerSetByte(_STATUS0_01, 0x00);   // Clear Status
+1997   1              else
+1998   1                  break;
+1999   1          }
+2000   1          while(--ucTemp);
+2001   1      
+2002   1          // Measure actual number of scan line in each frame
+2003   1          CScalerCodeW(tMEASURE_IVS);
+2004   1      
+2005   1          ucTemp  = 50;    // Tracking timeout 50ms
+2006   1          do
+2007   1          {   
+2008   1              CTimerDelayXms(1);
+2009   1              CScalerRead(_AUTO_ADJ_CTRL_7F, 0x01, pData, _NON_AUTOINC);
+2010   1          }
+2011   1          while((pData[0] & 0x01) && (--ucTemp));
+2012   1      
+2013   1          CScalerSetByte(_AUTO_ADJ_CTRL_7F, 0x00);
+2014   1          
+2015   1          if(ucTemp)
+2016   1          {
+2017   1              CScalerRead(_VER_START_80, 0x04, pData, _AUTOINC);
+2018   1              pData[0]    = pData[3] & 0x0f;
+2019   1              pData[1]    = pData[2];
+2020   1      
+2021   1              stModeInfo.IVTotal   = stModeInfo.IVTotal < ((WORD *)pData)[0] ? ((WORD *)pData)[0] : stModeInfo.I
+             -VTotal;
+2022   1          }
+2023   1      */
+2024   1      }
+2025          
+2026          //----------------------------------------------------------------------------------------------------
+2027          // Other Mode Functions
+2028          //----------------------------------------------------------------------------------------------------
+2029          
+2030          //--------------------------------------------------
+2031          // Description  : Reset mode
+2032          // Input Value  : None
+2033          // Output Value : None
+2034          //--------------------------------------------------
+2035          void CModeResetMode(void)
+2036          {         
+2037   1          CLR_KEYREPEATENABLE();
+2038   1      #if(DVD_EN)
+2039   1         if(_GET_INPUT_SOURCE() != _SOURCE_VIDEO_DVD)
+2040   1         {
+2041   2              #if(DVD_EN)
+2042   2              bDVD_PWR_OFF() ;
+2043   2              #endif
+2044   2                 //   bDVD_PWR = 1;
+2045   2                      bDVDON = 0;
+2046   2              }
+2047   1      #endif
+2048   1         
+2049   1      #if(_VIDEO_SUPPORT == _ON)
+2050   1          if (bVideoON && 
+2051   1              (_GET_INPUT_SOURCE() == _SOURCE_VGA || 
+C51 COMPILER V8.16   MODE                                                                  04/05/2012 11:15:23 PAGE 35  
+
+2052   1               _GET_INPUT_SOURCE() == _SOURCE_DVI || 
+2053   1               _GET_INPUT_SOURCE() == _SOURCE_HDMI || 
+2054   1               _GET_INPUT_SOURCE() == _SOURCE_YPBPR))  // Prev source is video
+2055   1          {
+2056   2              gmi_CVDCOutputDisable();
+2057   2              CPowerDownVDC();
+2058   2              bVideoON = 0;
+2059   2          } 
+2060   1      #if(_VIDEO_TV_SUPPORT)
+2061   1          if (_GET_INPUT_SOURCE() == _SOURCE_VIDEO_TV)
+2062   1          {
+2063   2              ucVideoNoModeTime++;
+2064   2      
+2065   2              if (ucVideoNoModeTime < 250)
+2066   2                  return;
+2067   2          }                                                                  
+2068   1      
+2069   1          ucVideoNoModeTime = 0;
+2070   1      #endif
+2071   1      #endif
+2072   1      
+2073   1      
+2074   1          CLR_LIGHTPOWERSTATUS();
+2075   1           MUTE_ON();  //guo 0814
+2076   1      
+2077   1          CAdjustDisableWatchDog(_WD_ALL);
+2078   1      
+2079   1      #if(_SCALER_TYPE == _RTD2547D)
+              
+              #if(_HDMI_SUPPORT == _ON)
+                      if(1)//CHdmiFormatDetect())//Input source is the HDMI format.
+                      {
+                      CScalerPageSelect(_PAGE2);
+                      CAdjustDisableHDMIWatchDog(_WD_AUDIO_FOR_TMDS_CLOCK | _WD_PACKET_VARIATION);
+                  
+                      //cyc:For 2880 input width.
+                  //    CScalerSetDataPortBit(_P2_HDMI_ADDR_PORT_C9, _P2_HDMI_VCR_50, 0xf0, 0x00);
+                  //    CScalerSetDataPortBit(_P2_HDMI_ADDR_PORT_C9, _P2_HDMI_ACRCR_51, ~_BIT2, 0x00);
+                      CScalerSetDataPortByte(_P2_HDMI_ADDR_PORT_C9, _P2_HDMI_AOCR_62, 0x00);//Disable SPDIF/I2S Output
+                      }
+              #endif
+                         
+                  CScalerSetByte(_HOST_CTRL_01, 0x40);
+                  CScalerSetBit(_VGIP_CTRL_10, ~(_BIT1 | _BIT0), 0x00);
+                  CScalerSetByte(_VGIP_SIGINV_11, 0x00);
+                  CScalerSetBit(_SYNC_TEST_MISC_5A, ~_BIT7, _BIT7);//For analog input detect interlace mode.
+                  CScalerPageSelect(_PAGE2);
+                  CScalerSetBit(_P2_POWER_ON_OFF_CTRL_A7, ~(_BIT4 | _BIT3 | _BIT2 | _BIT1 | _BIT0), _BIT3 | _BIT2 | _BIT
+             -1 | _BIT0);
+                  CScalerSetBit(_P2_Z0_CALIBRATION_CTRL_AC, ~_BIT6, _BIT6);
+                           
+              #else
+2103   1      
+2104   1      #if(_SCALER_TYPE == _RTD2553V || _SCALER_TYPE == _RTD2546N || _SCALER_TYPE == _RTD2525L) 
+2105   1          CScalerSetBit(_HOST_CTRL_01, ~(_BIT2 | _BIT1 | _BIT0), 0x00);
+2106   1      #else
+                  CScalerSetByte(_HOST_CTRL_01, 0x00);
+              #endif
+2109   1          
+2110   1          CScalerSetBit(_VGIP_CTRL_05, ~(_BIT1 | _BIT0), 0x00);
+2111   1          CScalerSetByte(_VGIP_SIGINV_06, 0x00);
+2112   1      
+C51 COMPILER V8.16   MODE                                                                  04/05/2012 11:15:23 PAGE 36  
+
+2113   1      #if (_SCALER_TYPE == _RTD2525L)
+2114   1          CScalerSetDataPortBit(_ADC_ACCESS_PORT_DC, 0x0c, ~_BIT7, 0x00);
+2115   1          CScalerSetByte(_ADC_ACCESS_PORT_DC,0x8e);
+2116   1          CScalerSetByte(_ADC_DATA_PORT_DD,0x00);
+2117   1      #endif
+2118   1      
+2119   1      
+2120   1          CScalerSetBit(_POWER_ON_OFF_CTRL_C2, ~_BIT5, _BIT5);
+2121   1          CScalerSetBit(_Z0_CALIBRATION_CTRL_C7, ~_BIT6, _BIT6);
+2122   1      
+2123   1      #if (_VIDEO_SUPPORT == _ON)
+2124   1      
+2125   1          #if(_SCALER_TYPE == _RTD2553V || _SCALER_TYPE == _RTD2546N || _SCALER_TYPE == _RTD2525L) 
+2126   1              if (_DSUB_A0_PORT == CGetSourcePortType(_GET_INPUT_SOURCE()))
+2127   1                  CScalerSetBit(_VSYNC_COUNTER_LEVEL_MSB_4C, ~_BIT3, _BIT3);
+2128   1          #else
+              
+                  #if(_SCALER_TYPE != _RTD2023L) 
+                  CScalerSetBit(_VSYNC_COUNTER_LEVEL_MSB_4C, ~_BIT5, _BIT5);
+                  #endif
+              
+                  #endif
+2135   1      
+2136   1      #endif // #if (_VIDEO_SUPPORT == _ON)
+2137   1      #endif // #if(_SCALER_TYPE == _RTD2547D)
+2138   1      
+2139   1          CModeSetFreeRun();
+2140   1      
+2141   1          if(GET_PANELPOWERSTATUS() == _OFF)
+2142   1          {
+2143   2              CScalerEnableDisplayTiming();
+2144   2          }
+2145   1      
+2146   1          COsdFxDisableOsd();
+2147   1      
+2148   1      
+2149   1          CModeAutoMeasureOff();
+2150   1          CAdjustTMDSErrorCorrectionOn();
+2151   1          CPowerPWMOn();
+2152   1          CMiscClearStatusRegister();
+2153   1      
+2154   1      #if(_SCALER_TYPE == _RTD2547D)   
+                  if(_GET_INPUT_SOURCE() == _SOURCE_VGA)
+                  {
+                      CScalerSetDataPortByte(_SYNC_PROC_ACCESS_PORT_5C, _SYNC_G_CLAMP_START_00, 0x04);
+                      CScalerSetDataPortByte(_SYNC_PROC_ACCESS_PORT_5C, _SYNC_G_CLAMP_END_01, 0x10);
+                      CScalerSetDataPortByte(_SYNC_PROC_ACCESS_PORT_5C, _SYNC_BR_CLAMP_START_02, 0x04);
+                      CScalerSetDataPortByte(_SYNC_PROC_ACCESS_PORT_5C, _SYNC_BR_CLAMP_END_03, 0x10);
+                      CScalerSetDataPortBit(_SYNC_PROC_ACCESS_PORT_5C, _SYNC_CLAMP_CTRL0_04, ~(_BIT7 | _BIT6), 0x00);
+                  }
+              #endif
+2164   1      
+2165   1      
+2166   1          CTimerCancelTimerEvent(CModeNoSignalEvent);
+2167   1          CTimerCancelTimerEvent(CModeNoCableEvent);
+2168   1          CTimerCancelTimerEvent(CModeNoSupportEvent);
+2169   1          CTimerCancelTimerEvent(CModePowerSavingEvent);
+2170   1          CTimerCancelTimerEvent(COsdDispOsdTimerEvent);
+2171   1      
+2172   1          CLR_FIRST_ADCCLOCK();
+2173   1          CLR_USE_TRANSITION_RESULT();
+2174   1          CLR_FRAMESYNCSTATUS();
+C51 COMPILER V8.16   MODE                                                                  04/05/2012 11:15:23 PAGE 37  
+
+2175   1          CLR_MODESTABLE();
+2176   1          ucInputSyncType = _NO_SYNC_STATE;
+2177   1      
+2178   1      #if(_SCALER_TYPE == _RTD2547D)   
+                  CLR_INTERLACE_MODE();
+               #if(_FRC_SUPPORT == _ON)
+                  CLR_FRCTATUS();
+                #if(_FIELD_MERGE_SUPPORT == _ON)
+                  CLR_FIELDMERGE_MODE();
+                #endif
+               #endif
+              
+               #if(_HDMI_SUPPORT == _ON)
+                  CLR_HDMIINPUT();    
+                  CLR_AUDIOPLLLOCKREADY();
+                  CLR_AVRESUME();
+                  CLR_AUDIOWAITINGTIMEOUT();
+               #endif
+              #endif
+2194   1      
+2195   1          // add for YPbPr 1080i change to 720p show mode not support
+2196   1      #if(_SCALER_TYPE != _RTD2547D)   
+2197   1      #if(_YPBPR_SUPPORT)
+                  if (_GET_INPUT_SOURCE() == _SOURCE_YPBPR)
+                      CAdjustGamma(_COMPACT_GAMMA_NORMAL_TABLE, tGAMMA_COMPACT1, tGAMMA_COMPACT1, tGAMMA_COMPACT1);
+              #endif
+2201   1      #endif // #if(_SCALER_TYPE != _RTD2547D)   
+2202   1      
+2203   1      
+2204   1      #if(_NEW_YPBPR && _YPBPR_SUPPORT)
+                      if(_GET_INPUT_SOURCE() == _SOURCE_YPBPR)
+                  {
+                 #if(_SCALER_TYPE == _RTD2547D)   
+                 /*
+                      CScalerSetByte(_P0_ADC_RED_CTL_A2,0xC0); 
+                      CScalerSetByte(_P0_ADC_GREEN_CTL_A3,0x40); 
+                      CScalerSetByte(_P0_ADC_BLUE_CTL_A4,0xC0); 
+                                      
+                      CScalerSetByte(_P0_SOG0_CTRL_AB,0x20);
+                      CScalerSetByte(_P0_SOG1_CTRL_AC,0x20);*/
+                 #else
+                      CScalerSetDataPortBit(_ADC_ACCESS_PORT_DC, 0x0C, ~_BIT7, 0x00);
+                      CScalerSetByte(_ADC_ACCESS_PORT_DC,0x81); 
+                      CScalerSetByte(_ADC_DATA_PORT_DD,0x40); 
+                      CScalerSetByte(_ADC_DATA_PORT_DD,0x40); 
+                      CScalerSetByte(_ADC_DATA_PORT_DD,0x40); 
+                                      
+                      CScalerSetByte(_ADC_ACCESS_PORT_DC, 0x8A);
+                      CScalerSetByte(_ADC_DATA_PORT_DD,0x25);
+                      CScalerSetByte(_ADC_ACCESS_PORT_DC, 0x8B);
+                      CScalerSetByte(_ADC_DATA_PORT_DD,0x25);
+                                        
+                      CScalerSetByte(_ADC_ACCESS_PORT_DC,0x8e);
+                      CScalerSetByte(_ADC_DATA_PORT_DD,0x04);
+                      CScalerSetByte(_ADC_ACCESS_PORT_DC,0x8c);
+                      CScalerSetByte(_ADC_DATA_PORT_DD,0x3f);  
+                 #endif
+                  }
+              #endif
+2234   1      
+2235   1          CScalerSetBit(_VDISP_CTRL_28, ~(_BIT5 | _BIT3), (_BIT5));
+2236   1      #if(_CHANGE_SOURCE_BACKGROUCD_COLOR==_BACK_COLOR)                                               
+C51 COMPILER V8.16   MODE                                                                  04/05/2012 11:15:23 PAGE 38  
+
+2237   1                      CAdjustBackgroundColor(0x00, 0x00, 0x00);     
+2238   1      #else
+                              CAdjustBackgroundColor(0x00, 0x00, 0xFF);     
+              #endif
+2241   1          SET_FIRST_LOADFONT();  // eric 0606 add
+2242   1      
+2243   1      
+2244   1      #if(_HDMI_SUPPORT == _ON)
+                  SET_PRE_VGA_CONNECT(bVGACONNECT);
+                  SET_PRE_HDMI_CONNECT(bHDMICONNECT);
+              #elif(_TMDS_SUPPORT == _ON)
+                  SET_PRE_VGA_CONNECT(bVGACONNECT);
+                  SET_PRE_DVI_CONNECT(bDVICONNECT);
+              #else
+2251   1          SET_PRE_VGA_CONNECT(bVGACONNECT);
+2252   1      #endif
+2253   1      
+2254   1          stModeInfo.ModeCurr = _MODE_NOSIGNAL;
+2255   1          ucModeFound         = _MODE_FIRST;
+2256   1          ucEvent0            = _INACTIVE_COUNTDOWN_EVENT;
+2257   1          ucEvent1            = _INACTIVE_COUNTDOWN_EVENT;
+2258   1          ucOsdState          = _MENU_NONE;
+2259   1          ucOsdEventMsg       = _NONE_MSG;
+2260   1      
+2261   1          ucOSDAdjTemp        = 0;
+2262   1          stModeInfo.Polarity = 0;
+2263   1          stModeInfo.IHCount  = 0;
+2264   1          stModeInfo.IHFreq   = 0;
+2265   1          stModeInfo.IVTotal  = 0;
+2266   1          stModeInfo.IVFreq   = 0;
+2267   1          stModeInfo.IHWidth  = 0;
+2268   1          stModeInfo.IVHeight = 0;
+2269   1          stModeInfo.IHSyncPulseCount = 0;
+2270   1      
+2271   1      #if(_VIDEO_SUPPORT)
+2272   1          RECODE_NONE_VIDEO();
+2273   1          VideoTurnOnLightCount = 0;
+2274   1      #endif
+2275   1      
+2276   1      #ifdef _SII164_INIT_SUPPORT
+                  //b164SW = 0;
+                      //CTimerDelayXms(200);
+                      //b164SW = 1;
+                  CModeInitSiI164();
+              #endif
+2282   1      
+2283   1      #if(_DDC_TYPE != _DDC_NONE)
+                  DDCInit();
+              #endif    
+2286   1          SET_FIRST_SHOW_NOTE();
+2287   1      
+2288   1            if (_GET_INPUT_SOURCE() == _SOURCE_VIDEO_TV)
+2289   1              {
+2290   2          CTimerDelayXms(50);
+2291   2      CScalerSetBit(_SYNC_INVERT_48, ~(_BIT6 | _BIT1), (_BIT4 | _BIT2));
+2292   2          CTimerDelayXms(50);
+2293   2      CScalerSetBit(_SYNC_CTRL_49, ~(_BIT5 | _BIT6), (_BIT2 | _BIT1));
+2294   2              }
+2295   1          ucCurrState = _SEARCH_STATE; 
+2296   1      }
+2297          
+2298          //--------------------------------------------------
+C51 COMPILER V8.16   MODE                                                                  04/05/2012 11:15:23 PAGE 39  
+
+2299          // Description  : Free run mode setting
+2300          // Input Value  : None
+2301          // Output Value : None
+2302          //--------------------------------------------------
+2303          void CModeSetFreeRun(void)
+2304          { 
+2305   1                  WORD ucDHStart =CCalcPanelDHSta();
+2306   1                  WORD ucDHEnd   = CCalcPanelDHEnd(0);
+2307   1          CMiscDisableDoubleBuffer();
+2308   1      
+2309   1      #if(_SCALER_TYPE == _RTD2547D)   
+                  // Enabl MPLL
+                  CAdjustPLL(_MPLL, (DWORD)_MEMORY_SPEED * 1000);
+                  // Enable the Mclk spread spectrum function
+                  CAdjustMclkSpreadSpectrumRange(_MCLK_SPREAD_RANGE);
+              
+                  CAdjustPLL(_DPLL, (DWORD)Panel.PixelClock * 1000);
+              #else
+2317   1          CAdjustDPLL((DWORD)Panel.PixelClock * 1000);
+2318   1      #endif
+2319   1      
+2320   1          CScalerSetBit(_VDISP_CTRL_28, ~(_BIT5 | _BIT3 | _BIT1 | _BIT0), (_BIT5 | _BIT1 | _BIT0));
+2321   1      
+2322   1                  pData[0]    = (HIBYTE(Panel.DHTotal - 4) & 0x0f);
+2323   1                  pData[1]    = (LOBYTE(Panel.DHTotal - 4));
+2324   1                  pData[2]    = (Panel.DHSyncWidth);
+2325   1                  pData[3]    = (HIBYTE(Panel.DHStartPos) & 0x0f);
+2326   1                  pData[4]    = (LOBYTE(Panel.DHStartPos));
+2327   1                  pData[5]    = (HIBYTE(ucDHStart) & 0x0f);
+2328   1                  pData[6]    = (LOBYTE(ucDHStart));
+2329   1                  pData[7]    = (HIBYTE(ucDHEnd) & 0x0f);
+2330   1                  pData[8]    = (LOBYTE(ucDHEnd));
+2331   1                  pData[9]    = (HIBYTE(CCalcPanelDHEnd(1)) & 0x0f);
+2332   1                  pData[10]   = (LOBYTE(CCalcPanelDHEnd(1)));
+2333   1      
+2334   1      #if(_SCALER_TYPE == _RTD2547D)   
+                  CScalerSetByte(_DISP_ACCESS_PORT_2A, _DISP_DH_TOTAL_H_00);
+                  CScalerWrite(_DISP_DATA_PORT_2B, 11, pData, _NON_AUTOINC);
+              #else
+2338   1          CScalerWrite(_DH_TOTAL_H_2A, 11, pData, _AUTOINC);
+2339   1      #endif
+2340   1      
+2341   1          pData[0]    = (HIBYTE(Panel.DVTotal) & 0x0f);
+2342   1          pData[1]    = (LOBYTE(Panel.DVTotal));
+2343   1          pData[2]    = (Panel.DVSyncHeight);
+2344   1          pData[3]    = (HIBYTE(Panel.DVStartPos) & 0x0f);
+2345   1          pData[4]    = (LOBYTE(Panel.DVStartPos));
+2346   1          pData[5]    = (HIBYTE(Panel.DVStartPos) & 0x0f);
+2347   1          pData[6]    = (LOBYTE(Panel.DVStartPos));
+2348   1          pData[7]    = (HIBYTE(CCalcPanelDVEnd()) & 0x0f);
+2349   1          pData[8]    = (LOBYTE(CCalcPanelDVEnd()));
+2350   1          pData[9]    = (HIBYTE(CCalcPanelDVEnd()) & 0x0f);
+2351   1          pData[10]   = (LOBYTE(CCalcPanelDVEnd()));
+2352   1      
+2353   1      #if(_SCALER_TYPE == _RTD2547D)   
+                  CScalerSetByte(_DISP_ACCESS_PORT_2A, _DISP_DV_TOTAL_H_0B);
+                  CScalerWrite(_DISP_DATA_PORT_2B, 11, pData, _NON_AUTOINC);
+              #else
+2357   1          CScalerWrite(_DV_TOTAL_H_35, 11, pData, _AUTOINC);
+2358   1      #endif
+2359   1      
+2360   1          pData[0]    = ((Panel.DHTotal >> 4) & 0xf0) | (HIBYTE(Panel.DVTotal) & 0x0f);
+C51 COMPILER V8.16   MODE                                                                  04/05/2012 11:15:23 PAGE 40  
+
+2361   1          pData[1]    = LOBYTE(Panel.DVTotal);
+2362   1          pData[2]    = LOBYTE(Panel.DHTotal);
+2363   1      
+2364   1      #if(_SCALER_TYPE == _RTD2547D)   
+                  CScalerPageSelect(_PAGE1);
+                  CScalerWrite(_P1_FIXED_LAST_LINE_MSB_BF, 3, pData, _AUTOINC);
+              #else
+2368   1          CScalerWrite(_FIXED_LAST_LINE_MSB_B8, 3, pData, _AUTOINC);
+2369   1      #endif
+2370   1      }
+2371          
+2372          //--------------------------------------------------
+2373          // Description  : Check if the connector status is changed
+2374          // Input Value  : None
+2375          // Output Value : Return _TRUE if the connector status changed
+2376          //--------------------------------------------------
+2377          bit CModeConnectIsChange(void)
+2378          {
+2379   1      
+2380   1      #if(_HDMI_SUPPORT == _ON)
+              
+                  if((bVGACONNECT != GET_PRE_VGA_CONNECT()) || (bHDMICONNECT != GET_PRE_HDMI_CONNECT()))
+                  {
+                      SET_PRE_VGA_CONNECT(bVGACONNECT);
+                      SET_PRE_HDMI_CONNECT(bHDMICONNECT);
+                      return _TRUE;
+                  }
+              
+                  SET_PRE_VGA_CONNECT(bVGACONNECT);
+                  SET_PRE_HDMI_CONNECT(bHDMICONNECT);
+              
+              #elif(_TMDS_SUPPORT == _ON)
+              
+                  if((bVGACONNECT != GET_PRE_VGA_CONNECT()) || (bDVICONNECT != GET_PRE_DVI_CONNECT()))
+                  {
+                      SET_PRE_VGA_CONNECT(bVGACONNECT);
+                      SET_PRE_DVI_CONNECT(bDVICONNECT);
+                      return _TRUE;
+                  }
+              
+                  SET_PRE_VGA_CONNECT(bVGACONNECT);
+                  SET_PRE_DVI_CONNECT(bDVICONNECT);
+              
+              #else
+2405   1      
+2406   1          if((bVGACONNECT != GET_PRE_VGA_CONNECT()))
+2407   1          {
+2408   2              SET_PRE_VGA_CONNECT(bVGACONNECT);
+2409   2              return _TRUE;
+2410   2          }
+2411   1      
+2412   1          SET_PRE_VGA_CONNECT(bVGACONNECT);
+2413   1      
+2414   1      #endif
+2415   1      
+2416   1          return _FALSE;
+2417   1      }
+2418          
+2419          //--------------------------------------------------
+2420          // Description  : Enable online measure
+2421          // Input Value  : None
+2422          // Output Value : None
+C51 COMPILER V8.16   MODE                                                                  04/05/2012 11:15:23 PAGE 41  
+
+2423          //--------------------------------------------------
+2424          void CModeAutoMeasureOn(void)
+2425          {
+2426   1          CScalerSetBit(_MEAS_HS_PERIOD_H_52, ~_BIT7, _BIT7);
+2427   1          CTimerDelayXms(40); //V304 modify
+2428   1      }
+2429          
+2430          //--------------------------------------------------
+2431          // Description  : Disable online measure
+2432          // Input Value  : None
+2433          // Output Value : None
+2434          //--------------------------------------------------
+2435          void CModeAutoMeasureOff(void)
+2436          {
+2437   1          CScalerSetBit(_MEAS_HS_PERIOD_H_52, ~_BIT7, 0x00);
+2438   1      }
+2439          
+2440          //----------------------------------------------------------------------------------------------------
+2441          // Mode Events
+2442          //----------------------------------------------------------------------------------------------------
+2443          
+2444          //--------------------------------------------------
+2445          // Description  : No signal timeout count down event
+2446          // Input Value  : None
+2447          // Output Value : None
+2448          //--------------------------------------------------
+2449          void CModeSyncTimeoutCountDownEvent(void)
+2450          {
+2451   1      #if(_VIDEO_SUPPORT && _VIDEO_CHIP == _VDC_TB1334 && _VIDEO_TV_SUPPORT)
+2452   1          if (_GET_INPUT_SOURCE() == _SOURCE_VIDEO_TV)
+2453   1          {               
+2454   2              CLoadTVNoSignalModeData();
+2455   2              CLoadVideoModeData();
+2456   2              SET_READYFORDISPLAY();
+2457   2              CModeDisplayActiveMode();
+2458   2              CModeAutoMeasureOn();
+2459   2              ucCurrState = _ACTIVE_STATE;
+2460   2          }
+2461   1          else
+2462   1      #endif
+2463   1          {
+2464   2              ucCurrState = _NOSIGNAL_STATE;
+2465   2              stModeInfo.ModeCurr = _MODE_NOSIGNAL;
+2466   2              SET_READYFORDISPLAY();
+2467   2          }
+2468   1      }
+2469          
+2470          //--------------------------------------------------
+2471          // Description  : Mode stable count down event
+2472          // Input Value  : None
+2473          // Output Value : None
+2474          //--------------------------------------------------
+2475          void CModeStableCountDownEvent(void)
+2476          {
+2477   1          SET_MODESTABLE();
+2478   1      }
+2479          
+2480          //--------------------------------------------------
+2481          // Description  : No signal event
+2482          // Input Value  : None
+2483          // Output Value : None
+2484          //--------------------------------------------------
+C51 COMPILER V8.16   MODE                                                                  04/05/2012 11:15:23 PAGE 42  
+
+2485          void CModeNoSignalEvent(void)
+2486          {
+2487   1          ucOsdEventMsg = _SHOW_NOSIGNAL_MSG;
+2488   1      }
+2489          //--------------------------------------------------
+2490          // Description  : No cable event
+2491          // Input Value  : None
+2492          // Output Value : None
+2493          //--------------------------------------------------
+2494          void CModeNoCableEvent(void)
+2495          {
+2496   1          ucOsdEventMsg = _SHOW_NOCABLE_MSG;
+2497   1      }
+2498          
+2499          //--------------------------------------------------
+2500          // Description  : No support event
+2501          // Input Value  : None
+2502          // Output Value : None
+2503          //--------------------------------------------------
+2504          void CModeNoSupportEvent(void)
+2505          {
+2506   1          ucOsdEventMsg = _SHOW_NOSUPPORT_MSG;
+2507   1      }
+2508          
+2509          //--------------------------------------------------
+2510          // Description  : Power saving event
+2511          // Input Value  : None
+2512          // Output Value : None
+2513          //--------------------------------------------------
+2514          void CModePowerSavingEvent(void)
+2515          {
+2516   1      #if(_BURNIN_EN)
+2517   1      if(GET_BURNIN_STATE()==BURNIN_OFF)      
+2518   1      #endif
+2519   1              {
+2520   2      #if(_AUTO_SLEEP_POWERDOWN == _OFF)
+2521   2      #if(_SCALER_TYPE == _RTD2547D)   
+                  CScalerPageSelect(_PAGE2);
+                  CScalerSetBit(_P2_POWER_ON_OFF_CTRL_A7, ~(_BIT4 | _BIT3 | _BIT2 | _BIT1 | _BIT0), _BIT4);
+                  CScalerSetBit(_P2_Z0_CALIBRATION_CTRL_AC, ~_BIT6, _BIT6);
+              #endif
+2526   2          CPowerPanelOff();
+2527   2          CScalerSetBit(_VDISP_CTRL_28, ~(_BIT3 | _BIT0), 0x00);
+2528   2          CPowerADCAPLLOff();
+2529   2          CPowerLVDSOff();
+2530   2          CPowerDPLLOff();
+2531   2      #if(_SCALER_TYPE == _RTD2547D)   
+                  CPowerMPLLOff();
+              #endif
+2534   2          CPowerPWMOff();
+2535   2          CScalerDisableDisplayTiming();
+2536   2      #if(_SCALER_TYPE == _RTD2547D)   
+                  CScalerSetBit(_HOST_CTRL_01, ~_BIT1, _BIT1);
+              #endif
+2539   2          ucCurrState = _SLEEP_STATE;
+2540   2      
+2541   2      #else
+                      //modify for auto power off 2007/08/29
+                      SET_POWERSWITCH();
+              #endif
+2545   2              }
+2546   1      }
+C51 COMPILER V8.16   MODE                                                                  04/05/2012 11:15:23 PAGE 43  
+
+2547          
+2548          
+2549          #ifdef _SII164_INIT_SUPPORT
+              //--------------------------------------------------
+              // Description  : Initialize SiI164 after power up or reset
+              // Input Value  : None
+              // Output Value : None
+              //--------------------------------------------------
+              void CModeInitSiI164(void)
+              {
+                  pData[0] = 0xF7;
+                      pData[1] = 0x8E;
+                      pData[2] = 0xFF;
+                      pData[3] = 0x00;
+                  CI2cWrite(_ADDR_SiI164, 0x08, 1, &pData[0]);
+                  CI2cWrite(_ADDR_SiI164, 0x09, 1, &pData[1]);
+                  CI2cWrite(_ADDR_SiI164, 0x0A, 1, &pData[2]);
+                  CI2cWrite(_ADDR_SiI164, 0x0C, 1, &pData[3]);           
+              }
+              #endif
+2567          
+2568          #if(_SCALER_TYPE == _RTD2547D)   
+              //--------------------------------------------------
+              // Description  : Check HDMI Input Status
+              // Input Value  : None
+              // Output Value : None
+              //--------------------------------------------------
+              #if((_HDMI_SUPPORT == _ON) || (_TMDS_SUPPORT == _ON))
+              void CModeHdmiStablePolling(void)
+              {
+                  if(CGetSourcePortType(_GET_INPUT_SOURCE()) == _DVI_PORT)
+                  {
+                      if(CHdmiFormatDetect())
+                          CModeResetMode();                        
+                  }
+              #if(_HDMI_SUPPORT == _ON)
+                  else if(CGetSourcePortType(_GET_INPUT_SOURCE()) == _HDMI_PORT)
+                  {
+                      if(CHdmiFormatDetect())//Input source is the HDMI format.
+                      {
+                          if(!GET_HDMIINPUT())
+                              CModeResetMode();
+                          else
+                          {
+                              if(GET_AUDIOWAITINGTIMEOUT())
+                              CHdmiEnableAudioOutput();
+                          }
+                      }
+                      else
+                      {
+                          if(GET_HDMIINPUT())
+                              CModeResetMode();
+                      }
+                  }
+              #endif
+              }
+              #endif // #if((_HDMI_SUPPORT == _ON) || (_TMDS_SUPPORT == _ON))
+              
+              //--------------------------------------------------
+              // Description  : Display FIFO Setting for Frame Sync Mode
+              // Input Value  : None
+              // Output Value : None
+C51 COMPILER V8.16   MODE                                                                  04/05/2012 11:15:23 PAGE 44  
+
+              //--------------------------------------------------
+              void CModeSetFIFOForFrameSync(void)
+              {
+                  CScalerPageSelect(_PAGE5);
+                  CScalerSetByte(_P5_SDRF_MN_DISP_CTRL_CF,0x05);
+                  CTimerDelayXms(100);
+                  CScalerSetByte(_P5_SDRF_MN_SDR_STATUS_D0,0x10);
+              }
+              
+              //--------------------------------------------------
+              // Description  : Check input signal for interlace
+              // Input Value  : None
+              // Output Value : None
+              //--------------------------------------------------
+              void CModeInterlaceCheck(void)
+              {
+                  switch(_GET_INPUT_SOURCE())
+                  {
+                      case _SOURCE_VGA:
+              #if(_YPBPR_SUPPORT == _ON)
+                      case _SOURCE_YPBPR:
+              #endif
+                          CTimerDelayXms(50);            
+                          CScalerRead(_IPV_ACT_LEN_H_1A, 1, pData, _NON_AUTOINC);
+                          if(pData[0] & 0x20)
+                              SET_INTERLACE_MODE();
+                          else
+                              CLR_INTERLACE_MODE();
+              
+                          CScalerSetBit(_SYNC_TEST_MISC_5A, ~_BIT7, 0x00);//Disable Test Mode
+              
+                          break;
+              
+              #if(_VIDEO_SUPPORT == _ON)
+                  case _SOURCE_VIDEO_AV:
+                  case _SOURCE_VIDEO_SV:
+                  case _SOURCE_VIDEO_YUV:
+                  case _SOURCE_VIDEO_DVD:
+                  case _SOURCE_VIDEO_SCART:
+              #endif
+              #if((_TMDS_SUPPORT == _ON) || (_HDMI_SUPPORT == _ON))
+                      case _SOURCE_DVI:
+                      case _SOURCE_HDMI:
+              #endif
+              #if((_TMDS_SUPPORT == _ON) || (_HDMI_SUPPORT == _ON) || (_VIDEO_SUPPORT == _ON))
+                          CScalerPageSelect(_PAGE2);
+                          CScalerSetDataPortBit(_P2_HDMI_ADDR_PORT_C9, _P2_HDMI_VCR_50, ~_BIT6, _BIT6);
+                          CTimerDelayXms(50);
+              
+                          CScalerGetDataPortByte(_P2_HDMI_ADDR_PORT_C9, _P2_HDMI_VCR_50, 1, pData, _NON_AUTOINC);
+                          if((pData[0] & 0x40) == 0x40)
+                              SET_INTERLACE_MODE();
+                          else
+                              CLR_INTERLACE_MODE();
+              
+                          break;
+              #endif
+                  }
+              }
+              #endif // #if(_SCALER_TYPE == _RTD2547D)   
+2669                 
+2670          //==============================================================================  
+C51 COMPILER V8.16   MODE                                                                  04/05/2012 11:15:23 PAGE 45  
+
+2671          // eric 0126 add for RTD2547D
+2672          //==============================================================================  
+2673          void CModeSetDisplayReady(void)
+2674          {
+2675   1      #if(_SCALER_TYPE == _RTD2547D)
+               #if((_HDMI_SUPPORT == _ON) || (_TMDS_SUPPORT == _ON))
+                  CModeHdmiStablePolling();
+               #endif
+              #endif // end #if(_SCALER_TYPE == _RTD2547D)
+2680   1      
+2681   1          if(GET_READYFORDISPLAY() == _TRUE)
+2682   1          {  
+2683   2              CLR_READYFORDISPLAY();
+2684   2              SET_OSD_READYFORDISPLAY();
+2685   2              CLR_SOURCE_AUTOCHANGE();
+2686   2      #if(_SCALER_TYPE == _RTD2547D)
+               #if(_OD_SUPPORT == _ON)
+                      CMemorySetODCompress();
+                      CMemorySetODFIFO();
+                      CMemorySetODOnOff(_ON);
+               #endif
+              
+               #if (_HDMI_SUPPORT == _ON)
+                              if ((CGetSourcePortType(stSystemData.InputSource) == _HDMI_PORT)) 
+                      {
+                              CScalerPageSelect(_PAGE2);
+                              CScalerSetDataPortBit(_P2_HDMI_ADDR_PORT_C9, _P2_HDMI_VWDSR_41, ~_BIT0, _BIT0);//Enable packet varia
+             -tion Watch Dog
+                      }
+               #endif
+              #endif  // #if(_SCALER_TYPE == _RTD2547D)
+2701   2      
+2702   2              CPowerPanelOn();
+2703   2      
+2704   2      #if(_VIDEO_SUPPORT && _VIDEO_CHIP == _VDC_TB1334)
+2705   2          if (bSourceVideo())
+2706   2                  CSetVideoReady();
+2707   2              else
+2708   2      #endif
+2709   2                  CSetVGAReady();
+2710   2              if(GET_BURNIN_STATE()==BURNIN_OFF)
+2711   2              {
+2712   3                     if((gmi_CModeLocked()&&_GET_INPUT_SOURCE()==_SOURCE_VIDEO_TV)||_GET_INPUT_SOURCE()!=_SOURCE_VIDEO_
+             -TV)
+2713   3                      {
+2714   4                      if(_GET_CHANNEL_FOR_AUDIO()&&_GET_INPUT_SOURCE()==_SOURCE_VIDEO_TV)
+2715   4                              {
+2716   5                                   CSetVolume();
+2717   5                              }
+2718   4                              _SET_CHANNEL_FOR_AUDIO(0);
+2719   4                              CAdjustBackgroundColor(0x00, 0x00, 0x00);                               
+2720   4                              CScalerSetBit(_VDISP_CTRL_28, ~(_BIT5 |_BIT3),  _BIT3 );
+2721   4                      }
+2722   3              }
+2723   2          }
+2724   1           
+2725   1          if((stModeUserData.FirstAuto == 0)      && 
+2726   1             (_GET_INPUT_SOURCE() == _SOURCE_VGA) &&  
+2727   1             (ucOsdState == _MENU_NONE)) 
+2728   1          {
+2729   2              stModeUserData.FirstAuto = 1;
+2730   2              ucOsdEventMsg = _DO_AUTO_CONFIG;
+C51 COMPILER V8.16   MODE                                                                  04/05/2012 11:15:23 PAGE 46  
+
+2731   2              CLR_FIRST_SHOW_NOTE();
+2732   2          }
+2733   1                                                      
+2734   1      
+2735   1      #if(_VIDEO_SUPPORT && _VIDEO_CHIP == _VDC_TB1334 && _VIDEO_TV_SUPPORT)
+2736   1          if (_GET_INPUT_SOURCE() == _SOURCE_VIDEO_TV)
+2737   1             CTVCheckChangeChannel();
+2738   1      #endif
+2739   1      }
+2740          
+2741          //==============================================================================  
+2742          //
+2743          //    CSetVGAReady
+2744          //
+2745          //==============================================================================  
+2746          void CSetVGAReady(void)
+2747          {
+2748   1      #if(_SCALER_TYPE == _RTD2547D)
+                  if(GET_FRCTATUS())
+                      CAdjustEnableWatchDog(_WD_FRAMESYNC_APLL_NONLOCK);
+                  else
+                      CAdjustEnableWatchDog(_WD_ALL);
+              
+              #if(_HDMI_SUPPORT == _ON)
+                  CScalerPageSelect(_PAGE2);
+                  if(CGetSourcePortType(_GET_INPUT_SOURCE()) == _HDMI_PORT)
+                      CAdjustEnableHDMIWatchDog(_WD_PACKET_VARIATION);//Enable packet variation Watch Dog
+                  else
+                      CAdjustDisableHDMIWatchDog(_WD_PACKET_VARIATION);//Disable packet variation Watch Dog
+              #endif  // #if(_HDMI_SUPPORT == _ON)
+              
+              #else
+2763   1      
+2764   1          CAdjustEnableWatchDog(_WD_ALL);
+2765   1      
+2766   1      #endif  // #if(_SCALER_TYPE == _RTD2547D)
+2767   1      }
+2768          
+2769          //==============================================================================  
+2770          //
+2771          //   bFrameSyncDet 
+2772          //
+2773          //==============================================================================  
+2774          bit bFrameSyncDet(void)
+2775          {                  
+2776   1      #if(_VIDEO_SUPPORT && _VIDEO_CHIP == _VDC_TB1334)
+2777   1          if (bSourceVideo())
+2778   1             return CVideoFrameSyncDetect();
+2779   1          else
+2780   1      #endif
+2781   1             return CFrameSyncDetect();
+2782   1      }                       
+2783          
+2784          //==============================================================================  
+2785          //
+2786          //   bModeIsChange 
+2787          //
+2788          //==============================================================================  
+2789          bit bModeIsChange(void)
+2790          {                          
+2791   1      #if(_VIDEO_SUPPORT && _VIDEO_CHIP == _VDC_TB1334)
+2792   1          if (bSourceVideo())
+C51 COMPILER V8.16   MODE                                                                  04/05/2012 11:15:23 PAGE 47  
+
+2793   1             return !gmi_CVideoIsExist(); 
+2794   1          else
+2795   1      #endif
+2796   1             return CModeIsChange();
+2797   1      }
+2798          
+2799          //---------------------------------------------
+2800          WORD CCalcPanelWdith(void)
+2801          {
+2802   1               if(Panel.DHWidth > (Panel.DVHeight * 4/3))  //yang 1229
+2803   1                      {
+2804   2                       if(_GET_DISPLAY_MODE() == DISPLAY_MODE_43)
+2805   2                           {
+2806   3                                              return Panel.DVHeight * 4 / 3;
+2807   3                           }
+2808   2                           else               
+2809   2                       return Panel.DHWidth;
+2810   2                      }
+2811   1               else
+2812   1                       return Panel.DHWidth;
+2813   1      
+2814   1      }
+2815          //----------------------------------------------------------
+2816          WORD CCalcPanelDHSta(void)
+2817          {
+2818   1      
+2819   1              WORD usWidth = CCalcPanelWdith();
+2820   1              return Panel.DHStartPos + (Panel.DHWidth - usWidth) / 2;
+2821   1      }
+2822          //---------------------------------------------
+2823          WORD CCalcPanelDHEnd(BYTE uctemp)
+2824          {
+2825   1            if(uctemp)
+2826   1              {
+2827   2              return Panel.DHStartPos + Panel.DHWidth;
+2828   2              }
+2829   1                else
+2830   1              {
+2831   2              WORD usWidth = CCalcPanelWdith();
+2832   2              return Panel.DHStartPos + Panel.DHWidth - (Panel.DHWidth - usWidth) / 2;
+2833   2              }
+2834   1      }
+2835          //---------------------------------------------
+2836          WORD CCalcPanelDHTota(void)
+2837          {
+2838   1              if (bSourceVideo())
+2839   1                      {
+2840   2                      if (CHECK60HZ())     // NTSC
+2841   2                              return    Panel.NTSC_Htotal;
+2842   2                      else                // PAL
+2843   2                              return    Panel.PAL_Htotal;
+2844   2                      }
+2845   1              else
+2846   1                      {
+2847   2                      return   Panel.DHTotal;    
+2848   2                      }
+2849   1      }
+2850          //---------------------------------------------
+2851          WORD CCalcPanelDVEnd(void)
+2852          {
+2853   1              return Panel.DVStartPos + Panel.DVHeight;
+2854   1      }
+C51 COMPILER V8.16   MODE                                                                  04/05/2012 11:15:23 PAGE 48  
+
+2855          //---------------------------------------------
+2856          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   5403    ----
+   CONSTANT SIZE    =   1292    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----      43
+   IDATA SIZE       =      7    ----
+   BIT SIZE         =      1    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
