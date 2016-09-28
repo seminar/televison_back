@@ -1,0 +1,1 @@
+"gmiOSD\FactoryMenu\Lcd_osdFac.c" OPTIMIZE (9,SIZE) BROWSE DEFINE (CMOS_CHIP_TYPE="PCB_2025LV13") PRINT(.\Output\Lcd_osdFac.lst) OBJECT(.\Output\Lcd_osdFac.obj)
