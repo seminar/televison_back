@@ -1,0 +1,508 @@
+C51 COMPILER V8.16   RS232                                                                 04/05/2012 11:59:56 PAGE 1   
+
+
+C51 COMPILER V8.16, COMPILATION OF MODULE RS232
+OBJECT MODULE PLACED IN .\Output\Rs232.obj
+COMPILER INVOKED BY: D:\安装文件\keil\C51\BIN\C51.EXE Rs232\Rs232.c OPTIMIZE(9,SIZE) BROWSE DEFINE(CMOS_CHIP_TYPE=PCB_20
+                    -25LV13) PRINT(.\Output\Rs232.lst) OBJECT(.\Output\Rs232.obj)
+
+line level    source
+
+   1          #include "Header\Include.h"
+   2          #include "Rs232\Rs232.h"
+   3          //extern ProssMCU2DVDkeyHandle(Keycode);
+   4          #if (_REMOTE_CONTROLLER==IR_DK_QC)
+   5          void ProssMCU2DVDkeyHandleIR(BYTE Keycode)
+   6          {
+   7   1              
+   8   1      //=====================================================
+   9   1      //上面发的值 转化为ir 码值注意发送方不能编译下面的
+  10   1      // 不然会形成互发码值
+  11   1      //=======================       ==============================
+  12   1         switch(Keycode)
+  13   1         {
+  14   2          case IR_FUNC_POWER:
+  15   2              Trs2DVDIrSend(0xD7);   //
+  16   2              break;
+  17   2      
+  18   2          case IR_FUNC_MUTE:
+  19   2              Trs2DVDIrSend(0xDF);  //
+  20   2              break;
+  21   2      
+  22   2      //===============================       
+  23   2      // 下面是数字键
+  24   2      //===============================
+  25   2      
+  26   2           case IR_FUNC_NUM1:
+  27   2              Trs2DVDIrSend(0x95);  //
+  28   2              break;
+  29   2              
+  30   2           case IR_FUNC_NUM2:
+  31   2              Trs2DVDIrSend(0x99);  //
+  32   2              break;
+  33   2      
+  34   2           case IR_FUNC_NUM3:
+  35   2              Trs2DVDIrSend(0x9D);  //
+  36   2              break;
+  37   2      
+  38   2           case IR_FUNC_NUM4:
+  39   2              Trs2DVDIrSend(0xD6);  //
+  40   2              break;
+  41   2      
+  42   2           case IR_FUNC_NUM5:
+  43   2              Trs2DVDIrSend(0xDA);  //
+  44   2              break;
+  45   2      
+  46   2           case IR_FUNC_NUM6:
+  47   2              Trs2DVDIrSend(0xDE);  //
+  48   2              break;
+  49   2      
+  50   2           case IR_FUNC_NUM7:
+  51   2              Trs2DVDIrSend(0x96);  //
+  52   2              break;
+  53   2      
+  54   2           case IR_FUNC_NUM8:
+C51 COMPILER V8.16   RS232                                                                 04/05/2012 11:59:56 PAGE 2   
+
+  55   2              Trs2DVDIrSend(0x9A);  //
+  56   2              break;
+  57   2      
+  58   2           case IR_FUNC_NUM9:
+  59   2              Trs2DVDIrSend(0x9E);  //
+  60   2              break;
+  61   2      
+  62   2           case IR_FUNC_NUM0:
+  63   2              Trs2DVDIrSend(0xD9);  //
+  64   2              break;
+  65   2          
+  66   2           case IR_FUNC_RETURN:
+  67   2              Trs2DVDIrSend(0xDD); 
+  68   2              break;
+  69   2          
+  70   2           case IR_FUNC_VOLINC :
+  71   2              Trs2DVDIrSend(0x83); 
+  72   2              break;
+  73   2          
+  74   2           case IR_FUNC_VOLDEC:
+  75   2              Trs2DVDIrSend(0x86); 
+  76   2              break;
+  77   2          
+  78   2           case IR_FUNC_CHINC:
+  79   2              Trs2DVDIrSend(0x80); 
+  80   2              break;
+  81   2      
+  82   2           case IR_FUNC_CHDEC:
+  83   2              Trs2DVDIrSend(0x8E); 
+  84   2              break;
+  85   2      
+  86   2           case IR_FUNC_ZOOM:
+  87   2              Trs2DVDIrSend(0x82); 
+  88   2              break;
+  89   2      
+  90   2           case IR_FUNC_MST:
+  91   2              Trs2DVDIrSend(0x81); 
+  92   2              break;
+  93   2      
+  94   2           case IR_FUNC_LEFT:
+  95   2              Trs2DVDIrSend(0x97); 
+  96   2              break;
+  97   2      
+  98   2           case IR_FUNC_RIGHT:
+  99   2              Trs2DVDIrSend(0x9f); 
+ 100   2              break;
+ 101   2      
+ 102   2           case IR_FUNC_UP:
+ 103   2              Trs2DVDIrSend(0x92); 
+ 104   2              break;
+ 105   2          
+ 106   2           case IR_FUNC_DOWN:
+ 107   2              Trs2DVDIrSend(0xd8); 
+ 108   2              break;   
+ 109   2      
+ 110   2            case IR_FUNC_OK:
+ 111   2              Trs2DVDIrSend(0x9b); 
+ 112   2              break;   
+ 113   2      
+ 114   2            case IR_FUNC_MENU:
+ 115   2              Trs2DVDIrSend(0xd4); 
+ 116   2              break;   
+C51 COMPILER V8.16   RS232                                                                 04/05/2012 11:59:56 PAGE 3   
+
+ 117   2      
+ 118   2            case IR_FUNC_EXIT:
+ 119   2              Trs2DVDIrSend(0xdc); 
+ 120   2              break;
+ 121   2      
+ 122   2            case IR_FUNC_SOURCE:
+ 123   2              Trs2DVDIrSend(0xc3); 
+ 124   2              break;
+ 125   2      
+ 126   2            case IR_FUNC_PMODE:
+ 127   2              Trs2DVDIrSend(0xc2); 
+ 128   2              break;
+ 129   2      
+ 130   2            case IR_FUNC_SMODE:
+ 131   2              Trs2DVDIrSend(0xc1); 
+ 132   2              break;
+ 133   2      
+ 134   2            case IR_FUNC_SLEEP:
+ 135   2              Trs2DVDIrSend(0xc0); 
+ 136   2              break;
+ 137   2      
+ 138   2            case IR_FUNC_FAV:
+ 139   2              Trs2DVDIrSend(0xc7); 
+ 140   2              break;
+ 141   2      
+ 142   2            case IR_FUNC_FAV_PLUS:
+ 143   2              Trs2DVDIrSend(0xc6); 
+ 144   2              break;
+ 145   2      
+ 146   2            case IR_FUNC_FAV_MINUS:
+ 147   2              Trs2DVDIrSend(0xc5); 
+ 148   2              break;   
+ 149   2      
+ 150   2            case IR_FUNC_EPG:
+ 151   2              Trs2DVDIrSend(0x89); 
+ 152   2              break;   
+ 153   2      
+ 154   2            case IR_FUNC_TEXT:
+ 155   2              Trs2DVDIrSend(0xcb); 
+ 156   2              break; 
+ 157   2      
+ 158   2            case IR_FUNC_HOLD:
+ 159   2              Trs2DVDIrSend(0xCA); 
+ 160   2              break; 
+ 161   2      
+ 162   2            case IR_FUNC_AUDIO:
+ 163   2              Trs2DVDIrSend(0xC9); 
+ 164   2              break; 
+ 165   2      
+ 166   2      
+ 167   2            case IR_FUNC_SUBT:
+ 168   2              Trs2DVDIrSend(0xC8); 
+ 169   2              break; 
+ 170   2      
+ 171   2            case IR_FUNC_INDEX:
+ 172   2              Trs2DVDIrSend(0xCF); 
+ 173   2              break; 
+ 174   2      
+ 175   2            case IR_FUNC_SIZE:
+ 176   2              Trs2DVDIrSend(0xCE); 
+ 177   2              break; 
+ 178   2      
+C51 COMPILER V8.16   RS232                                                                 04/05/2012 11:59:56 PAGE 4   
+
+ 179   2            case IR_FUNC_REVEAL:
+ 180   2              Trs2DVDIrSend(0xCD); 
+ 181   2              break; 
+ 182   2      
+ 183   2            case IR_FUNC_SUBP:
+ 184   2              Trs2DVDIrSend(0xCC); 
+ 185   2              break; 
+ 186   2      
+ 187   2            case IR_FUNC_RED:
+ 188   2              Trs2DVDIrSend(0xD3); 
+ 189   2              break; 
+ 190   2      
+ 191   2             case IR_FUNC_GRENN:
+ 192   2              Trs2DVDIrSend(0xD2); 
+ 193   2              break; 
+ 194   2      
+ 195   2            case IR_FUNC_YELLOW:
+ 196   2              Trs2DVDIrSend(0xD1); 
+ 197   2              break; 
+ 198   2      
+ 199   2            case IR_FUNC_BULE:
+ 200   2              Trs2DVDIrSend(0xD0); 
+ 201   2              break; 
+ 202   2      
+ 203   2      
+ 204   2          
+ 205   2              default:
+ 206   2              break;
+ 207   2      
+ 208   2         }
+ 209   1      
+ 210   1      
+ 211   1      }
+ 212          
+ 213          void ProssMCUIRHandle(BYTE Keycode)
+ 214          { 
+ 215   1              if(Keycode!=0)    
+ 216   1                      {
+ 217   2             
+ 218   2                          //CPowerPanelOff();
+ 219   2                              ProssMCU2DVDkeyHandleIR(Keycode);// 遥控码发送
+ 220   2                         //  DebugPrintf("_MENU_KEY_MESSAGE.\n",0x01);
+ 221   2                            CUartPutCharToScr(pUartData[0]);
+ 222   2                              CUartPutCharToScr(pUartData[2]);
+ 223   2                              CUartPutCharToScr(pUartData[1]);
+ 224   2                              CUartPutCharToScr(pUartData[3]);
+ 225   2                            CUartPutCharToScr(uchh);
+ 226   2                                uchh=0;
+ 227   2                            CUartPutCharToScr(ucll); 
+ 228   2                                ucll=0;
+ 229   2                            CUartPutCharToScr(Keycode);
+ 230   2                            CUartPutCharToScr(~Keycode);  
+ 231   2                       }
+ 232   1      
+ 233   1               if((Keycode==0)&&(uchh==0x7f))
+ 234   1                      {
+ 235   2      
+ 236   2                              ProssMCU2DVDkeyHandleIR(Keycode);// 遥控码发送
+ 237   2                         //  DebugPrintf("_MENU_KEY_MESSAGE.\n",0x01);
+ 238   2                            CUartPutCharToScr(0xA0);
+ 239   2                              CUartPutCharToScr(0x55);
+ 240   2                              CUartPutCharToScr(0xF0);
+C51 COMPILER V8.16   RS232                                                                 04/05/2012 11:59:56 PAGE 5   
+
+ 241   2                              CUartPutCharToScr(0xFF);;
+ 242   2                            CUartPutCharToScr(uchh);
+ 243   2                                uchh=0;
+ 244   2                            CUartPutCharToScr(ucll); 
+ 245   2                                ucll=0;
+ 246   2                            CUartPutCharToScr(Keycode);
+ 247   2                            CUartPutCharToScr(~Keycode);  
+ 248   2                       }
+ 249   1      
+ 250   1      
+ 251   1      
+ 252   1      }
+ 253          
+ 254          
+ 255          //---------------------------------------------------------------------------------------
+ 256          void ProssMCU2DVDkeyHandleTX(BYTE Keycode)
+ 257          {
+ 258   1      
+ 259   1        switch(Keycode)
+ 260   1         {
+ 261   2           case _MENU_KEY_MESSAGE:
+ 262   2              Trs2DVDIrSend(0xD4);   //
+ 263   2              break;
+ 264   2      
+ 265   2           case _RIGHT_KEY_MESSAGE:
+ 266   2              Trs2DVDIrSend(0x9F);  //
+ 267   2              break;
+ 268   2              
+ 269   2           case _LEFT_KEY_MESSAGE:
+ 270   2              Trs2DVDIrSend(0x97); //
+ 271   2              break;
+ 272   2              
+ 273   2           case _UP_KEY_MESSAGE:
+ 274   2              Trs2DVDIrSend(0x92);  //
+ 275   2              break;
+ 276   2              
+ 277   2           case _DOWN_KEY_MESSAGE:
+ 278   2              Trs2DVDIrSend(0xD8); //
+ 279   2              break; 
+ 280   2              
+ 281   2           case _MUTE_KEY_MESSAGE:
+ 282   2              Trs2DVDIrSend(0xDF); // 0x1C
+ 283   2              break; 
+ 284   2      
+ 285   2          case _ENTER_KEY_MESSAGE:
+ 286   2              Trs2DVDIrSend(0x9B); //
+ 287   2              break; 
+ 288   2      
+ 289   2          case _INPUT_KEY_MESSAGE:// 
+ 290   2              Trs2DVDIrSend(0xC3); 
+ 291   2              break; 
+ 292   2      
+ 293   2          case _EXIT_KEY_MESSAGE:// 
+ 294   2              Trs2DVDIrSend(0xDC); 
+ 295   2              break; 
+ 296   2      
+ 297   2          case _IR_VOLINC_KEY_MESSAGE:// 
+ 298   2              Trs2DVDIrSend(0x83); 
+ 299   2              break; 
+ 300   2      
+ 301   2              case _IR_VOLDEC_KEY_MESSAGE:// 
+ 302   2              Trs2DVDIrSend(0x86); 
+C51 COMPILER V8.16   RS232                                                                 04/05/2012 11:59:56 PAGE 6   
+
+ 303   2              break; 
+ 304   2      
+ 305   2              case _IR_CHINC_KEY_MESSAGE:// 
+ 306   2              Trs2DVDIrSend(0x80); 
+ 307   2              break; 
+ 308   2      
+ 309   2              case _IR_CHDEC_KEY_MESSAGE:// 
+ 310   2              Trs2DVDIrSend(0x8E); 
+ 311   2              break; 
+ 312   2      
+ 313   2              case IR_SLEEP_KEY_MESSAGE:// 
+ 314   2              Trs2DVDIrSend(0xC0); 
+ 315   2              break;
+ 316   2      
+ 317   2              case _IR_AVTYPE_KEY_MESSAGE:// 
+ 318   2              Trs2DVDIrSend(0x32); 
+ 319   2              break;
+ 320   2      
+ 321   2              case _IR_VGATYPE_KEY_MESSAGE:// 
+ 322   2              Trs2DVDIrSend(0x18); 
+ 323   2              break;
+ 324   2      
+ 325   2              case _IR_HDMITYPE_KEY_MESSAGE:// 
+ 326   2              Trs2DVDIrSend(0x16); 
+ 327   2              break;
+ 328   2      
+ 329   2              case _IR_TVTYPE_KEY_MESSAGE:// 
+ 330   2              Trs2DVDIrSend(0x1A); 
+ 331   2              break;
+ 332   2      
+ 333   2              case _IR_DTVTYPE_KEY_MESSAGE:// 
+ 334   2              Trs2DVDIrSend(0x19); 
+ 335   2              break;
+ 336   2          
+ 337   2          case _POWER_KEY_MESSAGE:// 
+ 338   2              Trs2DVDIrSend(0xD7); 
+ 339   2              break; 
+ 340   2      //============================================
+ 341   2      // 下面是数字键
+ 342   2      //============================================
+ 343   2      
+ 344   2           case _NUM1_KEY_MESSAGE:// 
+ 345   2              Trs2DVDIrSend(0x95); 
+ 346   2              break;
+ 347   2              
+ 348   2           case _NUM2_KEY_MESSAGE:// 
+ 349   2              Trs2DVDIrSend(0x99); 
+ 350   2              break;
+ 351   2      
+ 352   2           case _NUM3_KEY_MESSAGE:// 
+ 353   2              Trs2DVDIrSend(0x9D); 
+ 354   2              break;
+ 355   2      
+ 356   2           case _NUM4_KEY_MESSAGE:// 
+ 357   2              Trs2DVDIrSend(0xD6); 
+ 358   2              break;
+ 359   2      
+ 360   2           case _NUM5_KEY_MESSAGE:// 
+ 361   2              Trs2DVDIrSend(0xDA); 
+ 362   2              break;
+ 363   2      
+ 364   2           case _NUM6_KEY_MESSAGE:// 
+C51 COMPILER V8.16   RS232                                                                 04/05/2012 11:59:56 PAGE 7   
+
+ 365   2              Trs2DVDIrSend(0xDE); 
+ 366   2              break;
+ 367   2      
+ 368   2           case _NUM7_KEY_MESSAGE:// 
+ 369   2              Trs2DVDIrSend(0x96); 
+ 370   2              break;
+ 371   2      
+ 372   2           case _NUM8_KEY_MESSAGE:// 
+ 373   2              Trs2DVDIrSend(0x9A); 
+ 374   2              break;
+ 375   2      
+ 376   2           case _NUM9_KEY_MESSAGE:// 
+ 377   2              Trs2DVDIrSend(0x9E); 
+ 378   2              break;
+ 379   2      
+ 380   2           case _NUM0_KEY_MESSAGE:// 
+ 381   2              Trs2DVDIrSend(0xD9); 
+ 382   2              break;
+ 383   2      
+ 384   2      
+ 385   2         case _USB_KEY_MESSAGE:// 
+ 386   2              Trs2DVDIrSend(0x01); 
+ 387   2              break;
+ 388   2      
+ 389   2      
+ 390   2               case _DVD_KEY_MESSAGE:// 
+ 391   2              Trs2DVDIrSend(0x06); 
+ 392   2              break;
+ 393   2      
+ 394   2              
+ 395   2              default:
+ 396   2              break;
+ 397   2      
+ 398   2      
+ 399   2              }
+ 400   1      
+ 401   1      }
+ 402          
+ 403          void ProssMCUTXHandle(BYTE Keycode)
+ 404          {
+ 405   1      
+ 406   1              //      ProssMCU2DVDkeyHandleTX(Keycode);
+ 407   1                        Trs2DVDIrSend(Keycode);
+ 408   1                    CUartPutCharToScr(pUartData[0]);
+ 409   1                      CUartPutCharToScr(pUartData[2]);
+ 410   1                      CUartPutCharToScr(pUartData[1]);
+ 411   1                      CUartPutCharToScr(pUartData[3]);
+ 412   1                     CUartPutCharToScr(pUartData[4]);
+ 413   1                     CUartPutCharToScr(~pUartData[4]);
+ 414   1      
+ 415   1      
+ 416   1      
+ 417   1      
+ 418   1      
+ 419   1      }
+ 420          
+ 421          void ProssMCUTXHandlePOWER(BYTE Keycode)
+ 422          {
+ 423   1      
+ 424   1                   ProssMCU2DVDkeyHandleTX(Keycode);  
+ 425   1                    CUartPutCharToScr(0xbb);
+ 426   1                      CUartPutCharToScr(0x00);
+C51 COMPILER V8.16   RS232                                                                 04/05/2012 11:59:56 PAGE 8   
+
+ 427   1                      CUartPutCharToScr(0x1f);
+ 428   1                      CUartPutCharToScr(0x01);
+ 429   1                     CUartPutCharToScr(pUartData[4]);
+ 430   1                     CUartPutCharToScr(~pUartData[4]);
+ 431   1      
+ 432   1      
+ 433   1      
+ 434   1      
+ 435   1      }
+ 436          
+ 437          #endif 
+ 438          
+ 439          
+ 440          void Trs2DVDIrSendHead(void )
+ 441          {
+ 442   1      
+ 443   1      
+ 444   1               #if(IR_TYPE==IR_AT020)
+                                   SendByteData(0x20);                               // DVB HEADER_CODE0 01
+                                   SendByteData(0xdf);                               // DVB HEADER_CODE1 fe
+                       #elif(IR_TYPE==IR_AT002)
+                                    SendByteData(0x20);                              
+                                    SendByteData(0xdf); 
+                         #else 
+ 451   1                        SendByteData(0x03);
+ 452   1                        //  SendByteData(0xf7);
+ 453   1                       #endif 
+ 454   1      
+ 455   1      
+ 456   1      
+ 457   1      }
+ 458          
+ 459          
+ 460          
+ 461          
+ 462          
+ 463          
+ 464          
+ 465          
+ 466          
+ 467          
+ 468          
+ 469          
+ 470          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    785    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       1
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
