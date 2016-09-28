@@ -1,0 +1,777 @@
+C51 COMPILER V8.16   OSDVGA007                                                             04/05/2012 11:15:28 PAGE 1   
+
+
+C51 COMPILER V8.16, COMPILATION OF MODULE OSDVGA007
+OBJECT MODULE PLACED IN .\Output\OsdVga007.obj
+COMPILER INVOKED BY: D:\安装文件\keil\C51\BIN\C51.EXE gmiOSD\OSD007\OsdVga007.c OPTIMIZE(9,SIZE) BROWSE DEFINE(CMOS_CHIP
+                    -_TYPE=PCB_2025LV13) PRINT(.\Output\OsdVga007.lst) OBJECT(.\Output\OsdVga007.obj)
+
+line level    source
+
+   1          #define __OSDVGA007___
+   2          
+   3          #include "Header\Include.h"
+   4          #if(_OSD_TYPE == _OSD007)
+   5          
+   6          
+   7          
+   8          #if(_TMDS_SUPPORT || _VGA_SUPPORT || _YPBPR_SUPPORT || _HDMI_SUPPORT)   
+   9          //------------------------------------------------------------
+  10             
+  11          #if(_VGA_SUPPORT || _YPBPR_SUPPORT)
+  12          void CDrawPicturePage(void)
+  13          {                                                              
+  14   1          CLeftAlignTextout((BYTE *)sAuto[GET_LANGUAGE], 1, 4);           // "Auto"
+  15   1      
+  16   1      #if(_YPBPR_SUPPORT)
+                  if (_SOURCE_YPBPR == _GET_INPUT_SOURCE())
+                  {
+                      CLeftAlignTextout((BYTE *)sExit[GET_LANGUAGE], 1, 5);       // "Exit" 
+                      return;
+                  }
+              #endif
+  23   1      
+  24   1      #if(_VGA_SUPPORT)
+  25   1          CLeftAlignTextout((BYTE *)sAutoColor[GET_LANGUAGE], 1, 5);      // "Auto Color"
+  26   1          CLeftAlignTextout((BYTE *)sHPos[GET_LANGUAGE], 1, 6);           // "H Position"
+  27   1          CLeftAlignTextout((BYTE *)sVPos[GET_LANGUAGE], 1, 7);           // "V Position"
+  28   1          CLeftAlignTextout((BYTE *)sPhase[GET_LANGUAGE], 1, 8);          // "Phase"
+  29   1          CLeftAlignTextout((BYTE *)sClock[GET_LANGUAGE], 1, 9);          // "Clock"
+  30   1          CLeftAlignTextout((BYTE *)sExit[GET_LANGUAGE], 1, 10);           // "Exit" 
+  31   1      #endif
+  32   1      }
+  33          #endif
+  34          
+  35          
+  36          //----------------------------------------------------------------------------------------------------
+  37          void MNoneProc(void)
+  38          {
+  39   1          switch(ucKeyMessage)
+  40   1          {
+  41   2      #if(_MENU_FUNC == _MENU_EXIT_ITEM)
+  42   2              case VK_ENTER: 
+  43   2      #endif
+  44   2              case VK_MENU:        MPublicNoneMenu(); break;
+  45   2      
+  46   2              case VK_LEFT:        MNoneLR(0);        break;
+  47   2      
+  48   2              case VK_RIGHT:       MNoneLR(1);        break;
+  49   2      
+  50   2      #if(_IR_ENABLE)        
+  51   2              case VK_IR_MUTE:
+  52   2                  SSetMuteState();
+  53   2                  ucOsdEventMsg = _SAVE_EE_OSDUSERDATA_MSG;
+  54   2                  break;
+C51 COMPILER V8.16   OSDVGA007                                                             04/05/2012 11:15:28 PAGE 2   
+
+  55   2                  
+  56   2      #if(_USE_UD_LR_KEY_MSG)
+  57   2              case VK_F_LEFT:
+  58   2              case VK_F_RIGHT:
+  59   2      #endif
+  60   2              case VK_IR_VOLDEC:
+  61   2              case VK_IR_VOLINC:
+  62   2                  GotoAdjustVolume(); 
+  63   2                  break;
+  64   2      
+  65   2              case VK_IR_DISPLAY:
+  66   2                  CDisplayCurrentSourceMessage();
+  67   2                  break;
+  68   2      #if(_IMAGE_COLOR_MODE)
+  69   2              case _IR_IMAGE_KEY_MESSAGE:
+  70   2                  CGotoAdjImage();
+  71   2                  break;
+  72   2      #endif
+  73   2      #if(_AUTO_POWER_DOWN)
+  74   2              case VK_IR_SLEEP:
+  75   2                  CGotoAdjSleep();
+  76   2                  break;
+  77   2      #endif
+  78   2      
+  79   2      #endif
+  80   2          }
+  81   1      }
+  82          
+  83          //----------------------------------------------------------------------------------------------------
+  84          void MNoneLR(BYTE LR)
+  85          {
+  86   1          if (LR) 
+  87   1          {
+  88   2           //  if (_GET_INPUT_SOURCE() == _SOURCE_VGA)
+  89   2             //   DoAuto();
+  90   2           //  else
+  91   2      #if(_VGA_COLOR_SUPPORT)
+                     CGotoAdjustVColor();
+              #else
+  94   2             GotoAdjustVolume();
+  95   2      #endif
+  96   2          }
+  97   1          else  
+  98   1             GotoAdjustVolume();
+  99   1      }
+ 100          
+ 101          #if(_VGA_SUPPORT || _YPBPR_SUPPORT)
+ 102          //----------------------------------------------------------------------------------------------------
+ 103          void MPictureSubItemProc(void)
+ 104          {
+ 105   1          switch(ucKeyMessage)
+ 106   1          {
+ 107   2              // Select item
+ 108   2      #if(_USE_UD_LR_KEY_MSG)
+ 109   2              case VK_F_LEFT:
+ 110   2              case VK_F_RIGHT:
+ 111   2      #endif
+ 112   2              case VK_MENU:        
+ 113   2              case VK_IR_OK:        
+ 114   2                              MPictureSubItemMenu();               break;
+ 115   2      
+ 116   2              // Move item
+C51 COMPILER V8.16   OSDVGA007                                                             04/05/2012 11:15:28 PAGE 3   
+
+ 117   2      #if(_USE_UD_LR_KEY_MSG)
+ 118   2              case VK_F_UP:
+ 119   2      #endif
+ 120   2              case VK_RIGHT:        MPictureSubItemLR(1);                break;
+ 121   2      
+ 122   2              // Move item
+ 123   2      #if(_USE_UD_LR_KEY_MSG)
+ 124   2              case VK_F_DOWN:
+ 125   2      #endif
+ 126   2              case VK_LEFT:       MPictureSubItemLR(0);                break;
+ 127   2      
+ 128   2              // Exit item
+ 129   2      #if(_MENU_FUNC == _MENU_EXIT_ITEM)
+ 130   2              case VK_ENTER:      
+ 131   2      #endif
+ 132   2              case VK_AUTO:
+ 133   2              case VK_IR_EXIT:
+ 134   2                 CExitToMainItem(MENU_MAIN_PICTURE);  break;  
+ 135   2              // Other key
+ 136   2              default:             COthterKeyAction();                  break;
+ 137   2          }
+ 138   1      }
+ 139          
+ 140          //----------------------------------------------------------------------------------------------------
+ 141          //   Picture Sub item
+ 142          void MPictureSubItemMenu(void)
+ 143          {
+ 144   1          CClearMsg(_CLEAR_AND_SELECT_SUB_ITEM);
+ 145   1      
+ 146   1          switch(ucOsdState)
+ 147   1          {
+ 148   2              case MENU_ITEM_AUTO:
+ 149   2                  if (_SOURCE_VGA == _GET_INPUT_SOURCE())
+ 150   2                     CAutoDoAutoConfig();
+ 151   2                  CSetItemWindowState(_SELECT_SUB_WINDOW, _MOVE_STATE);
+ 152   2                  ShowMode();
+ 153   2                  break;
+ 154   2      
+ 155   2      #if(_VGA_SUPPORT)
+ 156   2              case MENU_ITEM_AUTO_COLOR:
+ 157   2                  if (_SOURCE_VGA == _GET_INPUT_SOURCE())
+ 158   2                      CAutoDoWhiteBalance();
+ 159   2                  CSetItemWindowState(_SELECT_SUB_WINDOW, _MOVE_STATE);
+ 160   2                  ShowMode();                           
+ 161   2                  break;
+ 162   2      
+ 163   2              case MENU_ITEM_HPOS:
+ 164   2                  SLIDER1(HPosGuage());
+ 165   2                  ucOsdState = MENU_SUB_HPOS_ADJ;
+ 166   2                  break;
+ 167   2      
+ 168   2              case MENU_ITEM_VPOS:
+ 169   2                  SLIDER1(VPosGuage());
+ 170   2                  ucOsdState = MENU_SUB_VPOS_ADJ;
+ 171   2                  break;
+ 172   2      
+ 173   2              case MENU_ITEM_PHASE:
+ 174   2                  SLIDER1(PHASE_GUAGE);
+ 175   2                  ucOsdState = MENU_SUB_PHASE_ADJ;
+ 176   2                  break;
+ 177   2      
+ 178   2              case MENU_ITEM_CLOCK:
+C51 COMPILER V8.16   OSDVGA007                                                             04/05/2012 11:15:28 PAGE 4   
+
+ 179   2                  SLIDER1(ClockGuage());
+ 180   2                  ucOsdState = MENU_SUB_CLOCK_ADJ;
+ 181   2                  break;
+ 182   2      #endif
+ 183   2      
+ 184   2              case MENU_SUB_PICTURE_CLOSE:
+ 185   2                  CExitToMainItem(MENU_MAIN_PICTURE);
+ 186   2                  break;
+ 187   2          }
+ 188   1      }
+ 189          
+ 190          
+ 191          //----------------------------------------------------------------------------------------------------
+ 192          void MPictureSubItemLR(BYTE LR)
+ 193          {
+ 194   1      #if(_YPBPR_SUPPORT)
+              
+                  if (_SOURCE_YPBPR == _GET_INPUT_SOURCE())
+                  {
+                      if (ucOsdState == MENU_ITEM_AUTO)
+                      {
+                         ucOsdState = MENU_SUB_PICTURE_CLOSE;
+                         LR = 1;
+                      }
+                      else
+                      {
+                         ucOsdState = MENU_ITEM_AUTO;
+                         LR = 0;
+                      }
+              
+                      CGotoNextSubItem(LR);
+                      return;
+                  }
+              #endif
+ 213   1      
+ 214   1      #if(_VGA_SUPPORT)
+ 215   1          ucOsdState = ValueInRangeChange(MENU_ITEM_AUTO, MENU_SUB_PICTURE_CLOSE, ucOsdState, LR, 1);
+ 216   1          
+ 217   1          CGotoNextSubItem(ucOsdState - MENU_ITEM_AUTO);
+ 218   1      #endif
+ 219   1      }
+ 220          
+ 221          #endif
+ 222          //----------------------------------------------------------------------------------------------------
+ 223          
+ 224          #if(_COLOR_TEMP)
+              //----------------------------------------------------------------------------------------------------
+              void CDrawColorTempSubItem(void)
+              {  BYTE uctemp=4;
+                  CLeftAlignTextout(sColorTemp9300, 1, uctemp++);                            // "9300"
+                  CLeftAlignTextout(sColorTemp6500, 1, uctemp++);                            // "6500"
+                  //CLeftAlignTextout(sColorTemp5800, 1, uctemp++);                            // "5800"
+                //  CLeftAlignTextout(sColorTempSRGB, 1, uctemp++);                            // "SRGB"
+                  CLeftAlignTextout((BYTE *)sColorTempUser[GET_LANGUAGE], 1, uctemp++); // "Color Temp"
+                  CLeftAlignTextout((BYTE *)sExit[GET_LANGUAGE], 1, uctemp++);          // "Exit"
+              }
+              
+              //   Color temp Sub item
+              void MColorTempSubItemProc(void)
+              {
+                  switch(ucKeyMessage)
+                  {
+C51 COMPILER V8.16   OSDVGA007                                                             04/05/2012 11:15:28 PAGE 5   
+
+                      // Select item
+              #if(_USE_UD_LR_KEY_MSG)
+                      case VK_F_LEFT:
+                      case VK_F_RIGHT:
+              #endif
+                      case VK_MENU:        
+                      case VK_IR_OK:        
+                                      MColorTempSubItemMenu();        break;
+              
+                      // Move item
+              #if(_USE_UD_LR_KEY_MSG)
+                      case VK_F_UP:
+              #endif
+                      case VK_LEFT:        MColorTempSubItemLR(1);         break;
+              
+                      // Move item
+              #if(_USE_UD_LR_KEY_MSG)
+                      case VK_F_DOWN:
+              #endif
+                      case VK_RIGHT:       MColorTempSubItemLR(0);         break;
+              
+                      // Exit item
+              #if(_MENU_FUNC == _MENU_EXIT_ITEM)
+                      case VK_ENTER:   
+                      case VK_AUTO:
+                      case VK_IR_EXIT:
+                      CExitToMainItem(MENU_ITEM_COLOR_TEMP);
+                      CClearSubItem();
+                      CDrawColorPage();
+                      CShowSubItemWindow(2);
+                      break;
+              #endif
+                          
+                      // Other key
+                      default:             COthterKeyAction();             break;
+                  }
+              }
+              
+              //----------------------------------------------------------------------------------------------------
+              void MColorTempSubItemMenu(void)
+              {
+                  bit bExitSubItem = 0;
+              
+                  CClearMsg(_CLEAR_AND_SELECT_SUB_ITEM);
+              
+                  switch(ucOsdState)
+                  {
+                      case MENU_SUB_CT_9300:
+                      case MENU_SUB_CT_6500:
+                      case MENU_SUB_CT_5800:
+                      case MENU_SUB_CT_SRGB:
+                          bExitSubItem = 1;
+                          break;
+              
+                      case MENU_SUB_CT_USER:
+                          ucOsdState = MENU_SUB_CT_R;    
+                          OSDSlider(_MESSAGE_V_POSITION, 6, 10, stColorTempData.ColorTemp[_RED], 255, 0x20, _SHOW_PERCEN
+             -T);
+                          break;
+              
+                      case MENU_SUB_CT_CLOSE:
+                          bExitSubItem = 1;
+C51 COMPILER V8.16   OSDVGA007                                                             04/05/2012 11:15:28 PAGE 6   
+
+                          break;
+                  }
+              
+                  if (bExitSubItem)
+                  {
+                      CExitToMainItem(MENU_ITEM_COLOR_TEMP);
+                      CClearSubItem();
+                      CDrawColorPage();
+                      CShowSubItemWindow(2);
+                  }
+              
+                  ucOsdEventMsg = _SAVE_EE_SYSTEMDATA_MSG;
+              }
+              
+              //----------------------------------------------------------------------------------------------------
+              void MColorTempSubItemLR(BYTE LR)
+              {
+                  BYTE ucTemp = 0;
+              
+                  ucOsdState = ValueInRangeChange(MENU_SUB_CT_9300, MENU_SUB_CT_CLOSE, ucOsdState, LR, 1);
+              
+                  switch(ucOsdState)
+                  {      
+                      case MENU_SUB_CT_9300:
+                          ucTemp = _CT_9300;
+                          break;
+              
+                      case MENU_SUB_CT_6500:
+                          ucTemp = _CT_6500;
+                          break;
+              
+                      case MENU_SUB_CT_5800:
+                          ucTemp = _CT_5800;
+                          break;
+              
+                      case MENU_SUB_CT_SRGB:
+                          ucTemp = _CT_SRGB;
+                          break;
+              
+                      case MENU_SUB_CT_USER:
+                          ucTemp = _CT_USER;
+                          break;
+              
+                      case MENU_SUB_CT_CLOSE:
+                          ucTemp = 255;
+                          break;
+                  }   
+                  
+                  if (ucTemp != 255)
+                  {
+                      SET_COLOR_TEMP_TYPE(ucTemp);
+                      CEepromLoadColorTempData();
+                  
+                      CAdjustContrast();
+                  }
+              
+                  CGotoNextSubItem(ucOsdState - MENU_SUB_CT_9300);
+              }
+              
+              //----------------------------------------------------------------------------------------------------
+              //   Color temp user Sub item
+              void MColorTempUserItemProc(void)
+C51 COMPILER V8.16   OSDVGA007                                                             04/05/2012 11:15:28 PAGE 7   
+
+              {
+                  switch(ucKeyMessage)
+                  {
+                      // Move item
+              #if(_USE_UD_LR_KEY_MSG)
+                      case VK_F_UP:
+                      case VK_F_DOWN:
+              #endif
+                      case VK_MENU:        MColorTempUserItemMenu();        break;
+              
+                      // Adjust
+              #if(_USE_UD_LR_KEY_MSG)
+                      case VK_F_LEFT:
+              #endif
+                      case VK_LEFT:        MColorTempUserItemLR(1);         break;
+              
+                      // Adjust
+              #if(_USE_UD_LR_KEY_MSG)
+                      case VK_F_RIGHT:
+              #endif
+                      case VK_RIGHT:       MColorTempUserItemLR(0);         break;
+              
+                      // Exit item
+              #if(_MENU_FUNC == _MENU_EXIT_ITEM)
+                      case VK_ENTER:
+                      case VK_AUTO:
+                          ucOsdState = MENU_SUB_CT_USER; 
+                          CClearMsg(_CLEAR_AND_EXIT_SUB_ITEM);
+                          OSDClear(11, 4, 1, 25, 0x40, BYTE_COLOR);  // Clear message color
+                          break;
+              #endif
+                          
+                      // Other key
+                      default:             COthterKeyAction();              break;
+                  }
+              }
+              
+              //----------------------------------------------------------------------------------------------------
+              void MColorTempUserItemMenu(void)
+              {
+                  bit bExitSubItem = 0;
+              
+                  CClearMsg(_CLEAR_AND_SELECT_SUB_ITEM);
+              
+                  switch(ucOsdState)
+                  {
+                      case MENU_SUB_CT_R:
+                          ucOsdState = MENU_SUB_CT_G;     
+                          OSDSlider(_MESSAGE_V_POSITION, 6, 10, stColorTempData.ColorTemp[_GREEN], 255, 0xc0, _SHOW_PERC
+             -ENT);
+                          break;
+              
+                      case MENU_SUB_CT_G:
+                          ucOsdState = MENU_SUB_CT_B;     
+                          OSDSlider(_MESSAGE_V_POSITION, 6, 10, stColorTempData.ColorTemp[_BLUE], 255, 0x30, _SHOW_PERCE
+             -NT);
+                          break;
+              
+                      case MENU_SUB_CT_B:
+                          ucOsdState = MENU_SUB_CT_R; 
+                          OSDSlider(_MESSAGE_V_POSITION, 6, 10, stColorTempData.ColorTemp[_RED], 255, 0x20, _SHOW_PERCEN
+             -T);
+C51 COMPILER V8.16   OSDVGA007                                                             04/05/2012 11:15:28 PAGE 8   
+
+                          break;
+                  }
+              }
+              
+              //----------------------------------------------------------------------------------------------------
+              void MColorTempUserItemLR(BYTE LR)
+              {
+                  switch(ucOsdState)
+                  {      
+                      case MENU_SUB_CT_R:   
+                          stColorTempData.ColorTemp[_RED] = ValueInRangeChange(0, 255, stColorTempData.ColorTemp[_RED], 
+             -LR, 0);
+                          OSDSlider(_MESSAGE_V_POSITION, 6, 10, stColorTempData.ColorTemp[_RED], 255, 0x20, _SHOW_PERCEN
+             -T);
+                          break;
+              
+                      case MENU_SUB_CT_G:
+                          stColorTempData.ColorTemp[_GREEN] = ValueInRangeChange(0, 255, stColorTempData.ColorTemp[_GREE
+             -N], LR, 0);
+                          OSDSlider(_MESSAGE_V_POSITION, 6, 10, stColorTempData.ColorTemp[_GREEN], 255, 0xc0, _SHOW_PERC
+             -ENT);
+                          break;
+              
+                      case MENU_SUB_CT_B:
+                          stColorTempData.ColorTemp[_BLUE] = ValueInRangeChange(0, 255, stColorTempData.ColorTemp[_BLUE]
+             -, LR, 0);
+                          OSDSlider(_MESSAGE_V_POSITION, 6, 10, stColorTempData.ColorTemp[_BLUE], 255, 0x30, _SHOW_PERCE
+             -NT);
+                          break;
+              
+                  }   
+                  
+                  CAdjustContrast();
+              
+                  ucOsdEventMsg = _SAVE_EE_COLORPROC1_MSG;
+              }
+              
+              
+              #endif
+ 456          
+ 457          #if(_VGA_SUPPORT)
+ 458          //--------- PHASE ADJUST PROC ----------------------------------
+ 459          void MPhaseAdjProc(void)
+ 460          {
+ 461   1          switch(ucKeyMessage)
+ 462   1          {
+ 463   2              // Move item
+ 464   2      #if(_USE_UD_LR_KEY_MSG)
+ 465   2              case VK_F_UP:
+ 466   2              case VK_F_DOWN:
+ 467   2                  MPhaseAdjMenu();
+ 468   2                  COsdProc();
+ 469   2                  break;
+ 470   2      #endif
+ 471   2      
+ 472   2              // Exit item
+ 473   2      #if(_MENU_FUNC == _MENU_EXIT_ITEM)
+ 474   2              case VK_ENTER: 
+ 475   2      #endif
+ 476   2              case VK_AUTO:
+ 477   2              case VK_IR_EXIT:
+ 478   2              case VK_MENU:        MPhaseAdjMenu();       break;
+C51 COMPILER V8.16   OSDVGA007                                                             04/05/2012 11:15:28 PAGE 9   
+
+ 479   2      
+ 480   2              // Adjust
+ 481   2      #if(_USE_UD_LR_KEY_MSG)
+ 482   2              case VK_F_LEFT:
+ 483   2      #endif
+ 484   2              case VK_LEFT:        MPhaseAdjLR(1);        break;
+ 485   2      
+ 486   2              // Adjust
+ 487   2      #if(_USE_UD_LR_KEY_MSG)
+ 488   2              case VK_F_RIGHT:
+ 489   2      #endif
+ 490   2              case VK_RIGHT:       MPhaseAdjLR(0);        break;
+ 491   2                 
+ 492   2              // Other key
+ 493   2              default:             COthterKeyAction();    break;
+ 494   2          }
+ 495   1      }
+ 496          
+ 497          //----------------------------------------------------------------------------------------------------
+ 498          void MPhaseAdjMenu(void)
+ 499          {
+ 500   1          ucOsdState = MENU_ITEM_PHASE;
+ 501   1          CClearMsg(_CLEAR_AND_EXIT_SUB_ITEM);
+ 502   1      }
+ 503          
+ 504          //----------------------------------------------------------------------------------------------------
+ 505          void MPhaseAdjLR(BYTE  LR)
+ 506          {
+ 507   1          SET_KEYREPEATENABLE();
+ 508   1          stModeUserData.Phase = ValueInRangeChange(0,63,stModeUserData.Phase,LR,0);
+ 509   1          SLIDER1(PHASE_GUAGE);
+ 510   1          CAdjustPhase(stModeUserData.Phase);
+ 511   1          ucOsdEventMsg = _SAVE_EE_MODEUSERDATA_MSG;
+ 512   1      }
+ 513          
+ 514          //--------- CLOCK ADJUST PROC ----------------------------------
+ 515          void MClockAdjProc(void)
+ 516          {
+ 517   1          switch(ucKeyMessage)
+ 518   1          {
+ 519   2              // Move item
+ 520   2      #if(_USE_UD_LR_KEY_MSG)
+ 521   2              case VK_F_UP:
+ 522   2              case VK_F_DOWN:
+ 523   2                  MClockAdjMenu();
+ 524   2                  COsdProc();
+ 525   2                  break;
+ 526   2      #endif
+ 527   2      
+ 528   2              // Exit item
+ 529   2      #if(_MENU_FUNC == _MENU_EXIT_ITEM)
+ 530   2              case VK_ENTER: 
+ 531   2      #endif
+ 532   2              case VK_AUTO:
+ 533   2              case VK_IR_EXIT:
+ 534   2              case VK_MENU:        MClockAdjMenu();       break;
+ 535   2      
+ 536   2              // Adjust
+ 537   2      #if(_USE_UD_LR_KEY_MSG)
+ 538   2              case VK_F_LEFT:
+ 539   2      #endif
+ 540   2              case VK_LEFT:        MClockAdjLR(1);        break;
+C51 COMPILER V8.16   OSDVGA007                                                             04/05/2012 11:15:28 PAGE 10  
+
+ 541   2      
+ 542   2              // Adjust
+ 543   2      #if(_USE_UD_LR_KEY_MSG)
+ 544   2              case VK_F_RIGHT:
+ 545   2      #endif
+ 546   2              case VK_RIGHT:       MClockAdjLR(0);        break;
+ 547   2      
+ 548   2              // Other key
+ 549   2              default:             COthterKeyAction();    break;
+ 550   2          }
+ 551   1      }
+ 552          
+ 553          //----------------------------------------------------------------------------------------------------
+ 554          void MClockAdjMenu(void)
+ 555          {
+ 556   1          ucOsdState = MENU_ITEM_CLOCK;
+ 557   1          CClearMsg(_CLEAR_AND_EXIT_SUB_ITEM);
+ 558   1      }
+ 559          
+ 560          //----------------------------------------------------------------------------------------------------
+ 561          void MClockAdjLR(BYTE  LR)
+ 562          {
+ 563   1          SET_KEYREPEATENABLE();
+ 564   1          stModeUserData.Clock = ValueInRangeChange(COsdFxGetAdcClockRange(_GET_CLOCKRANGE_MIN),COsdFxGetAdcCloc
+             -kRange(_GET_CLOCKRANGE_MAX),stModeUserData.Clock,LR,0);
+ 565   1          SLIDER1(ClockGuage());
+ 566   1          CAdjustAdcClock(stModeUserData.Clock);
+ 567   1          ucOsdEventMsg = _SAVE_EE_MODEUSERDATA_MSG;
+ 568   1      }
+ 569          
+ 570          //--------- H POSITION ADJUST PROC ----------------------------------
+ 571          void MHPosAdjProc(void)
+ 572          {
+ 573   1          switch(ucKeyMessage)
+ 574   1          {
+ 575   2              // Move item
+ 576   2      #if(_USE_UD_LR_KEY_MSG)
+ 577   2              case VK_F_UP:
+ 578   2              case VK_F_DOWN:
+ 579   2                  MHPosAdjMenu();
+ 580   2                  COsdProc();
+ 581   2                  break;
+ 582   2      #endif
+ 583   2      
+ 584   2              // Exit item
+ 585   2      #if(_MENU_FUNC == _MENU_EXIT_ITEM)
+ 586   2              case VK_ENTER: 
+ 587   2      #endif
+ 588   2              case VK_AUTO:
+ 589   2              case VK_IR_EXIT:
+ 590   2              case VK_MENU:        MHPosAdjMenu();       break;
+ 591   2      
+ 592   2              // Adjust
+ 593   2      #if(_USE_UD_LR_KEY_MSG)
+ 594   2              case VK_F_LEFT:
+ 595   2      #endif
+ 596   2              case VK_LEFT:        MHPosAdjLR(1);        break;
+ 597   2      
+ 598   2              // Adjust
+ 599   2      #if(_USE_UD_LR_KEY_MSG)
+ 600   2              case VK_F_RIGHT:
+ 601   2      #endif
+C51 COMPILER V8.16   OSDVGA007                                                             04/05/2012 11:15:28 PAGE 11  
+
+ 602   2              case VK_RIGHT:       MHPosAdjLR(0);        break;
+ 603   2                 
+ 604   2              // Other key
+ 605   2              default:             COthterKeyAction();   break;
+ 606   2          }
+ 607   1      }
+ 608          
+ 609          //----------------------------------------------------------------------------------------------------
+ 610          void MHPosAdjMenu(void)
+ 611          {
+ 612   1          ucOsdState = MENU_ITEM_HPOS;
+ 613   1          CClearMsg(_CLEAR_AND_EXIT_SUB_ITEM);
+ 614   1      }
+ 615          
+ 616          //----------------------------------------------------------------------------------------------------
+ 617          void MHPosAdjLR(BYTE  LR)
+ 618          {
+ 619   1          SET_KEYREPEATENABLE();
+ 620   1          stModeUserData.HPosition = ValueInRangeChange(stModeUserCenterData.CenterHPos - _HPOSITION_BIAS,
+ 621   1              stModeUserCenterData.CenterHPos + _HPOSITION_BIAS,
+ 622   1              stModeUserData.HPosition,LR,0);
+ 623   1          SLIDER1(HPosGuage());
+ 624   1          CAdjustHPosition();
+ 625   1          ucOsdEventMsg = _SAVE_EE_MODEUSERDATA_MSG;
+ 626   1      }
+ 627          
+ 628          
+ 629          //--------- V position adjust proc ----------------------------------
+ 630          void MVPosAdjProc(void)
+ 631          {
+ 632   1          switch(ucKeyMessage)
+ 633   1          {
+ 634   2              // Move item
+ 635   2      #if(_USE_UD_LR_KEY_MSG)
+ 636   2              case VK_F_UP:
+ 637   2              case VK_F_DOWN:
+ 638   2                  MVPosAdjMenu();
+ 639   2                  COsdProc();
+ 640   2                  break;
+ 641   2      #endif
+ 642   2      
+ 643   2              // Exit item
+ 644   2      #if(_MENU_FUNC == _MENU_EXIT_ITEM)
+ 645   2              case VK_ENTER: 
+ 646   2      #endif
+ 647   2              case VK_AUTO:
+ 648   2              case VK_IR_EXIT:
+ 649   2              case VK_MENU:        MVPosAdjMenu();       break;
+ 650   2      
+ 651   2              // Adjust
+ 652   2      #if(_USE_UD_LR_KEY_MSG)
+ 653   2              case VK_F_LEFT:
+ 654   2      #endif
+ 655   2              case VK_LEFT:        MVPosAdjLR(1);        break;
+ 656   2      
+ 657   2              // Adjust
+ 658   2      #if(_USE_UD_LR_KEY_MSG)
+ 659   2              case VK_F_RIGHT:
+ 660   2      #endif
+ 661   2              case VK_RIGHT:       MVPosAdjLR(0);        break;
+ 662   2      
+ 663   2              // Other key
+C51 COMPILER V8.16   OSDVGA007                                                             04/05/2012 11:15:28 PAGE 12  
+
+ 664   2              default:             COthterKeyAction();   break;
+ 665   2          }
+ 666   1      }
+ 667          
+ 668          //----------------------------------------------------------------------------------------------------
+ 669          void MVPosAdjMenu(void)
+ 670          {
+ 671   1          ucOsdState = MENU_ITEM_VPOS;
+ 672   1          CClearMsg(_CLEAR_AND_EXIT_SUB_ITEM);
+ 673   1      }
+ 674          
+ 675          //----------------------------------------------------------------------------------------------------
+ 676          void MVPosAdjLR(BYTE  LR)
+ 677          {
+ 678   1          SET_KEYREPEATENABLE();
+ 679   1          stModeUserData.VPosition = ValueInRangeChange(stModeUserCenterData.CenterVPos - _VPOSITION_BIAS,stMode
+             -UserCenterData.CenterVPos + _VPOSITION_BIAS,stModeUserData.VPosition,LR,0);
+ 680   1          SLIDER1(VPosGuage());
+ 681   1          CAdjustVPosition();
+ 682   1          ucOsdEventMsg = _SAVE_EE_MODEUSERDATA_MSG;
+ 683   1      }
+ 684          
+ 685          #endif
+ 686          
+ 687          //----------------------------------------------------------------------------------------------------
+ 688          #if(_VGA_SUPPORT)                   
+ 689          void DoAuto(void)
+ 690          { 
+ 691   1          CInitOSDMainFrame();
+ 692   1              
+ 693   1           SetOSDDouble((_GET_OSD_SIZE() ? 0x03 : 0x00)  | OSD_WINDOWCHAR_BLENDING);   
+ 694   1      
+ 695   1           if (_GET_OSD_SIZE()) 
+ 696   1              OSDPosition(_OSD_DOUBLE_WIDTH(_HINT_WINDOW_H_END), _OSD_DOUBLE_HEIGHT(_HINT_WINDOW_V_END), _AUTO_H
+             -_OFFSET, _AUTO_V_OFFSET, 0x03);
+ 697   1            else
+ 698   1             OSDPosition(_HINT_WINDOW_H_END, _HINT_WINDOW_V_END, _AUTO_DOUBLE_H_OFFSET, _AUTO_DOUBLE_V_OFFSET, 0
+             -x03);
+ 699   1      
+ 700   1      
+ 701   1          COsdFxDrawWindow(XSTART(_HINT_WINDOW_H_POS), YSTART(_HINT_WINDOW_V_POS), 
+ 702   1                           XEND(_HINT_WINDOW_H_END), YEND(_HINT_WINDOW_V_END), 
+ 703   1                           tOSD_MINI_WINDOW_STYLE);
+ 704   1      
+ 705   1          CenterTextout((BYTE *)sAutoALL[GET_LANGUAGE], 11, 2);
+ 706   1          COsdFxEnableOsd(); 
+ 707   1          CAutoDoWhiteBalance();
+ 708   1          CAutoDoAutoConfig();
+ 709   1          COsdFxDisableOsd();
+ 710   1      }
+ 711          #endif
+ 712          //----------------------------------------------------------------------------------------------------
+ 713          #endif  //#if(_TMDS_SUPPORT || _VGA_SUPPORT)
+ 714          #endif  //#if(OSD_TYPE == OSD007)
+ 715          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1347    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+C51 COMPILER V8.16   OSDVGA007                                                             04/05/2012 11:15:28 PAGE 13  
+
+   DATA SIZE        =   ----       3
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
