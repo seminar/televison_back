@@ -1,0 +1,389 @@
+C51 COMPILER V8.16   AV_TV                                                                 04/05/2012 11:15:33 PAGE 1   
+
+
+C51 COMPILER V8.16, COMPILATION OF MODULE AV_TV
+OBJECT MODULE PLACED IN .\Output\AV_TV.obj
+COMPILER INVOKED BY: D:\安装文件\keil\C51\BIN\C51.EXE Lib\AV_TV.C OPTIMIZE(9,SIZE) BROWSE DEFINE(CMOS_CHIP_TYPE=PCB_2025
+                    -LV13) PRINT(.\Output\AV_TV.lst) OBJECT(.\Output\AV_TV.obj)
+
+line level    source
+
+   1          ////////////////////////////////////////////////////////////////////////////
+   2          //         Copyright of Vector Co.,Ltd.                                   //
+   3          //                                                                        //
+   4          //                                                                        //
+   5          //                              AV TV function                            //
+   6          //   Ver: 0.00                                                            //
+   7          //   Creat file time: 2006.7.31                                           //
+   8          //   End modify time: 2006.7.31                                           //
+   9          //   For RTD2523B/RTD2553V/RTD2525L                                       //
+  10          ////////////////////////////////////////////////////////////////////////////
+  11          
+  12          #include "Header\Include.h"
+  13          
+  14          #define _VIDEO_READY         1  // 0: no video
+  15          #define _TV_READY            1  // 0: no tv
+  16          #define _SMALL_SOURCE_CODE   0  // 1: small source
+  17          
+  18          
+  19          //////////////////////////////////////////////////////////////////////////////////////////////////
+  20          //
+  21          //                            VIDEO FUNCTION
+  22          //
+  23          //////////////////////////////////////////////////////////////////////////////////////////////////
+  24          
+  25          bit bBuleBackGround = 0;  // 0: Blue back ground off      1: Blue back ground on
+  26          BYTE ucTVNoModeTime = 0;
+  27          
+  28          #if(_VIDEO_READY)
+  29          #if(_TV_READY)
+  30          
+  31          #define _TV_CHANGE_MODE_TIME_  90
+  32          
+  33          BYTE ucTVChangeModeTime = 0;
+  34          
+  35          //==============================================================================  
+  36          // Routine Name: 
+  37          // Input Value :  _BLUE_BACK_GROUND_DISABLE --> off
+  38          //                _BLUE_BACK_GROUND_ENABLE: --> on
+  39          // Output Value: 
+  40          // Description :  Set bule background on/off
+  41          //============================================================================== 
+  42          #define _BLUE_BACK_GROUND_ENABLE        1
+  43          #define _BLUE_BACK_GROUND_DISABLE       0
+  44          #define _SIGNAL_READY_STATE             1
+  45          #define _NO_SIGNAL_STATE                0
+  46          #define _NO_MODE_TIME_COUNT             250
+  47          void CSetBlueBackGround(const bit bOnOff)
+  48          {
+  49   1          bBuleBackGround = bOnOff;
+  50   1      
+  51   1          if (_BLUE_BACK_GROUND_ENABLE == bOnOff)
+  52   1          {
+  53   2              CScalerSetBit(0x28, ~_BIT5, _BIT5); // Set force to background color enable
+  54   2      #if(_CHANGE_SOURCE_BACKGROUCD_COLOR==_BACK_COLOR)                                               
+C51 COMPILER V8.16   AV_TV                                                                 04/05/2012 11:15:33 PAGE 2   
+
+  55   2                      CAdjustBackgroundColor(0x00, 0x00, 0x00);     
+  56   2      #else
+                              CAdjustBackgroundColor(0x00, 0x00, 0xFF);     
+              #endif
+  59   2         }
+  60   1          else
+  61   1          {
+  62   2              CScalerSetBit(0x28, ~_BIT5, 0x00); // Set force to background color disable
+  63   2          }
+  64   1      }
+  65          
+  66          //==============================================================================  
+  67          // Routine Name: 
+  68          // Input Value :  _SIGNAL_READY_STATE/_NO_SIGNAL_STATE 
+  69          // Output Value: 
+  70          // Description :  Bule background on/off handler
+  71          //============================================================================== 
+  72          void CBlueBackGroundHandler(const bit bSignalState)
+  73          {
+  74   1          if (!((stSystemData.MonitorFlag & _BIT6) >> 6))  // Blue backgournd disable
+  75   1          {
+  76   2              ucTVNoModeTime = 0;
+  77   2      
+  78   2              if (bBuleBackGround) // Blue background was enable,so set blue background disable
+  79   2                  CSetBlueBackGround(_BLUE_BACK_GROUND_DISABLE);
+  80   2      
+  81   2          }
+  82   1          else
+  83   1          {
+  84   2              if (_SIGNAL_READY_STATE == bSignalState)  
+  85   2              {
+  86   3                  if (_BLUE_BACK_GROUND_ENABLE == bBuleBackGround)  // Blue background was enable
+  87   3                  {
+  88   4                      ucTVNoModeTime++;
+  89   4      
+  90   4                      if (ucTVNoModeTime > _NO_MODE_TIME_COUNT)
+  91   4                      {
+  92   5                         ucTVNoModeTime = 0;
+  93   5                         CSetBlueBackGround(_BLUE_BACK_GROUND_DISABLE);
+  94   5                     }
+  95   4                  }
+  96   3                  else
+  97   3                      ucTVNoModeTime = 0;
+  98   3              }
+  99   2              else  // No signal state
+ 100   2              {
+ 101   3                  if (_BLUE_BACK_GROUND_DISABLE == bBuleBackGround) // Blue background was disable
+ 102   3                  {
+ 103   4                      ucTVNoModeTime++;
+ 104   4      
+ 105   4                      if (ucTVNoModeTime > _NO_MODE_TIME_COUNT)
+ 106   4                      {
+ 107   5                          ucTVNoModeTime = 0;
+ 108   5                          CSetBlueBackGround(_BLUE_BACK_GROUND_ENABLE);
+ 109   5                      }
+ 110   4                  }
+ 111   3                  else
+ 112   3                      ucTVNoModeTime = 0;
+ 113   3              }
+ 114   2          }
+ 115   1      }
+ 116          
+C51 COMPILER V8.16   AV_TV                                                                 04/05/2012 11:15:33 PAGE 3   
+
+ 117          //==============================================================================  
+ 118          BYTE CGetCurrentTvColor(void)
+ 119          {
+ 120   1          switch(ucTVType) 
+ 121   1          {
+ 122   2          case _TV_NTSC_M    :    // 60Hz Sound 4.5M  NTSC M
+ 123   2          case _TV_NTSC_4_BG :    // 60Hz Sound 5.5M  NTSC 4/BG 
+ 124   2          case _TV_NTSC_4_DK :    // 60Hz Sound 6.5M  NTSC 4/DK 
+ 125   2          case _TV_NTSC_4_I  :    // 60Hz Sound 6.0M  NTSC 4/I
+ 126   2          case _TV_PAL_M     :    // 60Hz Sound 4.5M  PAL M  
+ 127   2              return _60HZ;
+ 128   2      
+ 129   2          case _TV_PAL_BG    :    // 50Hz Sound 5.5M  PAL B/G
+ 130   2          case _TV_PAL_I     :    // 50Hz Sound 6.0M  PAL I
+ 131   2          case _TV_PAL_DK    :    // 50Hz Sound 6.5M  PAL D/K
+ 132   2          case _TV_PAL_N     :    // 50Hz Sound 4.5M  PAL N 
+ 133   2          case _TV_SECAM_BG  :    // 50Hz Sound 5.5M  SECAM B/G
+ 134   2          case _TV_SECAM_DK  :    // 50Hz Sound 6.5M  SECAM D/K
+ 135   2          case _TV_SECAM_L   :    // 50Hz Sound 6.5M  SECAM L  
+ 136   2          case _TV_SECAM_LL  :    // 50Hz Sound 6.5M  Secam L' 
+ 137   2              return _50HZ;
+ 138   2          } // end switch 
+ 139   1      
+ 140   1          return 0;
+ 141   1      }
+ 142          #endif
+ 143          
+ 144          //==============================================================================  
+ 145          // Routine Name: bit CVideoIsExist(bit InputChannel)
+ 146          // Input Value : Null
+ 147          // Output Value: 0->Non-Exist  / 1->Exist
+ 148          // Description : Check Video Channel if Signal Exist
+ 149          //============================================================================== 
+ 150          bit gmi_CVideoIsExist(void)
+ 151          {
+ 152   1          // eric add for TB1334 change channel not blue screen
+ 153   1          if (bChangeChannel)
+ 154   1             bBuleBackGround = _BLUE_BACK_GROUND_DISABLE;
+ 155   1      
+ 156   1          if(!gmi_CModeLocked()) // No Locked 
+ 157   1          {
+ 158   2      #if(_TV_READY)
+ 159   2              if (stSystemData.InputSource != _SOURCE_VIDEO_TV)
+ 160   2                  return _FALSE;
+ 161   2      
+ 162   2              {
+ 163   3                  BYTE ucCurrentColor = CGetCurrentTvColor();  // Modify by eric 0825
+ 164   3          
+ 165   3                  CBlueBackGroundHandler(_NO_SIGNAL_STATE);
+ 166   3      
+ 167   3      
+ 168   3                  if(ucCurrentColor == VideoType)
+ 169   3                  {
+ 170   4                      stModeInfo.ModeCurr = _VIDEO_EXIST;
+ 171   4                      ucTVChangeModeTime  = 0;
+ 172   4                      return _TRUE;
+ 173   4                  }
+ 174   3              }
+ 175   2      #endif
+ 176   2              return _FALSE;
+ 177   2          }        
+ 178   1        
+C51 COMPILER V8.16   AV_TV                                                                 04/05/2012 11:15:33 PAGE 4   
+
+ 179   1          {
+ 180   2              BYTE ucCurrent_Color = gmi_CVideoCurrentColor(0);
+ 181   2              
+ 182   2              switch(ucCurrent_Color)
+ 183   2              {
+ 184   3              case 0: // No color(TB1334) or no signal(Other VDC)
+ 185   3                  stModeInfo.ModeCurr = _VIDEO_EXIST;
+ 186   3                  return _TRUE;
+ 187   3      
+ 188   3              case _VIDEO_COLOR_PAL:
+ 189   3                  ucCurrent_Color = _50HZ;
+ 190   3                  break;
+ 191   3      
+ 192   3              case _VIDEO_COLOR_NTSC:
+ 193   3                  ucCurrent_Color = _60HZ;
+ 194   3                  break;
+ 195   3              }
+ 196   2      //-------------------------------------------------------------
+ 197   2              
+ 198   2      #if(_TV_READY)
+ 199   2              CBlueBackGroundHandler(_SIGNAL_READY_STATE);
+ 200   2      #endif
+ 201   2      
+ 202   2              if(ucCurrent_Color == VideoType)
+ 203   2              {
+ 204   3      #if(_TV_READY)
+ 205   3                  ucTVChangeModeTime  = 0;
+ 206   3      #endif
+ 207   3                  stModeInfo.ModeCurr = _VIDEO_EXIST;
+ 208   3                  return _TRUE;
+ 209   3              }
+ 210   2      
+ 211   2      #if(_TV_READY)
+ 212   2              ucTVChangeModeTime++;
+ 213   2      
+ 214   2              if (stSystemData.InputSource != _SOURCE_VIDEO_TV || ucTVChangeModeTime > _TV_CHANGE_MODE_TIME_ || 
+             -bChangeChannel)
+ 215   2      #endif
+ 216   2                  return _FALSE;
+ 217   2          }
+ 218   1      }     /*
+ 219          #undef _BLUE_BACK_GROUND_ENABLE        
+ 220          #undef _BLUE_BACK_GROUND_DISABLE       
+ 221          #undef _SIGNAL_READY_STATE             
+ 222          #undef _NO_SIGNAL_STATE                
+ 223          #undef _NO_MODE_TIME_COUNT             
+ 224                  */
+ 225          //==============================================================================  
+ 226          // Routine Name: bit CVideoModeChange(void)
+ 227          // Input Value : Null
+ 228          // Output Value: 0 --> Mode not changed     1 --> Mode changed
+ 229          // Description : Set current mode rate
+ 230          //============================================================================== 
+ 231          bit gmi_CVideoModeChange(void)
+ 232          {
+ 233   1          bit bTVModeNoLocked = 0;
+ 234   1      
+ 235   1        
+ 236   1          ucTVNoModeTime  = 0;
+ 237   1          bBuleBackGround = 0;
+ 238   1      
+ 239   1          if (!gmi_CModeLocked()) // No Locked 
+C51 COMPILER V8.16   AV_TV                                                                 04/05/2012 11:15:33 PAGE 5   
+
+ 240   1          {
+ 241   2      #if(_TV_READY)
+ 242   2              if (stSystemData.InputSource == _SOURCE_VIDEO_TV)
+ 243   2                  bTVModeNoLocked = 1;
+ 244   2              else
+ 245   2      #endif
+ 246   2              {
+ 247   3                  stModeInfo.ModeCurr = _MODE_NOSIGNAL;
+ 248   3                  RECODE_NONE_VIDEO();
+ 249   3                  return _FALSE;
+ 250   3              }
+ 251   2          }
+ 252   1          
+ 253   1          {
+ 254   2              BYTE ucCurrentColor = (_VIDEO_COLOR_PAL == gmi_CVideoCurrentColor(0)) ? _50HZ : _60HZ;
+ 255   2      
+ 256   2      #if(_TV_READY)
+ 257   2              if (stSystemData.InputSource == _SOURCE_VIDEO_TV && bTVModeNoLocked)
+ 258   2                  ucCurrentColor = CGetCurrentTvColor();  // Modify by eric 0825
+ 259   2      #endif
+ 260   2              
+ 261   2              if (_50HZ == ucCurrentColor)
+ 262   2                  RECODE50HZ();
+ 263   2              else //if (_VIDEO_COLOR_NTSC == ucCurrent_Color)
+ 264   2                  RECODE60HZ();
+ 265   2          }
+ 266   1          
+ 267   1          if (VideoType != 0)
+ 268   1          {
+ 269   2              stModeInfo.ModeCurr = _VIDEO_EXIST;
+ 270   2              return _TRUE;
+ 271   2          }
+ 272   1          else
+ 273   1          {
+ 274   2              stModeInfo.ModeCurr = _VIDEO_NOT_EXIST;
+ 275   2              RECODE_NONE_VIDEO();
+ 276   2              return _FALSE;
+ 277   2          }
+ 278   1      }
+ 279          
+ 280          //==============================================================================  
+ 281          // Routine Name: bit CSourceScanInputPortVideo()
+ 282          // Input Value : Null
+ 283          // Output Value: 0 --> Video no locked       1 --> Video locked
+ 284          // Description : Check video signal
+ 285          //============================================================================== 
+ 286          bit gmi_CSourceScanInputPortVideo(void)  // eric 0505
+ 287          {
+ 288   1      
+ 289   1          if (gmi_CModeLocked() || stSystemData.InputSource == _SOURCE_VIDEO_TV) // eric 0506 modify
+ 290   1              return _TRUE;
+ 291   1          else
+ 292   1              return _FALSE;   
+ 293   1      }
+ 294          
+ 295          //==============================================================================  
+ 296          // Routine Name: bit CVideoSyncHandler(void)
+ 297          // Input Value : Null
+ 298          // Output Value: 0 --> Sync error      1 --> Sync ok
+ 299          // Description : Check input sync
+ 300          //============================================================================== 
+ 301          bit gmi_CVideoSyncHandler(void)
+C51 COMPILER V8.16   AV_TV                                                                 04/05/2012 11:15:33 PAGE 6   
+
+ 302          {
+ 303   1          ucTVNoModeTime  = 0;
+ 304   1          bBuleBackGround = 0;
+ 305   1      
+ 306   1              if (stSystemData.InputSource == _SOURCE_VIDEO_TV && !((stSystemData.MonitorFlag & _BIT6) >> 6))
+ 307   1              {
+ 308   2      #if(!_SMALL_SOURCE_CODE)
+ 309   2              ucInputSyncType = _VIDEO8_STATE;
+ 310   2              bInputSignalAvailable = 1;
+ 311   2      #endif
+ 312   2              CScalerSetBit(_SYNC_CTRL_49, ~(_BIT1 | _BIT0), _BIT0);
+ 313   2              return _TRUE;
+ 314   2              }        
+ 315   1          
+ 316   1          if (gmi_CSourceScanInputPortVideo())
+ 317   1          {
+ 318   2      #if(_SMALL_SOURCE_CODE)
+                       return _TRUE;
+              #else
+ 321   2               ucInputSyncType = _VIDEO8_STATE;
+ 322   2               bInputSignalAvailable = 1;
+ 323   2      #endif
+ 324   2          }
+ 325   1          else
+ 326   1          {
+ 327   2      #if(_SMALL_SOURCE_CODE)
+                       return _FALSE;
+              #else
+ 330   2               ucInputSyncType = _NO_SYNC_STATE;
+ 331   2               bInputSignalAvailable = 0;
+ 332   2      #endif
+ 333   2          }
+ 334   1      
+ 335   1      
+ 336   1      #if(!_SMALL_SOURCE_CODE)
+ 337   1          if(ucInputSyncType == _NO_SYNC_STATE)
+ 338   1          {
+ 339   2               return _FALSE;
+ 340   2          }
+ 341   1          else
+ 342   1          {
+ 343   2              CScalerSetBit(_SYNC_CTRL_49, ~(_BIT1 | _BIT0), _BIT0);
+ 344   2              return _TRUE;
+ 345   2          }
+ 346   1      #endif
+ 347   1      }
+ 348          #endif
+ 349          
+ 350          
+ 351          
+ 352          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    420    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      2       2
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      1       3
+END OF MODULE INFORMATION.
+
+C51 COMPILER V8.16   AV_TV                                                                 04/05/2012 11:15:33 PAGE 7   
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
