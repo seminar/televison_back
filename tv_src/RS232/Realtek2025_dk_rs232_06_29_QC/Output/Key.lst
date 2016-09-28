@@ -1,0 +1,1263 @@
+C51 COMPILER V8.16   KEY                                                                   04/05/2012 16:47:23 PAGE 1   
+
+
+C51 COMPILER V8.16, COMPILATION OF MODULE KEY
+OBJECT MODULE PLACED IN .\Output\Key.obj
+COMPILER INVOKED BY: D:\安装文件\keil\C51\BIN\C51.EXE Code\Key.c OPTIMIZE(9,SIZE) BROWSE DEFINE(CMOS_CHIP_TYPE=PCB_2025L
+                    -V13) PRINT(.\Output\Key.lst) OBJECT(.\Output\Key.obj)
+
+line level    source
+
+   1          //----------------------------------------------------------------------------------------------------
+   2          // ID Code      : Key.c No.0001
+   3          // Update Note  : 
+   4          //
+   5          //----------------------------------------------------------------------------------------------------
+   6          
+   7          #define __KEY__
+   8          
+   9          #include "Header\Include.h"
+  10          #include "Rs232\Rs232.h"
+  11          #if(DVD_EN)
+  12          
+  13          void   Delay10us(WORD uctemp)// 0.56ms
+  14          {  
+  15   1              while( uctemp --)
+  16   1                      {
+  17   2                      Delay3us();
+  18   2                      Delay3us();
+  19   2                      Delay5us();
+  20   2                      }
+  21   1      }
+  22          
+  23          void SendByteData(BYTE ucValue)
+  24          {
+  25   1                 BYTE cnt;
+  26   1                  for(cnt=0;cnt<8;cnt++)
+  27   1                         {
+  28   2                         PNL0=0;
+  29   2                        Delay10us(49);// 
+  30   2                        PNL0=1;          
+  31   2                        
+  32   2                      if(ucValue&_BIT0)
+  33   2                      Delay10us(140); // "1"  
+  34   2                      else
+  35   2                      Delay10us(61);  //"0"  
+  36   2                          
+  37   2                      ucValue=ucValue>>1;
+  38   2                         }
+  39   1      
+  40   1      }
+  41          
+  42          void Trs2DVDIrSend(BYTE IRData)
+  43          {
+  44   1      //_MCU_PORT6_7_MODE        _MCU_PAD_IS_OUTPUT 
+  45   1      MCU_PORT6_OE_FF04 = MCU_PORT6_OE_FF04 |(1 << 7);
+  46   1          gmi_CStopIR();
+  47   1      
+  48   1                       PNL0=0;           
+  49   1                        Delay10us(781);// 
+  50   1                      PNL0=1;
+  51   1                        Delay10us(382);// 
+  52   1      
+  53   1                       Trs2DVDIrSendHead();
+  54   1                      SendByteData(IRData);
+C51 COMPILER V8.16   KEY                                                                   04/05/2012 16:47:23 PAGE 2   
+
+  55   1                      //SendByteData(~IRData); 
+  56   1                         PNL0=0;
+  57   1                              Delay10us(56); 
+  58   1                         PNL0=1;
+  59   1                              
+  60   1          gmi_CStartIR(); 
+  61   1      //_MCU_PORT6_7_MODE        _MCU_PAD_IS_INPUT 
+  62   1      MCU_PORT6_OE_FF04 = MCU_PORT6_OE_FF04 &(~_BIT7);
+  63   1      
+  64   1      
+  65   1        Delay10us(3124);// 
+  66   1      
+  67   1      
+  68   1      MCU_PORT6_OE_FF04 = MCU_PORT6_OE_FF04 |(1 << 7);
+  69   1          gmi_CStopIR();
+  70   1      
+  71   1       
+  72   1                       Trs2DVDIrSendHead();
+  73   1                      SendByteData(IRData);
+  74   1                      //SendByteData(~IRData); 
+  75   1                         PNL0=0;
+  76   1                              Delay10us(56); 
+  77   1                         PNL0=1;
+  78   1                              
+  79   1                  gmi_CStartIR(); 
+  80   1      //_MCU_PORT6_7_MODE        _MCU_PAD_IS_INPUT 
+  81   1      MCU_PORT6_OE_FF04 = MCU_PORT6_OE_FF04 &(~_BIT7);
+  82   1      
+  83   1      
+  84   1       Delay10us(3124);// 
+  85   1      
+  86   1      
+  87   1      MCU_PORT6_OE_FF04 = MCU_PORT6_OE_FF04 |(1 << 7);
+  88   1          gmi_CStopIR();
+  89   1      
+  90   1       
+  91   1                       Trs2DVDIrSendHead();
+  92   1                      SendByteData(IRData);
+  93   1                      //SendByteData(~IRData); 
+  94   1                         PNL0=0;
+  95   1                              Delay10us(56); 
+  96   1                         PNL0=1;
+  97   1                              
+  98   1                  gmi_CStartIR(); 
+  99   1      //_MCU_PORT6_7_MODE        _MCU_PAD_IS_INPUT 
+ 100   1      MCU_PORT6_OE_FF04 = MCU_PORT6_OE_FF04 &(~_BIT7);
+ 101   1                      
+ 102   1      }
+ 103          #if 0
+              void ProssMCU2DVDkeyHandle(BYTE Keycode)
+              {
+                 switch(Keycode)
+                 {
+                   case KEY_0:
+                      Trs2DVDIrSend(0x00); // DVD_KEY0
+                      break;
+                  /* case KEY_1:
+                       Trs2DVDIrSend(0x01); //DVD_KEY1
+                      break;
+                   case KEY_2:
+                       Trs2DVDIrSend(0x02); // DVD_KEY2
+                      break;
+C51 COMPILER V8.16   KEY                                                                   04/05/2012 16:47:23 PAGE 3   
+
+                   case KEY_3:
+                       Trs2DVDIrSend(0x03); // DVD_KEY3
+                      break;
+                   case KEY_4:
+                       Trs2DVDIrSend(0x04); // DVD_KEY4
+                      break;
+                   case KEY_5:
+                       Trs2DVDIrSend(0x05); // DVD_KEY5
+                      break;
+                   case KEY_6:
+                       Trs2DVDIrSend(0x06); // DVD_KEY6
+                      break;
+                   case KEY_7:
+                       Trs2DVDIrSend(0x07); // DVD_KEY7
+                      break;
+                   case KEY_8:
+                       Trs2DVDIrSend(0x08); // DVD_KEY8
+                      break;
+                   case KEY_9:
+                       Trs2DVDIrSend(0x09); //DVD_KEY9
+                      break;
+              
+                   case KEY_POWER:
+                    Trs2DVDIrSend(0x1f); //DVD POWER MEMORY DISC CONTENT.
+                       break;
+                  case KEY_DVD_EJECT:
+                       Trs2DVDIrSend(0x0a); // Open/Close
+                      break;
+                   case KEY_RECALL:
+                       Trs2DVDIrSend(0x1a); //Playing Repeat
+                      break;
+                   case KEY_MTS:
+                       Trs2DVDIrSend(0x34); //L/R Channel switch
+                      break;
+                   case KEY_DVD_MENU:
+                       Trs2DVDIrSend(0x32); // Root Menu
+                      break;
+                   case KEY_TTX_MIX:
+                       Trs2DVDIrSend(0x18); //Display Playing Infor.
+                      break;
+                   case KEY_PIP:
+                       Trs2DVDIrSend(0x19);// Repeat A-B
+                   case KEY_REPEAT:
+                       Trs2DVDIrSend(0x1a);// Repeat A-B
+                      break;
+                   case KEY_UP:
+                       Trs2DVDIrSend(0x21); //DVD_UP
+                      break;
+                   case KEY_DOWN:
+                       Trs2DVDIrSend(0x22); // DVD_DOWN
+                      break;
+                   case KEY_LEFT:
+                       Trs2DVDIrSend(0x23); //DVD_LEFT
+                      break;
+                   case KEY_RIGHT:
+                       Trs2DVDIrSend(0x24);// DVD_RIGHT
+                      break;
+                   case KEY_DVD_SLOW:
+                       Trs2DVDIrSend(0x0c);  // RESERVE.
+                      break;
+                   case KEY_TTX_LIST:
+                       Trs2DVDIrSend(0x35); // USB PORT SELET
+C51 COMPILER V8.16   KEY                                                                   04/05/2012 16:47:23 PAGE 4   
+
+                      break;
+                   case KEY_TTX:
+                       Trs2DVDIrSend(0x2a); // DVD Play/Pause
+                      break;
+                   case KEY_TTX_HOLD:
+                       Trs2DVDIrSend(0x12); // DVD Stop
+                      break;
+                   case KEY_TTX_CANCEL:
+                       Trs2DVDIrSend(0x13); // DVD Sound Language Switch.
+                      break;
+                   case KEY_TTX_INDEX:
+                       Trs2DVDIrSend(0x31); // DVD Setup
+                      break;
+              
+                   case KEY_MENU:
+                       Trs2DVDIrSend(0x36); // DVD EXIT Setup Menu
+                      break;
+                   case KEY_TTX_SUBTITLE:
+                       Trs2DVDIrSend(0x2b); //DVD_SubTitle 
+                      break;
+                 case KEY_DVD_SELECT:
+                       Trs2DVDIrSend(0x2e); //DVD_SELECT
+                      break;
+                   case KEY_TTX_SIZE:
+                       Trs2DVDIrSend(0x2f); //Title Menu
+                      break;
+                   case KEY_TTX_REVEAL:
+                       Trs2DVDIrSend(0x1c); //GOTO ???÷??·?
+                      break;
+                   case KEY_TTX_RED:
+                       Trs2DVDIrSend(0x16); // Prev Title
+                      break;
+                   case KEY_TTX_GREEN:  
+                       Trs2DVDIrSend(0x17); // Next Title
+                      break;
+                   case KEY_TTX_YELLOW:
+                       Trs2DVDIrSend(0x14); // Backward
+                      break;
+                   case KEY_TTX_CYAN:
+                       Trs2DVDIrSend(0x15); // Forward
+                      break;
+                      default:
+                      break;*/
+                 }
+              }
+              #else 
+ 225          void ProssMCU2DVDkeyHandle(BYTE Keycode)
+ 226          {
+ 227   1      
+ 228   1      #if( _UARTTX)
+ 229   1         switch(Keycode)
+ 230   1         {
+ 231   2      /*     case _MENU_KEY_MESSAGE:
+ 232   2              Trs2DVDIrSend(0x4e);   //
+ 233   2              break;
+ 234   2      
+ 235   2           case _RIGHT_KEY_MESSAGE:
+ 236   2              Trs2DVDIrSend(0x05);  //
+ 237   2              break;
+ 238   2              
+ 239   2           case _LEFT_KEY_MESSAGE:
+ 240   2              Trs2DVDIrSend(0x0c); //
+C51 COMPILER V8.16   KEY                                                                   04/05/2012 16:47:23 PAGE 5   
+
+ 241   2              break;
+ 242   2              
+ 243   2           case _UP_KEY_MESSAGE:
+ 244   2              Trs2DVDIrSend(0x17);  //
+ 245   2              break;
+ 246   2              
+ 247   2           case _DOWN_KEY_MESSAGE:
+ 248   2              Trs2DVDIrSend(0x0d); //
+ 249   2              break; 
+ 250   2              
+ 251   2           case _MUTE_KEY_MESSAGE:
+ 252   2              Trs2DVDIrSend(0x14); // 0x1C
+ 253   2              break; 
+ 254   2      
+ 255   2          case _ENTER_KEY_MESSAGE:
+ 256   2              Trs2DVDIrSend(0x02); //
+ 257   2              break; 
+ 258   2      
+ 259   2          case _INPUT_KEY_MESSAGE:// 
+ 260   2              Trs2DVDIrSend(0x01); 
+ 261   2              break; 
+ 262   2              
+ 263   2          case _POWER_KEY_MESSAGE:// 
+ 264   2              Trs2DVDIrSend(0x0b); 
+ 265   2              break; 
+ 266   2      //============================================
+ 267   2      // 下面是数字键
+ 268   2      //============================================
+ 269   2      
+ 270   2           case _NUM1_KEY_MESSAGE:// 
+ 271   2              Trs2DVDIrSend(0x42); 
+ 272   2              break;
+ 273   2              
+ 274   2           case _NUM2_KEY_MESSAGE:// 
+ 275   2              Trs2DVDIrSend(0x43); 
+ 276   2              break;
+ 277   2      
+ 278   2           case _NUM3_KEY_MESSAGE:// 
+ 279   2              Trs2DVDIrSend(0x0f); 
+ 280   2              break;
+ 281   2      
+ 282   2           case _NUM4_KEY_MESSAGE:// 
+ 283   2              Trs2DVDIrSend(0x1e); 
+ 284   2              break;
+ 285   2      
+ 286   2           case _NUM5_KEY_MESSAGE:// 
+ 287   2              Trs2DVDIrSend(0x1d); 
+ 288   2              break;
+ 289   2      
+ 290   2           case _NUM6_KEY_MESSAGE:// 
+ 291   2              Trs2DVDIrSend(0x1c); 
+ 292   2              break;
+ 293   2      
+ 294   2           case _NUM7_KEY_MESSAGE:// 
+ 295   2              Trs2DVDIrSend(0x18); 
+ 296   2              break;
+ 297   2      
+ 298   2           case _NUM8_KEY_MESSAGE:// 
+ 299   2              Trs2DVDIrSend(0x45); 
+ 300   2              break;
+ 301   2      
+ 302   2         /  case _NUM9_KEY_MESSAGE:// 
+C51 COMPILER V8.16   KEY                                                                   04/05/2012 16:47:23 PAGE 6   
+
+ 303   2              Trs2DVDIrSend(0x4c); 
+ 304   2              break;
+ 305   2      
+ 306   2           case _NUM0_KEY_MESSAGE:// 
+ 307   2              Trs2DVDIrSend(0x56); 
+ 308   2              break;
+ 309   2      */
+ 310   2              
+ 311   2              default:
+ 312   2              break;
+ 313   2         }
+ 314   1           
+ 315   1      #else
+              //***********************************************************************
+              
+              //=====================================================
+              //上面发的值 转化为ir 码值注意发送方不能编译下面的
+              // 不然会形成互发码值
+              //=======================       ==============================
+                 switch(Keycode)
+                 {
+              /*    case IR_FUNC_MENU:
+                      Trs2DVDIrSend(0x8D);   //
+                      break;
+              
+                  case IR_FUNC_RIGHT:
+                      Trs2DVDIrSend(0x5F);  //
+                      break;
+                      
+                   case IR_FUNC_LEFT:
+                      Trs2DVDIrSend(0xCF); 
+                      break;
+                      
+                   case IR_FUNC_UP:
+                      Trs2DVDIrSend(0x17);  //
+                      break;
+                      
+                   case IR_FUNC_DOWN:
+                      Trs2DVDIrSend(0x4F); 
+                      break; 
+              
+                   case IR_FUNC_MUTE:
+                      Trs2DVDIrSend(0xD7);  
+                      break;
+              
+                   case IR_FUNC_OK:
+                      Trs2DVDIrSend(0xBF); 
+                      break;
+              
+                  case IR_FUNC_SOURCE:
+                      Trs2DVDIrSend(0x7f);  
+                      break;
+                      
+                   case IR_FUNC_POWER:
+                      Trs2DVDIrSend(0x2F);  //
+                      break;
+              //===============================       
+              // 下面是数字键
+              //===============================
+              
+                   case IR_FUNC_NUM1:
+                      Trs2DVDIrSend(0xBD);  //
+C51 COMPILER V8.16   KEY                                                                   04/05/2012 16:47:23 PAGE 7   
+
+                      break;
+                      
+                   case IR_FUNC_NUM2:
+                      Trs2DVDIrSend(0x3D);  //
+                      break;
+              
+                   case IR_FUNC_NUM3:
+                      Trs2DVDIrSend(0x0F);  //
+                      break;
+              
+                   case IR_FUNC_NUM4:
+                      Trs2DVDIrSend(0x87);  //
+                      break;
+              
+                   case IR_FUNC_NUM5:
+                      Trs2DVDIrSend(0x47);  //
+                      break;
+              
+                   case IR_FUNC_NUM6:
+                      Trs2DVDIrSend(0xC7);  //
+                      break;
+              
+                   case IR_FUNC_NUM7:
+                      Trs2DVDIrSend(0xE7);  //
+                      break;
+              
+                   case IR_FUNC_NUM8:
+                      Trs2DVDIrSend(0x5D);  //
+                      break;
+              
+                   case IR_FUNC_NUM9:
+                      Trs2DVDIrSend(0xCD);  //
+                      break;
+              
+                   case IR_FUNC_NUM0:
+                      Trs2DVDIrSend(0x95);  //
+                      break;
+              */
+                      default:
+                      break;
+              
+                 }
+                 #endif
+ 408   1      }
+ 409          #endif
+ 410          #endif
+ 411          
+ 412            #if(_FACTORY_MENU_EN)
+ 413          //--------------------------------------------------
+ 414          // Description  : get BurnIn state and process the key
+ 415          // Input Value  : None
+ 416          // Output Value : false or true
+ 417          //--------------------------------------------------
+ 418          
+ 419          bit getFACState(void)
+ 420          {
+ 421   1            // BYTE uctemp=0xff;
+ 422   1              static BYTE ucFacKeyInfo=_BIT0;
+ 423   1               switch(ucFacKeyInfo)    
+ 424   1                      {
+ 425   2                      /*
+ 426   2                 case  _BIT0: if(ucDetectIR_Cmd==IR_FUNC_NUM1) ucFacKeyInfo=_BIT1 ; else ucFacKeyInfo=_BIT0 ; br
+C51 COMPILER V8.16   KEY                                                                   04/05/2012 16:47:23 PAGE 8   
+
+             -eak;                        
+ 427   2                 case  _BIT1: if(ucDetectIR_Cmd==IR_FUNC_NUM2) ucFacKeyInfo=_BIT2 ; else  ucFacKeyInfo=_BIT0 ; b
+             -reak;                        
+ 428   2                 case  _BIT2: if(ucDetectIR_Cmd==IR_FUNC_NUM3) ucFacKeyInfo=_BIT3 ; else  ucFacKeyInfo=_BIT0 ; b
+             -reak;                        
+ 429   2                 case  _BIT3: if(ucDetectIR_Cmd==IR_FUNC_NUM4) ucFacKeyInfo=_BIT4 ; else  ucFacKeyInfo=_BIT0 ; b
+             -reak;                        
+ 430   2      */
+ 431   2               }
+ 432   1                       
+ 433   1               switch(ucDetectIR_Cmd)    
+ 434   1                      {
+ 435   2             /*       //caimingan
+ 436   2                 case  IR_FUNC_NUM0: // uctemp=0;ucDetectIR_Cmd=0; break;
+ 437   2                 case  IR_FUNC_NUM1: //uctemp=1;ucDetectIR_Cmd=0; break;
+ 438   2                 case  IR_FUNC_NUM2:// uctemp=2;ucDetectIR_Cmd=0; break;
+ 439   2                 case  IR_FUNC_NUM3:// uctemp=3;ucDetectIR_Cmd=0; break;
+ 440   2                 case  IR_FUNC_NUM4: //uctemp=4;ucDetectIR_Cmd=0; break;
+ 441   2                 case  IR_FUNC_NUM5: //uctemp=5;ucDetectIR_Cmd=0; break;
+ 442   2                 case  IR_FUNC_NUM6: //uctemp=6;ucDetectIR_Cmd=0; break;
+ 443   2                 case  IR_FUNC_NUM7: //uctemp=7;ucDetectIR_Cmd=0; break;
+ 444   2                 case  IR_FUNC_NUM8: //uctemp=8;ucDetectIR_Cmd=0; break;
+ 445   2                 case  IR_FUNC_NUM9: //uctemp=9;ucDetectIR_Cmd=0; break;
+ 446   2                 */
+ 447   2                         ucDetectIR_Cmd=0;break;
+ 448   2                      }
+ 449   1      /*               
+ 450   1      #if(_RS232 == _ON)
+ 451   1         //  debug info
+ 452   1         if(uctemp!=0xff)
+ 453   1              {
+ 454   1                      CUartPrintf("KeyMessage:",uctemp);
+ 455   1                      CUartPrintf("ucFacKeyInfo:",ucFacKeyInfo);
+ 456   1              }
+ 457   1      #endif  
+ 458   1      */
+ 459   1              if(ucFacKeyInfo == _BIT4)
+ 460   1                      {ucFacKeyInfo=_BIT0;
+ 461   2                      return _TRUE;
+ 462   2                      }
+ 463   1              
+ 464   1              return _FALSE;
+ 465   1      }    
+ 466          #endif
+ 467          //--------------------------------------------------
+ 468          // Description  : Key scan process
+ 469          // Input Value  : None
+ 470          // Output Value : None
+ 471          //--------------------------------------------------
+ 472          void CKeyHandler(void)
+ 473          {
+ 474   1          // Clear the key message
+ 475   1          ucKeyMessage = _NONE_KEY_MESSAGE;
+ 476   1          
+ 477   1          if(CKeyScanReady())// || _ACTIVE_STATE != ucCurrState)
+ 478   1          {
+ 479   2              // Store previous key state
+ 480   2              ucKeyStatePrev = ucKeyStateCurr;
+ 481   2              
+ 482   2              // Get current key state
+ 483   2              ucKeyStateCurr = CKeyScan();
+ 484   2      
+C51 COMPILER V8.16   KEY                                                                   04/05/2012 16:47:23 PAGE 9   
+
+ 485   2      
+ 486   2              // Power key process, return if power key is pressed
+ 487   2              if(CKeyPowerKeyProc())
+ 488   2                  return;
+ 489   2              
+ 490   2              // Convert key state to key message, store in (ucKeyNotify)
+ 491   2              CKeyMessageProc();
+ 492   2          }
+ 493   1          
+ 494   1      #if(_ISPACK && _ISPACK_TYPE == _ISPACK_MCU)
+ 495   1          GetVirtualKey();
+ 496   1      #endif
+ 497   1      }
+ 498          
+ 499          //--------------------------------------------------
+ 500          // Description  : Check power key process
+ 501          // Input Value  : None
+ 502          // Output Value : None
+ 503          //--------------------------------------------------
+ 504          void CKeyCheckPowerKey(void)
+ 505          {
+ 506   1          // Store previous key state
+ 507   1          ucKeyStatePrev = ucKeyStateCurr;
+ 508   1          
+ 509   1          // Get current key state
+ 510   1          ucKeyStateCurr = CKeyScan();
+ 511   1          
+ 512   1          // Power key process
+ 513   1          CKeyPowerKeyProc();
+ 514   1      }
+ 515          
+ 516          //--------------------------------------------------
+ 517          // Description  : Initial key status
+ 518          // Input Value  : None
+ 519          // Output Value : None
+ 520          //--------------------------------------------------
+ 521          void CKeyInitial(void)
+ 522          {
+ 523   1          CLR_KEYSCANREADY();
+ 524   1          CLR_KEYSCANSTART();
+ 525   1      }
+ 526          
+ 527          //--------------------------------------------------
+ 528          // Description  : Key scan ready process. We wait 0.02 sec in order to keep the keypad debounce
+ 529          // Input Value  : None
+ 530          // Output Value : None
+ 531          //--------------------------------------------------
+ 532          bit CKeyScanReady(void)
+ 533          {
+ 534   1          if(GET_KEYSCANSTART() && GET_KEYSCANREADY())
+ 535   1          {
+ 536   2              return _TRUE;
+ 537   2          }
+ 538   1          else if(!GET_KEYSCANSTART())
+ 539   1          {
+ 540   2              // Wait 0.02 sec in order to keep the keypad debounce
+ 541   2              SET_KEYSCANSTART();
+ 542   2              CTimerReactiveTimerEvent(SEC(0.02), CKeyScanReadyTimerEvent);
+ 543   2              
+ 544   2              return _FALSE;
+ 545   2          }
+ 546   1          else
+C51 COMPILER V8.16   KEY                                                                   04/05/2012 16:47:23 PAGE 10  
+
+ 547   1          {
+ 548   2              return _FALSE;
+ 549   2          }  
+ 550   1      }
+ 551          
+ 552          //--------------------------------------------------
+ 553          // Description  : Key scan ready timer event
+ 554          // Input Value  : None
+ 555          // Output Value : None
+ 556          //--------------------------------------------------
+ 557          void CKeyScanReadyTimerEvent(void)
+ 558          {
+ 559   1          SET_KEYSCANREADY();
+ 560   1      }
+ 561          
+ 562          //--------------------------------------------------
+ 563          // Description  : Key repeat enable timer event
+ 564          // Input Value  : None
+ 565          // Output Value : None
+ 566          //--------------------------------------------------
+ 567          void CKeyRepeatEnableTimerEvent(void)
+ 568          {
+ 569   1          SET_KEYREPEATSTART();
+ 570   1      }
+ 571          
+ 572          //--------------------------------------------------
+ 573          // Description  : Key message translation
+ 574          // Input Value  : ucKeyMask     --> Key mask
+ 575          //                ucKeyMsg      --> Key message
+ 576          // Output Value : None
+ 577          //--------------------------------------------------
+ 578          void CKeyMessageConvert(BYTE ucKeyMask, BYTE ucKeyMsg)
+ 579          {
+ 580   1          if((ucKeyStatePrev ^ ucKeyStateCurr) == ucKeyMask)
+ 581   1          {
+ 582   2              ucKeyMessage = ucKeyMsg;
+ 583   2          }
+ 584   1          else
+ 585   1          { 
+ 586   2              if(GET_KEYREPEATENABLE())
+ 587   2              {
+ 588   3                  if(GET_KEYREPEATSTART())
+ 589   3                  {
+ 590   4                      ucKeyMessage = ucKeyMsg;
+ 591   4                  }
+ 592   3                  else
+ 593   3                  {
+ 594   4                      CTimerActiveTimerEvent(SEC(_KEY_REPEAT_START_TIME),CKeyRepeatEnableTimerEvent);
+ 595   4                  }
+ 596   3              }
+ 597   2          }
+ 598   1      }
+ 599          
+ 600          //--------------------------------------------------
+ 601          // Description  : Power key process
+ 602          // Input Value  : None
+ 603          // Output Value : Return _TRUE if power key is pressed
+ 604          //--------------------------------------------------
+ 605          bit CKeyPowerKeyProc(void)
+ 606          {
+ 607   1          if(ucKeyStateCurr == _POWER_KEY_MASK)
+ 608   1          {
+C51 COMPILER V8.16   KEY                                                                   04/05/2012 16:47:23 PAGE 11  
+
+ 609   2              if((ucKeyStatePrev ^ ucKeyStateCurr) == _POWER_KEY_MASK)
+ 610   2              {
+ 611   3                  CTimerDelayXms(25);
+ 612   3                  ucKeyStateCurr = CKeyScan();
+ 613   3                  
+ 614   3                  if((ucKeyStatePrev ^ ucKeyStateCurr) == _POWER_KEY_MASK)
+ 615   3                  {
+ 616   4                      CKeyPowerKeyMix();
+ 617   4                      SET_POWERSWITCH();
+ 618   4                      return _TRUE;
+ 619   4                  }
+ 620   3              }
+ 621   2          }
+ 622   1          
+ 623   1          return _FALSE;
+ 624   1      }
+ 625                                           
+ 626          //--------------------------------------------------
+ 627          // Description  : Get key status
+ 628          // Input Value  : None
+ 629          // Output Value : Return Key status
+ 630          //--------------------------------------------------
+ 631          BYTE CKeyScan(void)
+ 632          {
+ 633   1          BYTE ucKeyState = _NONE_KEY_MASK; 
+ 634   1         
+ 635   1      #if(_KEY_TYPE == _KEY_ADC)  // MTV512 & STK6021 ADC Key
+                  BYTE ucADC0 = CGetADCData(ADC_ID);    //Get ADC0 Value
+                  BYTE ucADC1 = CGetADCData(ADC_ID);    //Get ADC1 Value
+              
+                  if(_ABS(ucADC0,ucADC1) < 3)
+                  {
+                      if(_ABS(ucADC0,bNONE_KEY) < 3)          ucKeyState = _NONE_KEY_MASK;  // No key in
+                      else if(_ABS(ucADC0,bRIGHT_KEY) < 3)    ucKeyState = _RIGHT_KEY_MASK;
+                      else if(_ABS(ucADC0,bLEFT_KEY) < 3)     ucKeyState = _LEFT_KEY_MASK;
+                      else if(_ABS(ucADC0,bEXIT_KEY) < 3)     ucKeyState = _EXIT_KEY_MASK;
+                      else if(_ABS(ucADC0,bMENU_KEY) < 3)     ucKeyState = _MENU_KEY_MASK;
+                      else if(_ABS(ucADC0,bPOWER_KEY) < 3)    ucKeyState = _POWER_KEY_MASK;
+                  }   
+              #else // KEY_NORMAL
+ 649   1          if(!bPOWER_KEY)        ucKeyState    = ucKeyState | _POWER_KEY_MASK;
+ 650   1          if(!bRIGHT_KEY)        ucKeyState    = ucKeyState | _RIGHT_KEY_MASK;
+ 651   1          if(!bLEFT_KEY)         ucKeyState    = ucKeyState | _LEFT_KEY_MASK;
+ 652   1          if(!bEXIT_KEY)         ucKeyState    = ucKeyState | _EXIT_KEY_MASK;
+ 653   1          if(!bMENU_KEY)         ucKeyState    = ucKeyState | _MENU_KEY_MASK;
+ 654   1          if(!bCH_DEC_KEY)         ucKeyState    = ucKeyState | _CH_DEC_KEY_MASK;
+ 655   1          if(!bCH_INC_KEY)           ucKeyState    = ucKeyState | _CH_INC_KEY_MASK;
+ 656   1      #endif
+ 657   1      
+ 658   1          if(ucKeyState != _NONE_KEY_MASK)
+ 659   1              {
+ 660   2             CKeyInitial();
+ 661   2              //CUartPrintf("ucKeyState:",ucKeyState);
+ 662   2          DebugPrintf("ucKeyState=========\n",ucKeyState);
+ 663   2              }
+ 664   1          
+ 665   1          return ucKeyState;
+ 666   1      }
+ 667          //--------------------------------------------------
+ 668          // Description  : We can add some settings here while combo key with power key
+ 669          // Input Value  : None
+ 670          // Output Value : None
+C51 COMPILER V8.16   KEY                                                                   04/05/2012 16:47:23 PAGE 12  
+
+ 671          //--------------------------------------------------
+ 672          void CKeyPowerKeyMix(void)
+ 673          {
+ 674   1       /*   switch(ucKeyStateCurr)
+ 675   1          {
+ 676   1          case _POWER_RIGHT_KEY_MASK:
+ 677   1              ucOsdEventMsg = _ENTER_FACTORY_MODE_MSG;
+ 678   1              break;
+ 679   1              
+ 680   1          case _POWER_MENU_KEY_MASK:
+ 681   1              break;
+ 682   1              
+ 683   1          case _POWER_LEFT_RIGHT_KEY_MASK:
+ 684   1              break;
+ 685   1          } */
+ 686   1      }
+ 687          
+ 688          //--------------------------------------------------
+ 689          // Description  : Convert keypad status into key message, stores in ucKeyNotify
+ 690          // Input Value  : None
+ 691          // Output Value : None
+ 692          //--------------------------------------------------
+ 693          void CKeyMessageProc(void)
+ 694          {          
+ 695   1      //------------------------------------------------------------------------------
+ 696   1      BYTE value,getvalue;
+ 697   1      
+ 698   1      
+ 699   1      //-------------------------------------------------------------------------------
+ 700   1                      switch(ucKeyStateCurr)
+ 701   1          {
+ 702   2          /*
+ 703   2          case _MENU_KEY_MASK:
+ 704   2              CKeyMessageConvert(_MENU_KEY_MASK, _MENU_KEY_MESSAGE);        
+ 705   2              break;
+ 706   2              
+ 707   2          case _RIGHT_KEY_MASK:
+ 708   2              CKeyMessageConvert(_RIGHT_KEY_MASK, _RIGHT_KEY_MESSAGE);
+ 709   2              break;
+ 710   2              
+ 711   2          case _LEFT_KEY_MASK:
+ 712   2              CKeyMessageConvert(_LEFT_KEY_MASK, _LEFT_KEY_MESSAGE);
+ 713   2              break;
+ 714   2              
+ 715   2          case _EXIT_KEY_MASK:
+ 716   2              CKeyMessageConvert(_EXIT_KEY_MASK, _EXIT_KEY_MESSAGE);
+ 717   2      */
+ 718   2      #if(_OSD_TYPE ==  _OSD007)
+ 719   2      #if(_MENU_FUNC == _MENU_EXIT_ITEM)
+ 720   2              if (ucKeyMessage == _EXIT_KEY_MESSAGE)
+ 721   2              {
+ 722   3                 switch(ucOsdState)
+ 723   3                 {
+ 724   4                     case _MENU_NONE:
+ 725   4      #if(_VIDEO_TV_SUPPORT)
+ 726   4                     case MENU_SHOW_MESSAGE_SATAE:
+ 727   4      #endif
+ 728   4      
+ 729   4                     case ITEM_SHORTCUT_INPUTCH_NUM:
+ 730   4                     case MENU_VOLUME_SP:
+ 731   4                     case MENU_SHOW_MUTE_STATE:
+ 732   4                     case MENU_SHOW_MSG_STATE:
+C51 COMPILER V8.16   KEY                                                                   04/05/2012 16:47:23 PAGE 13  
+
+ 733   4                         break;
+ 734   4      
+ 735   4                     default:
+ 736   4                         ucKeyMessage = _IR_MENU_KEY_MESSAGE;
+ 737   4                         break;
+ 738   4                 }
+ 739   3              }
+ 740   2      #endif
+ 741   2      #endif  // end #if(_OSD_TYPE ==  _OSD003)
+ 742   2              break;
+ 743   2      
+ 744   2      #if(_KEY_TYPE_OSD007==_6KEY_SUPPORT)
+                  case _CH_INC_KEY_MASK:
+                      CKeyMessageConvert(_CH_INC_KEY_MASK, _IR_CHINC_KEY_MESSAGE);
+                      break;
+                  case _CH_DEC_KEY_MASK:
+                      CKeyMessageConvert(_CH_DEC_KEY_MASK, _IR_CHDEC_KEY_MESSAGE);
+                      break;
+              #endif
+ 752   2      
+ 753   2      #if(_KEY_TYPE_OSD007==_7KEY_SUPPORT)
+ 754   2          case _CH_INC_KEY_MASK:
+ 755   2              CKeyMessageConvert(_CH_INC_KEY_MASK, _IR_DOWN_KEY_MESSAGE);
+ 756   2              break;
+ 757   2          case _CH_DEC_KEY_MASK:
+ 758   2              CKeyMessageConvert(_CH_DEC_KEY_MASK, _IR_UP_KEY_MESSAGE);
+ 759   2              break;
+ 760   2      #endif
+ 761   2          default:
+ 762   2      #if(_IR_ENABLE)        
+ 763   2      #if(_REMOTE_CONTROLLER != IR_DVD)
+ 764   2       #if(_FACTORY_MENU_EN)
+ 765   2                      // get burn in state if true return
+ 766   2              if((ucDetectIR_Cmd!=0)&&(GET_FAC_STATE()==0)&&(MENU_SUB_RESET == ucOsdState|| ucCurrState==_SLEEP_STATE||
+             - ucCurrState==_NOSIGNAL_STATE))       
+ 767   2                      {
+ 768   3                              if(getFACState())
+ 769   3                              {
+ 770   4                              if(ucCurrState==_PWOFF_STATE)
+ 771   4                              SET_POWERSWITCH();
+ 772   4                             SET_FAC_STATE(1);
+ 773   4                              ucOsdEventMsg= _FAC_FOR_IN;
+ 774   4                              return;
+ 775   4                              }
+ 776   3                      }
+ 777   2      #endif  
+ 778   2       #if _UARTIR
+ 779   2      
+ 780   2      //-------------------------------------------------------------------------------
+ 781   2       /*     if(ucDetectIR_Cmd!=0)
+ 782   2           {
+ 783   2                // temp=0x01;
+ 784   2                              getvalue=0x00;           
+ 785   2                              value=ucDetectIR_Cmd;
+ 786   2                              // CUartPutCharToScr(value);
+ 787   2      
+ 788   2                              for(i=0;i<8;i++)
+ 789   2                      {
+ 790   2                      // CUartPutCharToScr(~value);
+ 791   2      
+ 792   2                      if(_BIT0&value)
+ 793   2                       {
+C51 COMPILER V8.16   KEY                                                                   04/05/2012 16:47:23 PAGE 14  
+
+ 794   2                             getvalue++;
+ 795   2                              }       
+ 796   2                                              getvalue=getvalue<<1;
+ 797   2                                              CUartPutCharToScr(getvalue);
+ 798   2                                              value=value>>1;
+ 799   2                                              CUartPutCharToScr       (value);                 
+ 800   2                      }
+ 801   2                                       getvalue=~getvalue;
+ 802   2      
+ 803   2                  // CUartPutCharToScr(getvalue);
+ 804   2      
+ 805   2                                      Trs2DVDIrSend(getvalue);   //
+ 806   2      
+ 807   2      
+ 808   2      
+ 809   2      
+ 810   2                                                       
+ 811   2              }
+ 812   2      */
+ 813   2      
+ 814   2         if(ucDetectIR_Cmd!=0)
+ 815   2              {
+ 816   3                  value=ucDetectIR_Cmd;
+ 817   3                  getvalue=0x00;
+ 818   3                  if(_BIT0&value)
+ 819   3                      {
+ 820   4                       getvalue=getvalue+128;
+ 821   4                                      }
+ 822   3                  if(_BIT1&value)
+ 823   3                      {
+ 824   4                       getvalue=getvalue+64;
+ 825   4                                      }
+ 826   3                  if(_BIT2&value)
+ 827   3                      {
+ 828   4                       getvalue=getvalue+32;
+ 829   4                                      }
+ 830   3                               if(_BIT3&value)
+ 831   3                      {
+ 832   4                       getvalue=getvalue+16;
+ 833   4                                      }
+ 834   3                              if(_BIT4&value)
+ 835   3                      {
+ 836   4                       getvalue=getvalue+8;
+ 837   4                                      }
+ 838   3                               if(_BIT5&value)
+ 839   3                      {
+ 840   4                       getvalue=getvalue+4;
+ 841   4                                      }
+ 842   3                              if(_BIT6&value)
+ 843   3                      {
+ 844   4                       getvalue=getvalue+2;
+ 845   4                                      }
+ 846   3                              if(_BIT7&value)
+ 847   3                      {
+ 848   4                       getvalue=getvalue+1;
+ 849   4                                      }
+ 850   3                    getvalue=~getvalue;
+ 851   3                   Trs2DVDIrSend(getvalue);
+ 852   3      
+ 853   3      
+ 854   3               }
+ 855   2      
+C51 COMPILER V8.16   KEY                                                                   04/05/2012 16:47:23 PAGE 15  
+
+ 856   2      
+ 857   2      
+ 858   2      
+ 859   2       //------------------------------------------------------------------------------  
+ 860   2      
+ 861   2       // ProssMCUIRHandle(ucDetectIR_Cmd);
+ 862   2      /*       if(ucDetectIR_Cmd!=0)    
+ 863   2                      {
+ 864   2             
+ 865   2                          //CPowerPanelOff();
+ 866   2                              ProssMCU2DVDkeyHandle(ucDetectIR_Cmd);// 遥控码发送
+ 867   2                         //  DebugPrintf("_MENU_KEY_MESSAGE.\n",0x01);
+ 868   2                            CUartPutCharToScr(0xA0);
+ 869   2                              CUartPutCharToScr(0x55);
+ 870   2                              CUartPutCharToScr(0xF0);
+ 871   2                              CUartPutCharToScr(0xFF);
+ 872   2                            CUartPutCharToScr(uchh);
+ 873   2                                uchh=0;
+ 874   2                            CUartPutCharToScr(ucll); 
+ 875   2                                ucll=0;
+ 876   2                            CUartPutCharToScr(ucDetectIR_Cmd);
+ 877   2                            CUartPutCharToScr(~ucDetectIR_Cmd);  
+ 878   2                       }
+ 879   2      
+ 880   2               if((ucDetectIR_Cmd==0)&&(uchh==0x7f))
+ 881   2                      {
+ 882   2      
+ 883   2                              ProssMCU2DVDkeyHandle(ucDetectIR_Cmd);// 遥控码发送
+ 884   2                         //  DebugPrintf("_MENU_KEY_MESSAGE.\n",0x01);
+ 885   2                            CUartPutCharToScr(0xA0);
+ 886   2                              CUartPutCharToScr(0x55);
+ 887   2                              CUartPutCharToScr(0xF0);
+ 888   2                              CUartPutCharToScr(0xFF);;
+ 889   2                            CUartPutCharToScr(uchh);
+ 890   2                                uchh=0;
+ 891   2                            CUartPutCharToScr(ucll); 
+ 892   2                                ucll=0;
+ 893   2                            CUartPutCharToScr(ucDetectIR_Cmd);
+ 894   2                            CUartPutCharToScr(~ucDetectIR_Cmd);  
+ 895   2                       }
+ 896   2      
+ 897   2                              
+ 898   2                      
+ 899   2                       
+ 900   2      
+ 901   2      
+ 902   2      
+ 903   2      
+ 904   2      
+ 905   2        /*    switch(ucDetectIR_Cmd)
+ 906   2              {
+ 907   2            case IR_FUNC_MENU: 
+ 908   2                      CUartPutCharToScr(IR_FUNC_MENU);
+ 909   2                    break;
+ 910   2                               
+ 911   2            case IR_FUNC_LEFT: 
+ 912   2                      CUartPutCharToScr(IR_FUNC_LEFT);
+ 913   2                    break;   
+ 914   2      
+ 915   2            case IR_FUNC_RIGHT: 
+ 916   2                      CUartPutCharToScr(IR_FUNC_RIGHT);
+ 917   2                    break;     
+C51 COMPILER V8.16   KEY                                                                   04/05/2012 16:47:23 PAGE 16  
+
+ 918   2      
+ 919   2            case IR_FUNC_UP: 
+ 920   2                      CUartPutCharToScr(IR_FUNC_UP);
+ 921   2                    break;
+ 922   2      
+ 923   2             case IR_FUNC_DOWN: 
+ 924   2                      CUartPutCharToScr(IR_FUNC_DOWN);
+ 925   2                    break;
+ 926   2      
+ 927   2               }
+ 928   2      
+ 929   2      */
+ 930   2                              
+ 931   2          #endif
+ 932   2      
+ 933   2              switch(ucDetectIR_Cmd)
+ 934   2              {
+ 935   3              // Stand key
+ 936   3      //-----------------------------------------------------------------------------------------
+ 937   3      #if (_DISIRTRIS)
+              
+              
+                      
+              #if(_OSD_TYPE ==  _OSD007)
+              #if(_MENU_FUNC == _MENU_EXIT_ITEM)
+                      case IR_FUNC_MENU:  
+                        if(GET_FAC_STATE())
+                                      {
+                                      SET_FAC_STATE(0);
+                                      ucDetectIR_Cmd=0;
+                                      if(GET_BURNIN_STATE()==BURNIN_OFF)
+                                              {
+                                             SET_NOSIGNAL_INFO(0);
+                                              SET_OSD_READYFORDISPLAY();
+                                              }
+                                     COsdFxDisableOsd();
+                                       }              
+                      else    
+                                      ucKeyMessage = _IR_MENU_KEY_MESSAGE;      break;
+              #else
+                      case IR_FUNC_MENU:      ucKeyMessage = _MENU_KEY_MESSAGE;         break;
+              #endif
+              #else
+                      case IR_FUNC_MENU:      ucKeyMessage = _MENU_KEY_MESSAGE;         break;
+              #endif // end #if(_OSD_TYPE ==  _OSD007)
+                      case IR_FUNC_SOURCE:    ucKeyMessage = _EXIT_KEY_MESSAGE;         break;
+                       case IR_FUNC_OK:    ucKeyMessage = _IR_OK_KEY_MESSAGE;         break;
+                       case IR_FUNC_EXIT:    ucKeyMessage = _IR_EXIT_KEY_MESSAGE;         break;
+                      case IR_FUNC_TV:    ucKeyMessage = _IR_VGATYPE_KEY_MESSAGE;         break;
+                       case IR_FUNC_AV:    ucKeyMessage = _IR_AVTYPE_KEY_MESSAGE;         break;
+                       case IR_FUNC_SV:    ucKeyMessage = _IR_SVTYPE_KEY_MESSAGE;         break;
+                       case IR_FUNC_VGA:    ucKeyMessage = _IR_SCARTTYPE_KEY_MESSAGE;         break;
+                       case IR_FUNC_DVD:    ucKeyMessage = _IR_TVTYPE_KEY_MESSAGE;         break;
+                       case IR_FUNC_HDMI:    ucKeyMessage = _IR_HDMITYPE_KEY_MESSAGE;         break;
+                       case IR_FUNC_DTV:    ucKeyMessage = _IR_DTVTYPE_KEY_MESSAGE;         break;
+              
+              #if(_USE_UD_LR_KEY_MSG)
+                      case IR_FUNC_LEFT:      ucKeyMessage = _IR_LEFT_KEY_MESSAGE;      break;
+                      case IR_FUNC_RIGHT:     ucKeyMessage = _IR_RIGHT_KEY_MESSAGE;     break;
+                      case IR_FUNC_UP:        ucKeyMessage = _IR_UP_KEY_MESSAGE;        break;
+                      case IR_FUNC_DOWN:      ucKeyMessage = _IR_DOWN_KEY_MESSAGE;      break;
+              #else
+C51 COMPILER V8.16   KEY                                                                   04/05/2012 16:47:23 PAGE 17  
+
+                      case IR_FUNC_LEFT:      
+              #if(_VIDEO_TV_SUPPORT)
+                          if (ucOsdState == _MENU_NONE ||  ucOsdState == MENU_SHOW_MESSAGE_SATAE)
+                              ucKeyMessage = _IR_VOLDEC_KEY_MESSAGE;         
+                          else                      
+              #endif                               
+                              ucKeyMessage = _LEFT_KEY_MESSAGE;
+                          break;
+              
+                      case IR_FUNC_RIGHT:     
+              #if(_VIDEO_TV_SUPPORT)
+                          if (ucOsdState == _MENU_NONE ||  ucOsdState == MENU_SHOW_MESSAGE_SATAE)
+                              ucKeyMessage = _IR_VOLDEC_KEY_MESSAGE;         
+                          else
+              #endif
+                              ucKeyMessage = _RIGHT_KEY_MESSAGE;
+                          break;
+              #endif
+                   
+                      // Other key
+                      case IR_FUNC_POWER:
+                          CKeyPowerKeyMix();
+                          SET_POWERSWITCH();
+                          break;
+              
+              //        case IR_FUNC_UP:         ucKeyMessage = _IR_UP_KEY_MESSAGE;       break;
+                //      case IR_FUNC_DOWN:       ucKeyMessage = _IR_DOWN_KEY_MESSAGE;     break;
+              #if(_REMOTE_CONTROLLER == IR_CHUNGHOP_RMH02)
+                        case IR_FUNC_VOLINC:     ucKeyMessage = _IR_VOLINC_KEY_MESSAGE;   break;
+                        case IR_FUNC_VOLDEC:     ucKeyMessage = _IR_VOLDEC_KEY_MESSAGE;   break;
+              #endif
+              #if(!_USE_UD_LR_KEY_MSG || _REMOTE_CONTROLLER == IR_CHUNGHOP_RMH02)
+                      case IR_FUNC_CHINC:      ucKeyMessage = _IR_CHINC_KEY_MESSAGE;    break;
+                      case IR_FUNC_CHDEC:      ucKeyMessage = _IR_CHDEC_KEY_MESSAGE;    break;
+              #endif
+                      case IR_FUNC_RETURN:     ucKeyMessage = _IR_RETURN_KEY_MESSAGE;   break;
+                      case IR_FUNC_TV_SYSTEM:  ucKeyMessage = _IR_TVTYPE_KEY_MESSAGE;   break;
+                    //  case IR_FUNC_SOUND:      ucKeyMessage = _IR_SOUND_KEY_MESSAGE;    break;
+                      case IR_FUNC_SHOW:       ucKeyMessage = _IR_DISPLAY_KEY_MESSAGE;  break;
+                      case IR_FUNC_MUTE:       ucKeyMessage = _IR_MUTE_KEY_MESSAGE;     break;
+                     case IR_FUNC_INPUTCH:    ucKeyMessage = _IR_INPUTCH_KEY_MESSAGE;  break;
+                      case IR_FUNC_IMAGE:      ucKeyMessage = _IR_IMAGE_KEY_MESSAGE;    break;
+                  
+                      case IR_FUNC_NUM0:       ucKeyMessage = _IR_NUM0_KEY_MESSAGE;     break;
+                      case IR_FUNC_NUM1:       ucKeyMessage = _IR_NUM1_KEY_MESSAGE;     break;
+                      case IR_FUNC_NUM2:       ucKeyMessage = _IR_NUM2_KEY_MESSAGE;     break;
+                      case IR_FUNC_NUM3:       ucKeyMessage = _IR_NUM3_KEY_MESSAGE;     break;
+                      case IR_FUNC_NUM4:       ucKeyMessage = _IR_NUM4_KEY_MESSAGE;     break;
+                      case IR_FUNC_NUM5:       ucKeyMessage = _IR_NUM5_KEY_MESSAGE;     break;
+                      case IR_FUNC_NUM6:       ucKeyMessage = _IR_NUM6_KEY_MESSAGE;     break;
+                      case IR_FUNC_NUM7:       ucKeyMessage = _IR_NUM7_KEY_MESSAGE;     break;
+                      case IR_FUNC_NUM8:       ucKeyMessage = _IR_NUM8_KEY_MESSAGE;     break;
+                      case IR_FUNC_NUM9:       ucKeyMessage = _IR_NUM9_KEY_MESSAGE;     break;
+              
+                      
+              #endif
+1036   3      //-----------------------------------------------------------------------------------------
+1037   3      
+1038   3              default:                 ucKeyMessage = _NONE_KEY_MESSAGE;        break;
+1039   3              }
+1040   2      
+1041   2      #elif(_REMOTE_CONTROLLER == IR_DVD)  //xdl  20080408
+C51 COMPILER V8.16   KEY                                                                   04/05/2012 16:47:23 PAGE 18  
+
+              
+               #if(_FACTORY_MENU_EN)
+                              // get burn in state if true return
+                      if((ucDetectIR_Cmd!=0)&&(GET_FAC_STATE()==0)&&(MENU_SUB_RESET == ucOsdState|| ucCurrState==_SLEEP_STATE||
+             - ucCurrState==_NOSIGNAL_STATE))       
+                              {
+                                      if(getFACState())
+                                      {
+                                      if(ucCurrState==_PWOFF_STATE)
+                                      SET_POWERSWITCH();
+                                      COsdDispOsdTimerEvent();
+                                     SET_FAC_STATE(1);
+                                      ucOsdEventMsg= _FAC_FOR_IN;
+                                      return;
+                                      }
+                              }
+              #endif  
+              
+                      switch(ucDetectIR_Cmd)
+                      {
+                      // Stand key
+              #if(_OSD_TYPE ==  _OSD007)
+              
+              #if(_MENU_FUNC == _MENU_EXIT_ITEM)
+                      case IR_FUNC_MENU:  
+                        if(GET_FAC_STATE())
+                                      {
+                                      SET_FAC_STATE(0);
+                                      ucDetectIR_Cmd=0;
+                                      if(GET_BURNIN_STATE()==BURNIN_OFF)
+                                              {
+                                             SET_NOSIGNAL_INFO(0);
+                                              SET_OSD_READYFORDISPLAY();
+                                              }
+                                       }              
+                      else    
+                                      ucKeyMessage = _IR_MENU_KEY_MESSAGE;      break;
+              #else
+                      case IR_FUNC_MENU:      ucKeyMessage = _MENU_KEY_MESSAGE;         break;
+              #endif
+              
+              #else
+                      case IR_FUNC_MENU:      ucKeyMessage = _MENU_KEY_MESSAGE;         break;
+              #endif // end #if(_OSD_TYPE ==  _OSD007)
+                     case IR_FUNC_SOURCE:    ucKeyMessage = _EXIT_KEY_MESSAGE;         break;
+                    //  case IR_FUNC_SOURCE:    ucKeyMessage = _SOURCE_KEY_MESSAGE;         break;
+              
+              #if(_USE_UD_LR_KEY_MSG)
+                      case IR_FUNC_LEFT:      ucKeyMessage = _IR_LEFT_KEY_MESSAGE;      break;
+                      case IR_FUNC_RIGHT:     ucKeyMessage = _IR_RIGHT_KEY_MESSAGE;     break;
+                      case IR_FUNC_UP:        ucKeyMessage = _IR_UP_KEY_MESSAGE;        break;
+                      case IR_FUNC_DOWN:      ucKeyMessage = _IR_DOWN_KEY_MESSAGE;      break;
+              #else
+                      case IR_FUNC_LEFT:      
+              #if(_VIDEO_TV_SUPPORT)
+                          if (ucOsdState == _MENU_NONE ||  ucOsdState == MENU_SHOW_MESSAGE_SATAE)
+                              ucKeyMessage = _IR_VOLDEC_KEY_MESSAGE;         
+                          else                      
+              #endif                               
+                              ucKeyMessage = _LEFT_KEY_MESSAGE;
+                          break;
+              
+C51 COMPILER V8.16   KEY                                                                   04/05/2012 16:47:23 PAGE 19  
+
+                      case IR_FUNC_RIGHT:     
+              #if(_VIDEO_TV_SUPPORT)
+                          if (ucOsdState == _MENU_NONE ||  ucOsdState == MENU_SHOW_MESSAGE_SATAE)
+                              ucKeyMessage = _IR_VOLDEC_KEY_MESSAGE;         
+                          else
+              #endif
+                              ucKeyMessage = _RIGHT_KEY_MESSAGE;
+                          break;
+              #endif
+                   
+                      // Other key
+                      case IR_FUNC_POWER:
+                          CKeyPowerKeyMix();
+                          SET_POWERSWITCH();
+                          break;
+              #if(DVD_EN)
+              //        case IR_FUNC_UP:         ucKeyMessage = _IR_UP_KEY_MESSAGE;       break;
+                //      case IR_FUNC_DOWN:       ucKeyMessage = _IR_DOWN_KEY_MESSAGE;     break;
+                      case IR_FUNC_RETURN:     ucKeyMessage = _IR_RETURN_KEY_MESSAGE;   break;
+               //       case IR_FUNC_TV_SYSTEM:  ucKeyMessage = _IR_TVTYPE_KEY_MESSAGE;   break;
+                       case IR_FUNC_SHOW:       ucKeyMessage = _IR_DISPLAY_KEY_MESSAGE;     Keycode= KEY_TTX_MIX ; break
+             -;
+                      case IR_FUNC_MUTE:       ucKeyMessage = _IR_MUTE_KEY_MESSAGE;     break;
+                      case IR_FUNC_INPUTCH:    ucKeyMessage = _IR_INPUTCH_KEY_MESSAGE;  break;
+                      case IR_FUNC_IMAGE:      ucKeyMessage = _IR_IMAGE_KEY_MESSAGE;    break;
+               //       case IR_FUNC_SOUND:      Keycode= KEY_9;    break;
+               //       case IR_FUNC_OK:         Keycode= KEY_9;       break;
+                  
+                      case IR_FUNC_NUM0:       ucKeyMessage = _IR_NUM0_KEY_MESSAGE;  Keycode= KEY_0;   break;
+                      case IR_FUNC_NUM1:       ucKeyMessage = _IR_NUM1_KEY_MESSAGE;  Keycode= KEY_1;   break;
+                      case IR_FUNC_NUM2:       ucKeyMessage = _IR_NUM2_KEY_MESSAGE;  Keycode= KEY_2;   break;
+                      case IR_FUNC_NUM3:       ucKeyMessage = _IR_NUM3_KEY_MESSAGE;  Keycode= KEY_3;   break;
+                      case IR_FUNC_NUM4:       ucKeyMessage = _IR_NUM4_KEY_MESSAGE;  Keycode= KEY_4;   break;
+                      case IR_FUNC_NUM5:       ucKeyMessage = _IR_NUM5_KEY_MESSAGE;  Keycode= KEY_5;   break;
+                      case IR_FUNC_NUM6:       ucKeyMessage = _IR_NUM6_KEY_MESSAGE;  Keycode= KEY_6;   break;
+                      case IR_FUNC_NUM7:       ucKeyMessage = _IR_NUM7_KEY_MESSAGE;  Keycode= KEY_7;   break;
+                      case IR_FUNC_NUM8:       ucKeyMessage = _IR_NUM8_KEY_MESSAGE;  Keycode= KEY_8;   break;
+                      case IR_FUNC_NUM9:       ucKeyMessage = _IR_NUM9_KEY_MESSAGE; Keycode= KEY_9;   break;
+                      case IR_DVD_KEY_DVD_EJECT   :              Keycode= KEY_DVD_EJECT ;        break;
+                      case IR_DVD_KEY_RECALL         :               Keycode= KEY_RECALL ;               break;
+                      case IR_DVD_KEY_MTS               :               Keycode= KEY_MTS ;                  break;
+                      case IR_DVD_KEY_DVD_MENU    :               Keycode= KEY_DVD_MENU ;        break;
+                           
+                      case IR_DVD_KEY_PIP              :               Keycode= KEY_PIP;                        break;
+                      case IR_DVD_KEY_UP               :               Keycode= KEY_UP  ;                       break;
+                      case IR_DVD_KEY_DOWN          :               Keycode= KEY_DOWN ;                  break;
+                      case IR_DVD_KEY_LEFT            :               Keycode= KEY_LEFT ;                       break;
+                      case IR_DVD_KEY_RIGHT          :               Keycode= KEY_RIGHT;                     break;
+                      case IR_DVD_KEY_DVD_SLOW   :               Keycode= KEY_DVD_SLOW;              break;
+                      case IR_DVD_KEY_TTX_LIST      :               Keycode= KEY_TTX_LIST  ;                break;
+                      case IR_DVD_KEY_TTX              :               Keycode= KEY_TTX;                             bre
+             -ak;
+                      case IR_DVD_KEY_TTX_HOLD      :               Keycode= KEY_TTX_HOLD ;                break;
+                      case IR_DVD_KEY_TTX_CANCEL    :               Keycode= KEY_TTX_CANCEL;        break;
+                      case IR_DVD_KEY_TTX_INDEX        :               Keycode= KEY_TTX_INDEX ;        break;
+                      case IR_DVD_KEY_MENU                :               Keycode= KEY_MENU;                       break
+             -;
+                      case IR_DVD_KEY_TTX_SUBTITLE    :               Keycode= KEY_TTX_SUBTITLE ;        break;
+                      case IR_DVD_KEY_DVD_SELECT      :               Keycode= KEY_DVD_SELECT;        break;
+                      case IR_DVD_KEY_TTX_SIZE            :               Keycode= KEY_TTX_SIZE;                break;
+                      case IR_DVD_KEY_TTX_REVEAL         :               Keycode= KEY_TTX_REVEAL;        break;
+                      case IR_DVD_KEY_TTX_RED               :               Keycode= KEY_TTX_RED;              break;
+C51 COMPILER V8.16   KEY                                                                   04/05/2012 16:47:23 PAGE 20  
+
+                      case IR_DVD_KEY_TTX_GREEN            :               Keycode= KEY_TTX_GREEN ;        break;
+                      case IR_DVD_KEY_TTX_YELLOW          :               Keycode= KEY_TTX_YELLOW;        break;
+                      case IR_DVD_KEY_TTX_CYAN             :               Keycode= KEY_TTX_CYAN ;        break;
+                      case IR_DVD_KEY_REPEAT            :               Keycode= KEY_REPEAT ;        break;
+              #endif          
+              
+                      default:                 ucKeyMessage = _NONE_KEY_MESSAGE;                                break;
+                      }
+              #endif
+1171   2      
+1172   2              ucDetectIR_Cmd = 0;
+1173   2      
+1174   2              if (ucKeyMessage == _NONE_KEY_MESSAGE)
+1175   2      #endif        
+1176   2              {
+1177   3                  CLR_KEYREPEATSTART();
+1178   3                  CTimerCancelTimerEvent(CKeyRepeatEnableTimerEvent);
+1179   3              }
+1180   2              break;
+1181   2          }
+1182   1      #if(DVD_EN)
+1183   1           if(_GET_INPUT_SOURCE()==_SOURCE_VIDEO_DVD&&Keycode!= 0xff)
+1184   1              {
+1185   2                   ProssMCU2DVDkeyHandle(Keycode);
+1186   2                                      Keycode= 0xff;
+1187   2              }
+1188   1      #endif   
+1189   1      
+1190   1          if (ucCurrState == _PWOFF_STATE)    // in power off mode not use key,but not include power key
+1191   1              ucKeyMessage = _NONE_KEY_MESSAGE;
+1192   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    739    ----
+   CONSTANT SIZE    =     21    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      1       6
+   IDATA SIZE       =      4    ----
+   BIT SIZE         =      1    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
