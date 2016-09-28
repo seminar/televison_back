@@ -1,0 +1,3793 @@
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 1   
+
+
+C51 COMPILER V8.16, COMPILATION OF MODULE ADJUST
+OBJECT MODULE PLACED IN .\Output\Adjust.obj
+COMPILER INVOKED BY: D:\安装文件\keil\C51\BIN\C51.EXE Code\Adjust.c OPTIMIZE(9,SIZE) BROWSE DEFINE(CMOS_CHIP_TYPE=PCB_20
+                    -25LV13) PRINT(.\Output\Adjust.lst) OBJECT(.\Output\Adjust.obj)
+
+line level    source
+
+   1          //----------------------------------------------------------------------------------------------------
+   2          // ID Code      : Adjust.c No.0004
+   3          // Update Note  : 
+   4          //
+   5          //----------------------------------------------------------------------------------------------------
+   6          
+   7          #define __ADJUST__
+   8          
+   9          #include "Header\Include.h"
+  10          
+  11          
+  12          //--------------------------------------------------
+  13          // Description  : Adjust IHS delay
+  14          // Input Value  : IHS delay
+  15          // Output Value : None
+  16          //--------------------------------------------------
+  17          void CAdjustIHSDelay(WORD usIHSDelay)
+  18          {
+  19   1      #if(_SCALER_TYPE == _RTD2547D)
+                  CScalerSetBit(_VGIP_HV_DELAY_1E, ~_BIT0, HIBYTE(usIHSDelay) & _BIT0);
+                  CScalerSetByte(_IHS_DELAY_1D, LOBYTE(usIHSDelay));
+              #else
+  23   1          CScalerSetBit(_VGIP_HV_DELAY_13, ~_BIT0, HIBYTE(usIHSDelay) & _BIT0);
+  24   1          CScalerSetByte(_IHS_DELAY_12, LOBYTE(usIHSDelay));
+  25   1      #endif    
+  26   1      }
+  27          
+  28          //--------------------------------------------------
+  29          // Description  : Adjust IVS delay
+  30          // Input Value  : IVS delay
+  31          // Output Value : None
+  32          //--------------------------------------------------
+  33          void CAdjustIVSDelay(WORD usIVSDelay)
+  34          {
+  35   1      #if(_SCALER_TYPE == _RTD2547D)
+                  CScalerSetBit(_VGIP_HV_DELAY_1E, ~_BIT1, (usIVSDelay >> 7) & _BIT1);
+                  CScalerSetByte(_IVS_DELAY_1C, LOBYTE(usIVSDelay));
+              #else
+  39   1          CScalerSetBit(_VGIP_HV_DELAY_13, ~_BIT1, (usIVSDelay >> 7) & _BIT1);
+  40   1          CScalerSetByte(_IVS_DELAY_11, LOBYTE(usIVSDelay));
+  41   1      #endif    
+  42   1      }
+  43          
+  44          //--------------------------------------------------
+  45          // Description  : Adjust Dclk offset
+  46          // Input Value  : Dclk offset
+  47          // Output Value : None
+  48          //--------------------------------------------------
+  49          void CAdjustDclkOffset(WORD usDclkOffset)
+  50          {
+  51   1      #if(_SCALER_TYPE == _RTD2547D)
+                  CScalerPageSelect(_PAGE1);
+                  CScalerSetBit(_P1_DCLK_FINE_TUNE_OFFSET_MSB_BC, 0xf0, HIBYTE(usDclkOffset) & 0x0f);
+                  CScalerSetByte(_P1_DCLK_FINE_TUNE_OFFSET_LSB_BD, LOBYTE(usDclkOffset));
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 2   
+
+                  CScalerSetBit(_P1_DCLK_SPREAD_SPECTRUM_BE, ~_BIT2, _BIT2);
+              #else
+  57   1          CScalerSetBit(_DCLK_FINE_TUNE_OFFSET_MSB_B5, 0xf0, HIBYTE(usDclkOffset) & 0x0f);
+  58   1          CScalerSetByte(_DCLK_FINE_TUNE_OFFSET_LSB_B6, LOBYTE(usDclkOffset));
+  59   1          CScalerSetBit(_SPREAD_SPECTRUM_B7, ~_BIT2, _BIT2);
+  60   1      #endif    
+  61   1      }
+  62          
+  63          #if(_SCALER_TYPE == _RTD2547D)
+              //--------------------------------------------------
+              // Description  : Adjust Mclk offset
+              // Input Value  : Mclk offset
+              // Output Value : None
+              //--------------------------------------------------
+              void CAdjustMclkOffset(WORD usMclkOffset)
+              {
+                  CScalerPageSelect(_PAGE1);
+                  CScalerSetBit(_P1_MCLK_FINE_TUNE_OFFSET_MSB_CD, 0xf0, HIBYTE(usMclkOffset) & 0x0f);
+                  CScalerSetByte(_P1_MCLK_FINE_TUNE_OFFSET_LSB_CE, LOBYTE(usMclkOffset));
+                  CScalerSetBit(_P1_MCLK_SPREAD_SPECTRUM_CF, ~_BIT2, _BIT2);
+              }
+              
+              //--------------------------------------------------
+              // Description  : Adjust DCLK spread spectrum range
+              // Input Value  : DPLL Spread spectrum range
+              // Output Value : None
+              //--------------------------------------------------
+              void CAdjustDclkSpreadSpectrumRange(BYTE ucSpreadRange)
+              {
+                  CScalerPageSelect(_PAGE1);
+                      if(GET_EMC_EN())
+                              {
+                          CScalerSetBit(_P1_DCLK_SPREAD_SPECTRUM_BE, 0xff, 0xfF);
+                          CScalerSetBit(_P1_DCLK_SPREAD_SPECTRUM_BE, ~_BIT2, _BIT2);
+                              }
+                      else
+                              {
+                          CScalerSetBit(_P1_DCLK_SPREAD_SPECTRUM_BE, 0x0f, (ucSpreadRange << 4) & 0xf0);
+                          CScalerSetBit(_P1_DCLK_SPREAD_SPECTRUM_BE, ~_BIT2, _BIT2);
+                              }
+              }
+              
+              //--------------------------------------------------
+              // Description  : Adjust MCLK spread spectrum range
+              // Input Value  : MPLL Spread spectrum range
+              // Output Value : None
+              //--------------------------------------------------
+              void CAdjustMclkSpreadSpectrumRange(BYTE ucSpreadRange)
+              {
+                  CScalerPageSelect(_PAGE1);
+                  CScalerSetBit(_P1_MCLK_SPREAD_SPECTRUM_CF, 0x0f, (ucSpreadRange << 4) & 0xf0);
+                  CScalerSetBit(_P1_MCLK_SPREAD_SPECTRUM_CF, ~_BIT2, _BIT2);
+              }
+              
+              #else
+ 110          
+ 111          //--------------------------------------------------
+ 112          // Description  : Adjust spread spectrum range
+ 113          // Input Value  : Spread spectrum range
+ 114          // Output Value : None
+ 115          //--------------------------------------------------
+ 116          void CAdjustSpreadSpectrumRange(BYTE ucSpreadRange)
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 3   
+
+ 117          {
+ 118   1              if(GET_EMC_EN())
+ 119   1                      {
+ 120   2                  CScalerSetBit(_SPREAD_SPECTRUM_B7, ~_BIT2, _BIT2);
+ 121   2                  CScalerSetBit(_SPREAD_SPECTRUM_B7, 0xff, 0xff);
+ 122   2                  CScalerSetBit(_SPREAD_SPECTRUM_B7, ~_BIT2, _BIT2);
+ 123   2                  CScalerSetBit(_SPREAD_SPECTRUM_B7, 0xff, 0xff);
+ 124   2                      }
+ 125   1              else
+ 126   1                      {
+ 127   2                  CScalerSetBit(_SPREAD_SPECTRUM_B7, 0x0f, (ucSpreadRange << 4) & 0xf0);
+ 128   2                  CScalerSetBit(_SPREAD_SPECTRUM_B7, ~_BIT2, _BIT2);
+ 129   2                      }
+ 130   1      }
+ 131          #endif // end #if(_SCALER_TYPE == _RTD2547D)
+ 132            
+ 133          
+ 134          //--------------------------------------------------
+ 135          // Description  : Sync processor measure start
+ 136          // Input Value  : None
+ 137          // Output Value : None
+ 138          //--------------------------------------------------
+ 139          void CAdjustSyncProcessorMeasureStart(void)
+ 140          {
+ 141   1          CScalerSetBit(_MEAS_HS_PERIOD_H_52, ~_BIT5, _BIT5);
+ 142   1      }
+ 143          
+ 144          //--------------------------------------------------
+ 145          // Description  : Turn on the error correction function
+ 146          // Input Value  : None
+ 147          // Output Value : None
+ 148          //--------------------------------------------------
+ 149          void CAdjustTMDSErrorCorrectionOn(void)
+ 150          {
+ 151   1      #if(_SCALER_TYPE == _RTD2547D)
+                  CScalerPageSelect(_PAGE2);
+                  CScalerSetBit(_P2_UP_DOWN_CTRL2_B7, ~(_BIT7 | _BIT6 | _BIT5), _BIT7);
+              #else
+ 155   1          CScalerSetBit(_UP_DOWN_CTRL3_D4, 0x3f, 0xc0);
+ 156   1      #endif
+ 157   1      }
+ 158          
+ 159          
+ 160          #if(((_TMDS_SUPPORT == _ON) || (_HDMI_SUPPORT == _ON)) && (_DVI_LONG_CABLE_SUPPORT == _ON))
+              //--------------------------------------------------
+              // Description  : Measure TMDS transition result
+              // Input Value  : ucType    --> _TMDS_MEASURE_AVE, _TMDS_MEASURE_MAX, _TMDS_MEASURE_MIN
+              //                ucSelect  --> _TMDS_MEASURE_HSYNC_BE, _TMDS_MEASURE_HSYNC_AF, _TMDS_MEASURE_DE_BE, _TMDS
+             -_MEASURE_DE_AF
+              // Output Value : Transition result
+              //--------------------------------------------------
+              BYTE CAdjustTMDSMeasure(BYTE ucType, BYTE ucSelect)
+              {
+                  BYTE result;
+              
+              #if(_SCALER_TYPE == _RTD2547D)
+                  CScalerPageSelect(_PAGE2);
+                  CScalerSetBit(_P2_TMDS_MEAS_RESULT0_A2, ~(_BIT6 | _BIT5), (ucType << 5));
+                  CScalerSetBit(_P2_TMDS_MEAS_RESULT0_A2, ~(_BIT7 | _BIT4 | _BIT3), (_BIT7 | (ucSelect << 3)));
+              
+                  if(CTimerPollingEventProc(60, CMiscTMDSMeasureEvent) == _FALSE)
+                  {
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 4   
+
+                      CScalerSetBit(_P2_TMDS_MEAS_RESULT0_A2, ~_BIT7, 0x00);
+                      return 0xff;
+                  }
+              
+                  CScalerRead(_P2_TMDS_MEAS_RESULT1_A3, 1, &result, _NON_AUTOINC);
+              #else
+                  CScalerSetBit(_TMDS_MEAS_RESULT0_BD, ~(_BIT6 | _BIT5), (ucType << 5));
+                  CScalerSetBit(_TMDS_MEAS_RESULT0_BD, ~(_BIT7 | _BIT4 | _BIT3), (_BIT7 | (ucSelect << 3)));
+              
+                  if(CTimerPollingEventProc(60, CMiscTMDSMeasureEvent) == _FALSE)
+                  {
+                      CScalerSetBit(_TMDS_MEAS_RESULT0_BD, ~_BIT7, 0x00);
+                      return 0xff;
+                  }
+              
+                  CScalerRead(_TMDS_MEAS_RESULT1_BE, 1, &result, _NON_AUTOINC);
+              #endif
+              
+                  return (result & 0x7f);
+              }
+              
+              //--------------------------------------------------
+              // Description  : TMDS CRC check process before displaying
+              // Input Value  : None
+              // Output Value : None
+              //--------------------------------------------------
+              void CAdjustTMDSCRCCheck(void)
+              {
+                  BYTE temp0, temp1;
+                  DWORD dsod0, dsod1;
+              
+                  if(GET_FRAMESYNCSTATUS())
+                  {
+                      CTimerDelayXms(20);
+              
+                      temp0 = 0;
+                      temp0 += CAdjustTMDSCRC(&pData[8]);
+                      temp0 += CAdjustTMDSCRC(&pData[12]);
+                      dsod0 = abs(((DWORD *)pData)[2] - ((DWORD *)pData)[3]);
+              
+                      if(temp0 < 2)
+                      {
+              #if(_SCALER_TYPE == _RTD2547D)
+                          CScalerPageSelect(_PAGE2);
+                          CScalerSetBit(_P2_ANALOG_COMMON_CTRL2_AB, ~(_BIT5 | _BIT6), CScalerGetBit(_P2_ANALOG_COMMON_CT
+             -RL2_AB, (_BIT6 | _BIT5)) ^ (_BIT5 | _BIT6));
+              #else
+                          CScalerSetBit(_ANALOG_COMMON_CTRL2_C6, ~(_BIT5 | _BIT6), CScalerGetBit(_ANALOG_COMMON_CTRL2_C6
+             -, (_BIT6 | _BIT5)) ^ (_BIT5 | _BIT6));
+              #endif
+              
+                          temp1 = 0;
+                          temp1 += CAdjustTMDSCRC(&pData[8]);
+                          temp1 += CAdjustTMDSCRC(&pData[12]);
+                          dsod1 = abs(((DWORD *)pData)[2] - ((DWORD *)pData)[3]);
+              
+                          if(temp1 < 2)
+                          {
+                              if(GET_USE_TRANSITION_RESULT())
+                              {
+              #if(_SCALER_TYPE == _RTD2547D)
+                                  CScalerSetBit(_P2_ANALOG_COMMON_CTRL2_AB, ~(_BIT5 | _BIT6), CScalerGetBit(_P2_ANALOG_C
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 5   
+
+             -OMMON_CTRL2_AB, (_BIT6 | _BIT5)) ^ (_BIT5 | _BIT6));
+              #else
+                                  CScalerSetBit(_ANALOG_COMMON_CTRL2_C6, ~(_BIT5 | _BIT6), CScalerGetBit(_ANALOG_COMMON_
+             -CTRL2_C6, (_BIT6 | _BIT5)) ^ (_BIT5 | _BIT6));
+              #endif
+                              }
+                              else
+                              {
+                                  if(dsod0 <= dsod1)
+              #if(_SCALER_TYPE == _RTD2547D)
+                                      CScalerSetBit(_P2_ANALOG_COMMON_CTRL2_AB, ~(_BIT5 | _BIT6), CScalerGetBit(_P2_ANAL
+             -OG_COMMON_CTRL2_AB, (_BIT6 | _BIT5)) ^ (_BIT5 | _BIT6));
+              #else
+                                      CScalerSetBit(_ANALOG_COMMON_CTRL2_C6, ~(_BIT5 | _BIT6), CScalerGetBit(_ANALOG_COM
+             -MON_CTRL2_C6, (_BIT6 | _BIT5)) ^ (_BIT5 | _BIT6));
+              #endif
+                              }
+                          }
+                          else
+                          {
+                              //CModeSetDigitalCapture();
+                          }
+                      }
+                      else
+                      {
+                          //CModeSetDigitalCapture();
+                      }
+                  }
+              }
+              
+              //--------------------------------------------------
+              // Description  : Get TMDS transition difference 
+              // Input Value  : ucPar     --> _MEASURE_HSYNC or _MEASURE_DE
+              // Output Value : Transition difference result
+              //--------------------------------------------------
+              BYTE CAdjustTMDSEqualizerCheck(BYTE ucPar)
+              {
+                  BYTE result0, result1;
+              
+                  if(ucPar == _MEASURE_HSYNC)
+                  {
+                      result0 = CAdjustTMDSMeasure(_TMDS_MEASURE_MAX, _TMDS_MEASURE_HSYNC_BE);
+                      if(result0 == 0xff)     return 0xff;
+                      else if(result0 < 6)    return 0xfe;
+              
+                      result1 = CAdjustTMDSMeasure(_TMDS_MEASURE_MIN, _TMDS_MEASURE_HSYNC_AF);
+                      if(result1 == 0xff)     return 0xff;
+                      else if(result1 < 6)    return 0xfe;
+                  }
+                  else if(ucPar == _MEASURE_DE)
+                  {
+                      result0 = CAdjustTMDSMeasure(_TMDS_MEASURE_MAX, _TMDS_MEASURE_DE_BE);
+                      if(result0 == 0xff)     return 0xff;
+                      else if(result0 < 6)    return 0xfe;
+              
+                      result1 = CAdjustTMDSMeasure(_TMDS_MEASURE_MAX, _TMDS_MEASURE_DE_AF);
+                      if(result1 == 0xff)     return 0xff;
+                      else if(result1 < 6)    return 0xfe;
+                  }
+              
+                  result0 = abs(result0 - result1);
+              
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 6   
+
+                  if(result0 <= 2)
+                      result0 = 0;
+              
+                  return result0;
+              }
+              
+              //--------------------------------------------------
+              // Description  : Adjust TMDS equalizer setting
+              // Input Value  : None
+              // Output Value : return _TRUE if success
+              //--------------------------------------------------
+              bit CAdjustTMDSEqualizer(void)
+              {
+                  BYTE cnt, result0, result1;
+              
+                  CLR_USE_TRANSITION_RESULT();
+              
+              #if(_SCALER_TYPE == _RTD2547D)
+                  CScalerPageSelect(_PAGE2);
+                  CScalerSetByte(_P2_TMDS_MEAS_SELECT_A1, 0x21);
+                  CScalerSetBit(_P2_TMDS_MEAS_RESULT0_A2, ~(_BIT6 | _BIT5), _BIT5);
+              #else
+                  CScalerSetByte(_TMDS_MEAS_SELECT_BC, 0x21);
+                  CScalerSetBit(_TMDS_MEAS_RESULT0_BD, 0x9f, 0x20);
+              #endif
+              
+                  cnt = 1;
+                  do
+                  {
+              #if(_SCALER_TYPE == _RTD2547D)
+                      CScalerSetBit(_P2_TMDS_MEAS_SELECT_A1, 0xf0, (cnt%16));
+              #else
+                      CScalerSetBit(_TMDS_MEAS_SELECT_BC, 0xf0, (cnt%16));
+              #endif
+              
+                      result0 = CAdjustTMDSMeasure(_TMDS_MEASURE_MAX, _TMDS_MEASURE_DE_BE);
+                      if(result0 == 0xff)
+                          return _FALSE;
+              
+                      if(result0 > 80)
+                          break;
+              
+                      cnt++;
+                  }
+                  while(cnt <= 16);
+              
+                  cnt = 0;
+              
+              #if(_SCALER_TYPE == _RTD2547D)
+                  CScalerPageSelect(_PAGE2);
+                  CScalerSetBit(_P2_ANALOG_COMMON_CTRL2_AB, ~(_BIT6 | _BIT5 | _BIT4), 0x00);
+              #else
+                  CScalerSetBit(_ANALOG_COMMON_CTRL2_C6, 0x8f, 0x00);
+              #endif
+                  result0 = CAdjustTMDSEqualizerCheck(_MEASURE_HSYNC);
+                  if(result0 == 0xff)     return _FALSE;
+                  if(result0 == 0xfe)     cnt += 1;
+              
+              #if(_SCALER_TYPE == _RTD2547D)
+                  CScalerPageSelect(_PAGE2);
+                  CScalerSetBit(_P2_ANALOG_COMMON_CTRL2_AB, ~(_BIT6 | _BIT5 | _BIT4), _BIT4);
+              #else
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 7   
+
+                  CScalerSetBit(_ANALOG_COMMON_CTRL2_C6, 0x8f, 0x10);
+              #endif
+                  result1 = CAdjustTMDSEqualizerCheck(_MEASURE_HSYNC);
+                  if(result1 == 0xff)     return _FALSE;
+                  if(result1 == 0xfe)     cnt += 2;
+              
+                  if((abs(result0 - result1) <= 2) || (cnt != 0))
+                  {
+                      cnt = 0;
+              
+              #if(_SCALER_TYPE == _RTD2547D)
+                      CScalerSetBit(_P2_ANALOG_COMMON_CTRL2_AB, ~(_BIT6 | _BIT5 | _BIT4), 0x00);
+              #else
+                      CScalerSetBit(_ANALOG_COMMON_CTRL2_C6, 0x8f, 0x00);
+              #endif
+                      result0 = CAdjustTMDSEqualizerCheck(_MEASURE_DE);
+                      if(result0 == 0xff)     return _FALSE;
+                      if(result0 == 0xfe)     cnt += 1;
+              
+              #if(_SCALER_TYPE == _RTD2547D)
+                      CScalerSetBit(_P2_ANALOG_COMMON_CTRL2_AB, ~(_BIT6 | _BIT5 | _BIT4), _BIT4);
+              #else
+                      CScalerSetBit(_ANALOG_COMMON_CTRL2_C6, 0x8f, 0x10);
+              #endif
+                      result1 = CAdjustTMDSEqualizerCheck(_MEASURE_DE);
+                      if(result1 == 0xff)     return _FALSE;
+                      if(result1 == 0xfe)     cnt += 2;
+                  }
+              
+                  if((result0 <= result1) || (cnt >= 2))
+              #if(_SCALER_TYPE == _RTD2547D)
+                      CScalerSetBit(_P2_ANALOG_COMMON_CTRL2_AB, ~(_BIT6 | _BIT5 | _BIT4), (_BIT6 | _BIT5 | _BIT4));
+              #else
+                      CScalerSetBit(_ANALOG_COMMON_CTRL2_C6, 0x8f, 0x70);
+              #endif
+              
+                  if(abs(result0 - result1) > 2)
+                      SET_USE_TRANSITION_RESULT();
+              
+                  return _TRUE;
+              }
+              #endif  // End of #if(((_TMDS_SUPPORT == _ON) || (_HDMI_SUPPORT == _ON)) && (_DVI_LONG_CABLE_SUPPORT == _O
+             -N))
+ 400          
+ 401          
+ 402          #if((_TMDS_SUPPORT == _ON) || (_HDMI_SUPPORT == _ON))
+              //--------------------------------------------------
+              // Description  : Set digital mode capture
+              // Input Value  : None
+              // Output Value : None
+              //--------------------------------------------------
+              void CAdjustSetDigitalCapture(void)
+              {
+              #if(_SCALER_TYPE == _RTD2547D)
+                  CScalerSetBit(_VGIP_CTRL_10, ~_BIT1, _BIT1);
+                  CScalerSetBit(_IPH_ACT_STA_H_14, 0xf8, 0x00);
+                  CScalerSetByte(_IPH_ACT_STA_L_15, 0x00);
+                  CScalerSetByte(_IPV_ACT_STA_H_18, 0x00);
+                  CScalerSetByte(_IPV_ACT_STA_L_19, 0x00);
+              #else
+                  CScalerSetBit(_VGIP_CTRL_05, ~_BIT1, _BIT1);
+                  CScalerSetBit(_IPH_ACT_STA_H_09, 0xf8, 0x00);
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 8   
+
+                  CScalerSetByte(_IPH_ACT_STA_L_0A, 0x00);
+                  CScalerSetByte(_IPV_ACT_STA_H_0D, 0x00);
+                  CScalerSetByte(_IPV_ACT_STA_L_0E, 0x00);
+              #endif
+              }
+              
+              #if(((_TMDS_SUPPORT == _ON) || (_HDMI_SUPPORT == _ON)) && (_DVI_LONG_CABLE_SUPPORT == _ON))
+              //--------------------------------------------------
+              // Description  : Measure TMDS CRC value
+              // Input Value  : None
+              // Output Value : CRC value, DWORD data type
+              //--------------------------------------------------
+              DWORD CAdjustTMDSCRCMeasure(void)
+              {
+                  BYTE result[4];
+              
+                  result[0] = 0;
+              #if(_SCALER_TYPE == _RTD2547D)
+                  CScalerPageSelect(_PAGE2);
+                  CScalerSetBit(_P2_TMDS_CTRL_A4, ~_BIT0, 0x00);
+                  CScalerSetBit(_P2_TMDS_CTRL_A4, ~_BIT0, _BIT0);
+              #else
+                  CScalerSetBit(_POWER_ON_OFF_CTRL_C2, ~_BIT0, 0x00);
+                  CScalerSetBit(_POWER_ON_OFF_CTRL_C2, ~_BIT0, _BIT0);
+              #endif
+              
+                  if(CTimerPollingEventProc(60, CMiscTMDSCRCEvent) == _FALSE)
+                  {
+              #if(_SCALER_TYPE == _RTD2547D)
+                      CScalerSetBit(_P2_TMDS_CTRL_A4, ~_BIT0, 0x00);
+              #else
+                      CScalerSetBit(_POWER_ON_OFF_CTRL_C2, ~_BIT0, 0x00);
+              #endif
+                      return 0xffffffffl;
+                  }
+              
+                  CTimerDelayXms(20);
+              
+              #if(_SCALER_TYPE == _RTD2547D)
+                  CScalerRead(_P2_CRC_OUTPUT_BYTE_2_A5, 3, &result[1], _NON_AUTOINC);
+              #else
+                  CScalerRead(_CRC_OUTPUT_BYTE_2_C0, 3, &result[1], _NON_AUTOINC);
+              #endif
+              
+                  return ((DWORD *)result)[0];
+              }
+              
+              //--------------------------------------------------
+              // Description  : Do two times CRC check and get phase SOD value
+              // Input Value  : pArray    --> SOD value buffer
+              // Output Value : Return 0 if CRCs are not the same or CRCs == 0
+              //--------------------------------------------------
+              BYTE CAdjustTMDSCRC(BYTE *pArray)
+              {
+                  BYTE temp;
+              
+                  CScalerSetByte(_AUTO_ADJ_CTRL1_7D, 0x3b);
+                  CScalerSetByte(_STATUS0_02, 0x00);
+              
+                  ((DWORD *)pData)[0] = CAdjustTMDSCRCMeasure();
+                  ((DWORD *)pData)[1] = CAdjustTMDSCRCMeasure();
+              
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 9   
+
+                  CScalerRead(_STATUS0_02, 1, &temp, _NON_AUTOINC);
+                  CScalerRead(_AUTO_PHASE_3_84, 4, pArray, _AUTOINC);
+              
+                  if((((DWORD *)pData)[0] != ((DWORD *)pData)[1]) || ((temp & 0x03) != 0) || (((DWORD *)pData)[0] == 0) 
+             -|| (((DWORD *)pData)[1] == 0))
+                      return 0;
+                  else
+                      return 1;
+              }
+              #endif
+              
+              //--------------------------------------------------
+              // Description  : TMDS digital/analog capture check process before displaying
+              // Input Value  : None
+              // Output Value : None
+              //--------------------------------------------------
+              void CAdjustTMDSCaptureCheck(void)
+              {         /*
+                  BYTE temp0;
+                  WORD ihstartpos, ivstartpos;
+              
+                  if(GET_FRAMESYNCSTATUS())
+                  {
+                      CScalerRead(_IPH_ACT_STA_H_09, 2, pData, _AUTOINC);
+                      ihstartpos = (((WORD)(pData[0] & 0x07)) << 8) | pData[1];
+                      CScalerRead(_IPV_ACT_STA_H_0D, 2, pData, _AUTOINC);
+                      ivstartpos = (((WORD)(pData[0] & 0x07)) << 8) | pData[1];
+              
+                      CAdjustTMDSErrorCorrectionOff();
+                      CAdjustSetDigitalCapture();
+                      CTimerDelayXms(20);
+              
+                      temp0 = 0;
+                      temp0 += CAdjustTMDSCRC(&pData[8]);
+                      temp0 += CAdjustTMDSCRC(&pData[12]);
+              
+                      if(temp0 < 2)
+                      {
+                          CAdjustTMDSErrorCorrectionOn();
+                          CScalerSetBit(_VGIP_CTRL_05, ~_BIT1, 0x00);
+                          CScalerSetBit(_IPH_ACT_STA_H_09, 0xf8, (BYTE)(ihstartpos >> 8));
+                          CScalerSetByte(_IPH_ACT_STA_L_0A, (BYTE)ihstartpos);
+                          CScalerSetByte(_IPV_ACT_STA_H_0D, (BYTE)(ivstartpos >> 8));
+                          CScalerSetByte(_IPV_ACT_STA_L_0E, (BYTE)ivstartpos);
+                          CTimerDelayXms(20);
+                      }
+                  }  */
+              
+                  if(GET_FRAMESYNCSTATUS())
+                  {
+                      CAdjustSetDigitalCapture();
+                      CTimerDelayXms(20);
+                  }
+              }
+              #endif  // End of #if((_TMDS_SUPPORT == _ON) || (_HDMI_SUPPORT == _ON))
+ 535          
+ 536          #if(_HDCP_SUPPORT == _ON)
+ 537          //--------------------------------------------------
+ 538          // Description  : Adjust HDCP key
+ 539          // Input Value  : None
+ 540          // Output Value : None
+ 541          //--------------------------------------------------
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 10  
+
+ 542          void CAdjustHDCP(void)
+ 543          {
+ 544   1      #if(_SCALER_TYPE == _RTD2547D)
+                  CScalerPageSelect(_PAGE2);
+                  CScalerSetByte(_P2_HDCP_CTRL_C0, 0x06);
+                  CScalerCodeW(tHDCP_CTRL);
+                  CScalerWrite(_P2_DEVICE_KEY_ACCESS_PORT_C1, 320, tHDCP_KEY_TABLE_0, _NON_AUTOINC);
+                  CScalerSetByte(_P2_HDCP_CTRL_C0, 0x01);
+              #else
+ 551   1          CScalerSetByte(_HDCP_CTRL_D5, 0x06);
+ 552   1          CScalerCodeW(tHDCP_CTRL);
+ 553   1          CScalerWrite(_DEVICE_KEY_ACCESS_PORT_D6, 320, tHDCP_KEY_TABLE_0, _NON_AUTOINC);
+ 554   1          CScalerSetByte(_HDCP_CTRL_D5, 0x01);
+ 555   1      #endif
+ 556   1      }
+ 557          #endif
+ 558          
+ 559          //--------------------------------------------------
+ 560          // Description  : Enable watch dog
+ 561          // Input Value  : ucPar --> Parameter for watch dog
+ 562          // Output Value : None
+ 563          //--------------------------------------------------
+ 564          void CAdjustEnableWatchDog(BYTE ucPar)
+ 565          {
+ 566   1      #if(_SCALER_TYPE == _RTD2547D)
+                  if(GET_FRAMESYNCSTATUS() ||  GET_FRCTATUS())
+                  {
+                      CScalerSetByte(_WATCH_DOG_CTRL0_0C, 0x00);
+                      CMiscClearStatusRegister();
+                      CScalerSetBit(_WATCH_DOG_CTRL0_0C, ~ucPar, 0x06 | ucPar);  //Ming-Yen
+                  }
+              #else
+ 574   1          if(GET_FRAMESYNCSTATUS())
+ 575   1          {
+ 576   2              CScalerSetByte(_WATCHDOG_CTRL1_DA, 0x00);
+ 577   2              CMiscClearStatusRegister();
+ 578   2              CScalerSetBit(_WATCHDOG_CTRL1_DA, ~ucPar, 0x06 | ucPar);
+ 579   2          }
+ 580   1      #endif
+ 581   1      }
+ 582          
+ 583          //--------------------------------------------------
+ 584          // Description  : Disable watch dog
+ 585          // Input Value  : ucPar --> Parameter for watch dog
+ 586          // Output Value : None
+ 587          //--------------------------------------------------
+ 588          void CAdjustDisableWatchDog(BYTE ucPar)
+ 589          {
+ 590   1          BYTE temp;
+ 591   1      
+ 592   1      #if(_SCALER_TYPE == _RTD2547D)
+                  CScalerSetBit(_WATCH_DOG_CTRL0_0C, ~ucPar, 0x00);
+              
+                  temp = CScalerGetBit(_WATCH_DOG_CTRL0_0C, (_BIT5 | _BIT4 | _BIT3));
+              
+                  if(temp == 0x00)
+                      CScalerSetByte(_WATCH_DOG_CTRL0_0C, 0x00);
+              #else
+ 600   1          CScalerSetBit(_WATCHDOG_CTRL1_DA, ~ucPar, 0x00);
+ 601   1      
+ 602   1          temp = CScalerGetBit(_WATCHDOG_CTRL1_DA, (_BIT5 | _BIT4 | _BIT3));
+ 603   1      
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 11  
+
+ 604   1          if(temp == 0x00)
+ 605   1              CScalerSetByte(_WATCHDOG_CTRL1_DA, 0x00);
+ 606   1      #endif
+ 607   1      }
+ 608          
+ 609          #if(_SCALER_TYPE == _RTD2547D && _HDMI_SUPPORT == _ON)
+              //--------------------------------------------------
+              // Description  : Enable HDMI watch dog
+              // Input Value  : None
+              // Output Value : None
+              //--------------------------------------------------
+              void CAdjustEnableHDMIWatchDog(BYTE ucPar)
+              {
+              if((ucPar & _WD_SET_AVMUTE_ENABLE) == 0x01)
+                  CScalerSetDataPortBit(_P2_HDMI_ADDR_PORT_C9, _P2_HDMI_WDCR0_31, ~_BIT7, _BIT7); //Enable Set_AVMute Wa
+             -tch Dog
+              
+              if((ucPar & _WD_AUDIO_FOR_TMDS_CLOCK) == 0x02)
+                  CScalerSetDataPortBit(_P2_HDMI_ADDR_PORT_C9, _P2_HDMI_WDCR1_32, ~_BIT7, _BIT7);//Enable Audio Watch Do
+             -g for TMDS clock
+              
+              if((ucPar & _WD_PACKET_VARIATION) == 0x04)
+                  CScalerSetDataPortBit(_P2_HDMI_ADDR_PORT_C9, _P2_HDMI_VWDSR_41, ~_BIT0, _BIT0);//Enable packet variati
+             -on Watch Dog
+              }
+              
+              //--------------------------------------------------
+              // Description  : Disable HDMI watch dog
+              // Input Value  : None
+              // Output Value : None
+              //--------------------------------------------------
+              void CAdjustDisableHDMIWatchDog(BYTE ucPar)
+              {
+              if((ucPar & _WD_SET_AVMUTE_ENABLE) == 0x01)
+                  CScalerSetDataPortBit(_P2_HDMI_ADDR_PORT_C9, _P2_HDMI_WDCR0_31, ~_BIT7, 0x00); //Disable Set_AVMute Wa
+             -tch Dog
+              
+              if((ucPar & _WD_AUDIO_FOR_TMDS_CLOCK) == 0x02)
+                  CScalerSetDataPortBit(_P2_HDMI_ADDR_PORT_C9, _P2_HDMI_WDCR1_32, ~_BIT7, 0x00);//Disable Audio Watch Do
+             -g for TMDS clock
+              
+              if((ucPar & _WD_PACKET_VARIATION) == 0x04)
+                  CScalerSetDataPortBit(_P2_HDMI_ADDR_PORT_C9, _P2_HDMI_VWDSR_41, ~_BIT0, 0x00);//Disable packet variati
+             -on Watch Dog
+              }
+              #endif  // end #if(_SCALER_TYPE == _RTD2547D)
+ 644          
+ 645          
+ 646          //--------------------------------------------------
+ 647          // Description  : Adjust sRGB function ( Not ready )
+ 648          // Input Value  : None
+ 649          // Output Value : None
+ 650          //--------------------------------------------------
+ 651          void CAdjustSRGB(void)
+ 652          {
+ 653   1      
+ 654   1      }
+ 655          
+ 656          //--------------------------------------------------
+ 657          // Description  : Adjust gamma
+ 658          // Input Value  : Gamma table type and gamma tables
+ 659          // Output Value : None
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 12  
+
+ 660          //--------------------------------------------------
+ 661          void CAdjustGamma(BYTE ucGammaTableType, BYTE *pGammaTableArrayR, BYTE *pGammaTableArrayG, BYTE *pGammaTab
+             -leArrayB)
+ 662          {
+ 663   1          WORD cnt;
+ 664   1          BYTE i, temp;
+ 665   1      
+ 666   1          if((ucGammaTableType == _COMPACT_GAMMA_NORMAL_TABLE) || (ucGammaTableType == _FULL_GAMMA_NORMAL_TABLE)
+             -)
+ 667   1          {
+ 668   2              CScalerSetByte(_GAMMA_CTRL_67, 0x80 | ucGammaTableType);
+ 669   2              CScalerWrite(_GAMMA_PORT_66, ((ucGammaTableType == _COMPACT_GAMMA_NORMAL_TABLE) ? 256 : 384), pGam
+             -maTableArrayR, _NON_AUTOINC);
+ 670   2              CScalerSetByte(_GAMMA_CTRL_67, 0x90 | ucGammaTableType);
+ 671   2              CScalerWrite(_GAMMA_PORT_66, ((ucGammaTableType == _COMPACT_GAMMA_NORMAL_TABLE) ? 256 : 384), pGam
+             -maTableArrayG, _NON_AUTOINC);
+ 672   2              CScalerSetByte(_GAMMA_CTRL_67, 0xa0 | ucGammaTableType);
+ 673   2              CScalerWrite(_GAMMA_PORT_66, ((ucGammaTableType == _COMPACT_GAMMA_NORMAL_TABLE) ? 256 : 384), pGam
+             -maTableArrayB, _NON_AUTOINC);
+ 674   2              CScalerSetByte(_GAMMA_CTRL_67, 0x40);
+ 675   2          }
+ 676   1          else if((ucGammaTableType == _COMPACT_GAMMA_COMPRESS_TABLE) || (ucGammaTableType == _FULL_GAMMA_COMPRE
+             -SS_TABLE))
+ 677   1          {
+ 678   2              for(i=0;i<3;i++)
+ 679   2              {
+ 680   3                  ucVLDCnt    = 0;
+ 681   3                  ucVLDTemp   = 0;
+ 682   3      
+ 683   3                  if(i == 0)
+ 684   3                  {
+ 685   4                      CScalerSetByte(_GAMMA_CTRL_67, 0x80 | (ucGammaTableType % 2));
+ 686   4                      pvldarray   = (pGammaTableArrayR + 16);
+ 687   4                  }
+ 688   3                  else if(i == 1)
+ 689   3                  {
+ 690   4                      CScalerSetByte(_GAMMA_CTRL_67, 0x90 | (ucGammaTableType % 2));
+ 691   4                      pvldarray   = (pGammaTableArrayG + 16);
+ 692   4                  }
+ 693   3                  else
+ 694   3                  {
+ 695   4                      CScalerSetByte(_GAMMA_CTRL_67, 0xa0 | (ucGammaTableType % 2));
+ 696   4                      pvldarray   = (pGammaTableArrayB + 16);
+ 697   4                  }
+ 698   3      
+ 699   3                  for(temp=0;temp<16;temp++)
+ 700   3                      pData[temp] = *(pvldarray + temp - 16);
+ 701   3      
+ 702   3                  for(cnt=0;cnt<((ucGammaTableType == _COMPACT_GAMMA_COMPRESS_TABLE) ? 256 : 384);cnt++)
+ 703   3                  {
+ 704   4                      temp    = CScalerGetVLD() << 4;
+ 705   4                      temp    |= CScalerGetVLD();
+ 706   4                      CScalerSetByte(_GAMMA_PORT_66, temp);
+ 707   4                  }
+ 708   3              }
+ 709   2      
+ 710   2              CScalerSetByte(_GAMMA_CTRL_67, 0x40);
+ 711   2          }
+ 712   1      }
+ 713          
+ 714          //--------------------------------------------------
+ 715          // Description  : Set dithering
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 13  
+
+ 716          // Input Value  : Dithering tables
+ 717          // Output Value : None
+ 718          //--------------------------------------------------
+ 719          void CAdjustDither(BYTE *pDitherSeqTable, BYTE * pDitherTable)
+ 720          {
+ 721   1          CScalerSetBit(_DITHERING_CTRL_6B, ~(_BIT7 | _BIT6), _BIT7);
+ 722   1          CScalerWrite(_DITHERING_SEQUENCE_TABLE_69, 24, pDitherSeqTable, _NON_AUTOINC);
+ 723   1          CScalerSetBit(_DITHERING_CTRL_6B, ~(_BIT7 | _BIT6), _BIT6);
+ 724   1          CScalerWrite(_DITHERING_TABLE_ACCESS_PORT_6A, 24, pDitherTable, _NON_AUTOINC);
+ 725   1      #if(_SCALER_TYPE == _RTD2547D)
+                  CScalerSetByte(_DITHERING_CTRL_6B, 0x28);
+              #else
+ 728   1          CScalerSetByte(_DITHERING_CTRL_6B, 0x38);
+ 729   1      #endif
+ 730   1      }
+ 731          
+ 732          //--------------------------------------------------
+ 733          // Description  : Adjust sharpness
+ 734          // Input Value  : None
+ 735          // Output Value : None
+ 736          //--------------------------------------------------
+ 737          void CAdjustSharpness(void)
+ 738          {
+ 739   1          CAdjustSetSharpnessTable(tSU_COEF_TABLE[stSystemData.Sharpness & 0x0f], tSU_COEF_TABLE[stSystemData.Sh
+             -arpness & 0x0f]);
+ 740   1      }
+ 741          
+ 742          //--------------------------------------------------
+ 743          // Description  : Set Sharpness Table
+ 744          // Input Value  : None
+ 745          // Output Value : None
+ 746          //--------------------------------------------------
+ 747          void CAdjustSetSharpnessTable(BYTE code *pArray0, BYTE code *pArray1)
+ 748          {
+ 749   1      #if(_SCALER_TYPE == _RTD2547D)
+                  CScalerSetByte(_FILTER_CTRL_35, 0xb0);
+                  CScalerWrite(_FILTER_ACCESS_PORT_36, 128, pArray0, _NON_AUTOINC);
+                  CScalerSetByte(_FILTER_CTRL_35, 0xc0);
+                  CScalerWrite(_FILTER_ACCESS_PORT_36, 128, pArray1, _NON_AUTOINC);
+                  CScalerSetByte(_FILTER_CTRL_35, 0x00);
+              #else
+ 756   1          CScalerSetByte(_FILTER_CTRL_1C, 0xb0);
+ 757   1          CScalerWrite(_FILTER_PORT_1D, 128, pArray0, _NON_AUTOINC);
+ 758   1          CScalerSetByte(_FILTER_CTRL_1C, 0xc0);
+ 759   1          CScalerWrite(_FILTER_PORT_1D, 128, pArray1, _NON_AUTOINC);
+ 760   1          CScalerSetByte(_FILTER_CTRL_1C, 0x00);
+ 761   1      #endif
+ 762   1      }
+ 763          
+ 764          //--------------------------------------------------
+ 765          // Description  : Adjust color precessing brightness
+ 766          // Input Value  : None
+ 767          // Output Value : None
+ 768          //--------------------------------------------------
+ 769          void CAdjustBrightness(void)
+ 770          {
+ 771   1          WORD iBright = (WORD)stConBriData.Brightness * 200 / 100+25;
+ 772   1      
+ 773   1          switch(_GET_INPUT_SOURCE())
+ 774   1          {
+ 775   2          case _SOURCE_VGA:
+ 776   2              pData[0] = pData[1] = pData[2] = ((iBright > 2)? (iBright - 2) : iBright);
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 14  
+
+ 777   2              break;
+ 778   2      
+ 779   2          case _SOURCE_DVI:
+ 780   2          case _SOURCE_HDMI:
+ 781   2          case _SOURCE_VIDEO_AV:
+ 782   2          case _SOURCE_VIDEO_SV:
+ 783   2          case _SOURCE_VIDEO_DVD:   
+ 784   2         // case _SOURCE_VIDEO_YUV:
+ 785   2          case _SOURCE_VIDEO_TV: 
+ 786   2          case _SOURCE_YPBPR:    
+ 787   2          case _SOURCE_VIDEO_SCART:
+ 788   2              pData[0] = pData[1] = pData[2] = iBright;
+ 789   2              break;
+ 790   2          }
+ 791   1      
+ 792   1      #if (_SCALER_TYPE == _RTD2553V || _SCALER_TYPE == _RTD2546N || _SCALER_TYPE == _RTD2525L || _SCALER_TYPE =
+             -= _RTD2547D)
+ 793   1          CScalerSetByte(_CB_ACCESS_PORT_64, 0x80);
+ 794   1          CScalerWrite(_CB_DATA_PORT_65, 3, pData, _NON_AUTOINC);
+ 795   1          CScalerSetByte(_CB_ACCESS_PORT_64, 0x00);
+ 796   1      #else
+                  CScalerWrite(_BRI_RED_COE_60, 3, pData, _AUTOINC);
+              #endif
+ 799   1      }
+ 800          
+ 801          //--------------------------------------------------
+ 802          // Description  : Adjust color processing contrast
+ 803          // Input Value  : None
+ 804          // Output Value : None
+ 805          //--------------------------------------------------
+ 806          void CAdjustContrast(void)
+ 807          {
+ 808   1          BYTE cnt;
+ 809   1          WORD iContrast = (WORD)stConBriData.Contrast +83;
+ 810   1      
+ 811   1          for(cnt=0;cnt<3;cnt++)
+ 812   1              pData[cnt] = (((WORD)stColorTempData.ColorTemp[cnt] * iContrast / 128) > 255) ? 255 : (BYTE)((WORD
+             -)stColorTempData.ColorTemp[cnt] * iContrast / 128);
+ 813   1      
+ 814   1      #if (_SCALER_TYPE == _RTD2553V || _SCALER_TYPE == _RTD2546N || _SCALER_TYPE == _RTD2525L || _SCALER_TYPE =
+             -= _RTD2547D)
+ 815   1          CScalerSetByte(_CB_ACCESS_PORT_64, 0x83);
+ 816   1          CScalerWrite(_CB_DATA_PORT_65, 3, pData, _NON_AUTOINC);
+ 817   1          CScalerSetByte(_CB_ACCESS_PORT_64, 0x00);
+ 818   1      #else
+                  CScalerWrite(_CTS_RED_COE_63, 3, pData, _AUTOINC);
+              #endif
+ 821   1      }
+ 822          
+ 823          //--------------------------------------------------
+ 824          // Description  : Adjust backlight
+ 825          // Input Value  : None
+ 826          // Output Value : None
+ 827          //--------------------------------------------------
+ 828          void CAdjustBacklight(void)
+ 829          {
+ 830   1          BYTE ucLight = (WORD)(_BACKLIGHT_MAX - _BACKLIGHT_MIN) * stSystemData.BackLight/100;
+ 831   1      
+ 832   1      #if(_BACKLIGHT_PWM_INVERSE == _ENABLE)
+ 833   1      
+ 834   1          ucLight = _BACKLIGHT_MAX - ucLight;
+ 835   1      
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 15  
+
+ 836   1      #else
+              
+                  ucLight = _BACKLIGHT_MIN + ucLight;
+              
+              #endif
+ 841   1      
+ 842   1          CSetPWM(_BACKLIGHT_PWM, ucLight);
+ 843   1      }
+ 844          
+ 845          //--------------------------------------------------
+ 846          // Description  : Adjust ADC gain
+ 847          // Input Value  : None
+ 848          // Output Value : None
+ 849          //--------------------------------------------------
+ 850          void CAdjustAdcGain(void)
+ 851          {
+ 852   1      #if (_SCALER_TYPE == _RTD2553V || _SCALER_TYPE == _RTD2546N || _SCALER_TYPE == _RTD2525L || _SCALER_TYPE =
+             -= _RTD2547D)
+ 853   1      
+ 854   1      #if(_ADC_INPUT_SWAP_RG == _ON)
+              
+                  pData[1] = stAdcData.AdcGain[_RED];
+                  pData[0] = stAdcData.AdcGain[_GREEN];
+                  pData[2] = stAdcData.AdcGain[_BLUE];
+              
+              #elif(_ADC_INPUT_SWAP_RB == _ON)
+              
+                  pData[2] = stAdcData.AdcGain[_RED];
+                  pData[1] = stAdcData.AdcGain[_GREEN];
+                  pData[0] = stAdcData.AdcGain[_BLUE];
+              
+              #elif(_ADC_INPUT_SWAP_GB == _ON)
+              
+                  pData[0] = stAdcData.AdcGain[_RED];
+                  pData[2] = stAdcData.AdcGain[_GREEN];
+                  pData[1] = stAdcData.AdcGain[_BLUE];
+              
+              #else
+ 873   1      
+ 874   1          pData[0] = stAdcData.AdcGain[_RED];
+ 875   1          pData[1] = stAdcData.AdcGain[_GREEN];
+ 876   1          pData[2] = stAdcData.AdcGain[_BLUE];
+ 877   1      
+ 878   1      #endif
+ 879   1      
+ 880   1        #if(_SCALER_TYPE == _RTD2547D)
+                  CScalerPageSelect(_PAGE0);
+                  CScalerWrite(_P0_RED_GAIN_A5, 3, pData, _AUTOINC);
+                #else
+ 884   1          CScalerSetByte(_ADC_ACCESS_PORT_DC, 0x80);
+ 885   1          CScalerSetByte(_ADC_ACCESS_PORT_DC, 0x84);
+ 886   1          CScalerWrite(_ADC_DATA_PORT_DD, 3, pData, _NON_AUTOINC);
+ 887   1          CScalerSetByte(_ADC_ACCESS_PORT_DC, 0x00);
+ 888   1        #endif // end #if(_SCALER_TYPE == _RTD2547D)
+ 889   1      #else
+              
+              #if(_ADC_INPUT_SWAP_RG == _ON)
+              
+                  CScalerSetByte(_GRN_GAIN_E1, stAdcData.AdcGain[_RED]);
+                  CScalerSetByte(_RED_GAIN_E0, stAdcData.AdcGain[_GREEN]);
+                  CScalerSetByte(_BLU_GAIN_E2, stAdcData.AdcGain[_BLUE]);
+              
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 16  
+
+              #elif(_ADC_INPUT_SWAP_RB == _ON)
+              
+                  CScalerSetByte(_BLU_GAIN_E2, stAdcData.AdcGain[_RED]);
+                  CScalerSetByte(_GRN_GAIN_E1, stAdcData.AdcGain[_GREEN]);
+                  CScalerSetByte(_RED_GAIN_E0, stAdcData.AdcGain[_BLUE]);
+              
+              #elif(_ADC_INPUT_SWAP_GB == _ON)
+              
+                  CScalerSetByte(_RED_GAIN_E0, stAdcData.AdcGain[_RED]);
+                  CScalerSetByte(_BLU_GAIN_E2, stAdcData.AdcGain[_GREEN]);
+                  CScalerSetByte(_GRN_GAIN_E1, stAdcData.AdcGain[_BLUE]);
+              
+              #else
+              
+                  CScalerSetByte(_RED_GAIN_E0, stAdcData.AdcGain[_RED]);
+                  CScalerSetByte(_GRN_GAIN_E1, stAdcData.AdcGain[_GREEN]);
+                  CScalerSetByte(_BLU_GAIN_E2, stAdcData.AdcGain[_BLUE]);
+              
+              #endif
+              
+              #endif
+ 918   1      }
+ 919          
+ 920          //--------------------------------------------------
+ 921          // Description  : Adjust ADC offset
+ 922          // Input Value  : None
+ 923          // Output Value : None
+ 924          //--------------------------------------------------
+ 925          void CAdjustAdcOffset(void)
+ 926          {
+ 927   1      #if (_SCALER_TYPE == _RTD2553V || _SCALER_TYPE == _RTD2546N || _SCALER_TYPE == _RTD2525L || _SCALER_TYPE =
+             -= _RTD2547D)
+ 928   1      
+ 929   1      #if(_ADC_INPUT_SWAP_RG == _ON)
+              
+                  pData[4] = stAdcData.AdcOffset[_RED];
+                  pData[3] = stAdcData.AdcOffset[_GREEN];
+                  pData[5] = stAdcData.AdcOffset[_BLUE];
+              
+              #elif(_ADC_INPUT_SWAP_RB == _ON)
+              
+                  pData[5] = stAdcData.AdcOffset[_RED];
+                  pData[4] = stAdcData.AdcOffset[_GREEN];
+                  pData[3] = stAdcData.AdcOffset[_BLUE];
+              
+              #elif(_ADC_INPUT_SWAP_GB == _ON)
+              
+                  pData[3] = stAdcData.AdcOffset[_RED];
+                  pData[5] = stAdcData.AdcOffset[_GREEN];
+                  pData[4] = stAdcData.AdcOffset[_BLUE];
+              
+              #else
+ 948   1      
+ 949   1          pData[3] = stAdcData.AdcOffset[_RED];
+ 950   1          pData[4] = stAdcData.AdcOffset[_GREEN];
+ 951   1          pData[5] = stAdcData.AdcOffset[_BLUE];
+ 952   1      
+ 953   1      #endif
+ 954   1      
+ 955   1        #if(_SCALER_TYPE == _RTD2547D)
+                  CScalerPageSelect(_PAGE0);
+                  CScalerWrite(_P0_RED_OFFSET_A8, 3, &pData[3], _AUTOINC);
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 17  
+
+                #else
+ 959   1          CScalerSetByte(_ADC_ACCESS_PORT_DC, 0x80);
+ 960   1          CScalerSetByte(_ADC_ACCESS_PORT_DC, 0x87);
+ 961   1          CScalerWrite(_ADC_DATA_PORT_DD, 3, &pData[3], _NON_AUTOINC);
+ 962   1          CScalerSetByte(_ADC_ACCESS_PORT_DC, 0x00);
+ 963   1        #endif // end #if(_SCALER_TYPE == _RTD2547D)
+ 964   1      
+ 965   1      #else
+              
+              #if(_ADC_INPUT_SWAP_RG == _ON)
+              
+                  CScalerSetByte(_GRN_OFFSET_E4, stAdcData.AdcOffset[_RED]);
+                  CScalerSetByte(_RED_OFFSET_E3, stAdcData.AdcOffset[_GREEN]);
+                  CScalerSetByte(_BLU_OFFSET_E5, stAdcData.AdcOffset[_BLUE]);
+              
+              #elif(_ADC_INPUT_SWAP_RB == _ON)
+              
+                  CScalerSetByte(_BLU_OFFSET_E5, stAdcData.AdcOffset[_RED]);
+                  CScalerSetByte(_GRN_OFFSET_E4, stAdcData.AdcOffset[_GREEN]);
+                  CScalerSetByte(_RED_OFFSET_E3, stAdcData.AdcOffset[_BLUE]);
+              
+              #elif(_ADC_INPUT_SWAP_GB == _ON)
+              
+                  CScalerSetByte(_RED_OFFSET_E3, stAdcData.AdcOffset[_RED]);
+                  CScalerSetByte(_BLU_OFFSET_E5, stAdcData.AdcOffset[_GREEN]);
+                  CScalerSetByte(_GRN_OFFSET_E4, stAdcData.AdcOffset[_BLUE]);
+              
+              #else
+              
+                  CScalerSetByte(_RED_OFFSET_E3, stAdcData.AdcOffset[_RED]);
+                  CScalerSetByte(_GRN_OFFSET_E4, stAdcData.AdcOffset[_GREEN]);
+                  CScalerSetByte(_BLU_OFFSET_E5, stAdcData.AdcOffset[_BLUE]);
+              
+              #endif
+              
+              #endif
+ 994   1      }
+ 995          
+ 996          //--------------------------------------------------
+ 997          // Description  : Adjust ADC gain and offset
+ 998          // Input Value  : None
+ 999          // Output Value : None
+1000          //--------------------------------------------------
+1001          void CAdjustAdcGainOffset(void)
+1002          {
+1003   1          CAdjustAdcGain();
+1004   1          CAdjustAdcOffset();
+1005   1      }
+1006          
+1007          //--------------------------------------------------
+1008          // Description  : Adjust background color
+1009          // Input Value  : Red, green and blue color settings
+1010          // Output Value : None
+1011          //--------------------------------------------------
+1012          void CAdjustBackgroundColor(BYTE ucRed, BYTE ucGreen, BYTE ucBlue)
+1013          {
+1014   1          CScalerSetBit(_OVERLAY_CTRL_6C, ~_BIT5, 0x00);
+1015   1          CScalerSetBit(_OVERLAY_CTRL_6C, ~_BIT5, _BIT5);
+1016   1      
+1017   1          CScalerSetByte(_BGND_COLOR_CTRL_6D, ucRed);
+1018   1          CScalerSetByte(_BGND_COLOR_CTRL_6D, ucGreen);
+1019   1          CScalerSetByte(_BGND_COLOR_CTRL_6D, ucBlue);
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 18  
+
+1020   1      
+1021   1          CScalerSetBit(_OVERLAY_CTRL_6C, ~_BIT5, 0x00);
+1022   1      }
+1023          
+1024          //--------------------------------------------------
+1025          // Description  : Apply color palette setting
+1026          // Input Value  : Color palette table
+1027          // Output Value : None
+1028          //--------------------------------------------------
+1029          void CAdjustColorPalette(BYTE *pColorPaletteArray)
+1030          {
+1031   1          CScalerSetByte(_OVERLAY_LUT_ADDR_6E, 0x80);
+1032   1      
+1033   1          CScalerWrite(_COLOR_LUT_PORT_6F, 48, pColorPaletteArray, _NON_AUTOINC);
+1034   1      
+1035   1          CScalerSetByte(_OVERLAY_LUT_ADDR_6E, 0x00);
+1036   1      }
+1037          
+1038          //--------------------------------------------------
+1039          // Description  : Calculate the suitable IVS to DVS delay
+1040          //                CR[38] : IVS to DVS delay in IHS lines
+1041          //                CR[1E] : IVS to DVS delay in ICLK * 16
+1042          // Input Value  : Scaling setting
+1043          // Output Value : IV to DV delay lines
+1044          //--------------------------------------------------
+1045          BYTE CAdjustIVS2DVSDelay(BYTE ucOption)
+1046          {
+1047   1                      // andy modify for panel
+1048   1                  ((DWORD *)pData)[0] = ((DWORD)stDisplayInfo.DHTotal * Panel.DVStartPos) + CCalcPanelDHSta();
+1049   1                  //((DWORD *)pData)[0] = ((DWORD)stDisplayInfo.DHTotal * stDisplayInfo.DVStartPos) + Panel.DHStartPos;
+1050   1                  ((DWORD *)pData)[0] = ((DWORD *)pData)[0] * stModeInfo.IVHeight / stDisplayInfo.DVHeight * stModeInfo
+             -.IHTotal / stDisplayInfo.DHTotal;
+1051   1                  ((DWORD *)pData)[1] = ((DWORD)stModeInfo.IHTotal * (stModeInfo.IVStartPos - (ucVStartBias + _PROGRAM_
+             -VDELAY))) + stModeInfo.IHStartPos - (ucHStartBias + _PROGRAM_HDELAY);
+1052   1      
+1053   1          if(ucOption & _BIT0)
+1054   1          {
+1055   2              // V scale-up. Target 2.50 IHS delay
+1056   2              // Reg[40] = 0 ==> Delay 1 line
+1057   2              ((DWORD *)pData)[1] += (stModeInfo.IHTotal * 1) + 640;
+1058   2      
+1059   2          }
+1060   1          else
+1061   1          {
+1062   2              if (ucOption & _BIT1)
+1063   2              {
+1064   3                  // V scale-down. Target 1.75 IHS delay
+1065   3                  ((DWORD *)pData)[1]  += stModeInfo.IHTotal + ((DWORD)640 * stModeInfo.IVHeight / stDisplayInfo
+             -.DVHeight);
+1066   3              }
+1067   2              else
+1068   2              {
+1069   3                  // V no scaling. Target 1.50 IHS delay
+1070   3                  ((DWORD *)pData)[1]  += stModeInfo.IHTotal + 640;
+1071   3              }
+1072   2      
+1073   2      #if (_SCALER_TYPE == _RTD2553V || _SCALER_TYPE == _RTD2546N || _SCALER_TYPE == _RTD2525L)
+1074   2              if(stModeInfo.IHWidth <= 1680) 
+1075   2              {
+1076   3                  // Turn on full-line buffer
+1077   3                  ((DWORD *)pData)[1]  += stModeInfo.IHTotal;
+1078   3                  CScalerSetBit(_SCALE_CTRL_19, ~_BIT4, _BIT4);
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 19  
+
+1079   3              }
+1080   2              else
+1081   2              {
+1082   3                  ((DWORD *)pData)[1]  += 640;
+1083   3              }
+1084   2      #else
+                      // Turn on full-line buffer
+                      ((DWORD *)pData)[1]  += stModeInfo.IHTotal;
+                #if(_SCALER_TYPE == _RTD2547D)
+                      CScalerSetBit(_SCALE_CTRL_32, ~_BIT4, _BIT4);
+                #else
+                      CScalerSetBit(_SCALE_CTRL_19, ~_BIT4, _BIT4);
+                #endif
+              #endif
+1093   2          }
+1094   1      
+1095   1          if (((DWORD *)pData)[0] > ((DWORD *)pData)[1])
+1096   1          {
+1097   2              // You should never get into this code ....
+1098   2          }
+1099   1      
+1100   1          ((DWORD *)pData)[0]  = ((DWORD *)pData)[1] - ((DWORD *)pData)[0];
+1101   1      
+1102   1          pData[14] = ((DWORD *)pData)[0] / stModeInfo.IHTotal;
+1103   1          pData[15] = (((DWORD *)pData)[0] - ((DWORD)stModeInfo.IHTotal * pData[14])) / 16;
+1104   1      
+1105   1          CScalerSetBit(_FS_DELAY_FINE_TUNING_43, ~_BIT1, 0x00);
+1106   1          CScalerSetByte(_IVS2DVS_DELAY_LINES_40, pData[14]);
+1107   1          CScalerSetByte(_IV_DV_DELAY_CLK_ODD_41, pData[15]);
+1108   1      
+1109   1          return pData[14];
+1110   1      }
+1111          
+1112          #if(_SCALER_TYPE == _RTD2547D)
+              //--------------------------------------------------
+              // Description  : Set display clock (Dclk) frequency in kHz
+              // Input Value  : ulFreq    --> Target Dclk frequency
+              // Output Value : None
+              //--------------------------------------------------
+              void CAdjustPLL(bit ucSelection, DWORD ulFreq)
+              {
+                  WORD mcode;
+                  BYTE div;
+              
+                  // We want to set DPLL offset to middle(2048), so the target DPLL M/N setting should be 16/15 of targe
+             -t frequency.
+                  mcode   = ulFreq * 8 * (ucSelection ? _MPLL_N_CODE : _DPLL_N_CODE) * 16 / ((DWORD)_RTD_XTAL * 15);
+              
+                  if(mcode > 255)
+                  {
+                      div     = 1;                            // Output DPLL for DCLK
+                      mcode   = (mcode + 2) >> 2;             // Round to integer
+                  }
+                  else
+                  {
+                      div     = 2;                            // Output DPLL/2 for DCLK
+                      mcode   = (mcode + 1) >> 1;             // Round to integer
+                  }
+              
+                  // Original Formula : M_Code/Ich = 36.67 must be constant
+                  // Ich   = M_Code * 100 / 3667
+                  // Ich   = 1u + D0[0]*1u + D0[1]*2u + D0[2]*4u + D0[3]*8u (A)
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 20  
+
+              
+                  // Calculate the Ich,
+                  pData[5]    = ((WORD)mcode * 100 / 3667) - 1;
+                  pData[6]    = 0x00;
+              
+                  if(pData[5] >= 8)
+                  {
+                      pData[5]    -= 8;
+                      pData[6]    |= 0x08; //V307 modify
+                  }
+              
+                  if(pData[5] >= 4)
+                  {
+                      pData[5]    -= 4;
+                      pData[6]    |= 0x04;
+                  }
+              
+                  if(pData[5] >= 2)
+                  {
+                      pData[5]    -= 2;
+                      pData[6]    |= 0x02;
+                  }
+              
+                  if(pData[5] >= 1)
+                  {
+                      pData[5]    -= 1;
+                      pData[6]    |= 0x01;
+                  }
+                  
+                  pData[0]    = mcode - 2;
+              #if(_M2PLL_USE == _ON)
+                  pData[1]    = ((1 == div) ? 0x00 : 0x10) | (((ucSelection ? _MPLL_N_CODE : _DPLL_N_CODE) / _RTD_M2PLL_
+             -RATIO) - 2);
+              #else
+                  pData[1]    = ((1 == div) ? 0x00 : 0x10) | ((ucSelection ? _MPLL_N_CODE : _DPLL_N_CODE) - 2);
+              #endif
+                  pData[2]    = 0x80 | pData[6];
+                  pData[3]    = 0x17;
+              
+                  CScalerPageSelect(_PAGE1);
+                  CScalerWrite((ucSelection ? _P1_MPLL_M_C8 : _P1_DPLL_M_B7), 4, pData, _AUTOINC);
+              
+                  //V306 modify
+                  CScalerSetBit((ucSelection ? _P1_MPLL_MISC_CC : _P1_DPLL_OTHER_BB), ~_BIT1, _BIT1);
+                  if((bit)CScalerGetBit((ucSelection ? _P1_MPLL_N_C9 : _P1_DPLL_N_B8), _BIT7))
+                  {
+                      CScalerSetBit((ucSelection ? _P1_MPLL_N_C9 : _P1_DPLL_N_B8), ~_BIT6, _BIT6);
+                      CTimerDelayXms(2);
+                      CScalerSetBit((ucSelection ? _P1_MPLL_N_C9 : _P1_DPLL_N_B8), ~_BIT6, 0x00);
+                  } //V306 modify
+              
+                  // Dclk frequency in Hz
+                  ((DWORD *)pData)[0] = (DWORD)_RTD_XTAL * 1000 / (div * 2) * mcode / (ucSelection ? _MPLL_N_CODE : _DPL
+             -L_N_CODE);
+              
+                  // Offset resolution (Dclk / 2^15) in Hz
+                  ((DWORD *)pData)[1] = ((DWORD *)pData)[0] >> 15;
+              
+                  // Target frequency of Dclk in Hz
+                  mcode       = (((DWORD *)pData)[0] - (ulFreq * 1000)) / ((DWORD *)pData)[1];
+                  mcode       = mcode & 0x0fff;
+              
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 21  
+
+                  if(ucSelection == _DPLL)
+                      //Enable DDS spread spectrum output function
+                      CScalerSetBit(_P1_FIXED_LAST_LINE_CTRL_C2, ~_BIT0, _BIT0);
+              
+                  if(ucSelection == _DPLL)
+                      CAdjustDclkOffset(mcode);
+                  else
+                      CAdjustMclkOffset(mcode);
+              }
+              
+              #elif(_SCALER_TYPE == _RTD2533B)
+              
+              //--------------------------------------------------
+              // Description  : Set display clock (Dclk) frequency in kHz
+              // Input Value  : ulFreq    --> Target Dclk frequency
+              // Output Value : None
+              //--------------------------------------------------
+              void CAdjustDPLL(DWORD ulFreq)
+              {
+                  WORD mcode;
+                  BYTE div;
+              
+                  // We want to set DPLL offset to middle(2048), so the target DPLL M/N setting should be 16/15 of targe
+             -t frequency.
+                  mcode   = ulFreq * 8 * _DPLL_N_CODE * 16 / ((DWORD)_RTD_XTAL * 15);
+              
+                  if(mcode > 255)
+                  {
+                      div     = 1;                            // Output DPLL for DCLK
+                      mcode   = (mcode + 2) >> 2;             // Round to integer
+                  }
+                  else
+                  {
+                      div     = 2;                            // Output DPLL/2 for DCLK
+                      mcode   = (mcode + 1) >> 1;             // Round to integer
+                  }
+              
+                  // Original Formula : M_Code/Ich = 17.6 must be constant
+                  // Ich   = M_Code * 10 / 176
+                  // 2*Ich = M_Code * 20 / 176 , set D0[5] to 0, then I = 2 * Ich
+                  // I     = 2 * Ich = 2.5u + D0[0]*2.5u + D0[1]*5u + D0[2]*10u + D0[3]*20u + D0[4]*30u (A)
+                  // 2*I   = 4 * Ich = 5u + D0[0]*5u + D0[1]*10u + D0[2]*20u + D0[3]*40u + D0[4]*60u (A)
+              
+                  // Calculate the 4 * Ich,
+                  pData[5]    = ((WORD)mcode * 4 * 10 / 176) - 5;
+                  pData[6]    = 0x00;
+                  
+                  if(pData[5] >= 60)
+                  {
+                      pData[5]    -= 60;
+                      pData[6]    |= 0x10;
+                  }
+              
+                  if(pData[5] >= 40)
+                  {
+                      pData[5]    -= 40;
+                      pData[6]    |= 0x08;
+                  }
+              
+                  if(pData[5] >= 20)
+                  {
+                      pData[5]    -= 20;
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 22  
+
+                      pData[6]    |= 0x04;
+                  }
+              
+                  if(pData[5] >= 10)
+                  {
+                      pData[5]    -= 10;
+                      pData[6]    |= 0x02;
+                  }
+              
+                  if(pData[5] >= 5)
+                  {
+                      pData[5]    -= 5;
+                      pData[6]    |= 0x01;
+                  }
+              
+                  pData[0]    = mcode - 2;
+              #if(_M2PLL_USE == _ON)
+                  pData[1]    = ((1 == div) ? 0x00 : 0x10) | ((_DPLL_N_CODE / _RTD_M2PLL_RATIO) - 2);
+              #else
+                  pData[1]    = ((1 == div) ? 0x00 : 0x10) | (_DPLL_N_CODE - 2);
+              #endif
+                  pData[2]    = 0x40 | pData[6];
+                  pData[3]    = 0x0f;
+                  CScalerWrite(_DPLL_M_AE, 4, pData, _AUTOINC);
+              
+                  // Dclk frequency in Hz
+                  ((DWORD *)pData)[0] = (DWORD)_RTD_XTAL * 1000 / (div * 2) * mcode / _DPLL_N_CODE;
+              
+                  // Offset resolution (Dclk / 2^15) in Hz
+                  ((DWORD *)pData)[1] = ((DWORD *)pData)[0] >> 15;
+              
+                  // Target frequency of Dclk in Hz
+                  mcode       = (((DWORD *)pData)[0] - (ulFreq * 1000)) / ((DWORD *)pData)[1];
+                  mcode       = mcode & 0x0fff;
+              
+                  //Enable DDS spread spectrum output function
+                  CScalerSetBit(_FIXED_LAST_LINE_CTRL_BB, ~_BIT0, _BIT0);
+              
+                  CAdjustDclkOffset(mcode);
+              }
+              
+              #elif((_SCALER_TYPE == _RTD2023L) || (_SCALER_TYPE == _RTD2023S) || (_SCALER_TYPE == _RTD2023L_VB) || (_SC
+             -ALER_TYPE == _RTD2023S_VB))
+              
+              //--------------------------------------------------
+              // Description  : Set display clock (Dclk) frequency in kHz
+              // Input Value  : ulFreq    --> Target Dclk frequency
+              // Output Value : None
+              //--------------------------------------------------
+              void CAdjustDPLL(DWORD ulFreq)
+              {
+                  WORD mcode;
+                  BYTE div;
+              
+                  // We want to set DPLL offset to middle(2048), so the target DPLL M/N setting should be 16/15 of targe
+             -t frequency.
+                  mcode   = ulFreq * 8 * _DPLL_N_CODE * 16 / ((DWORD)_RTD_XTAL * 15);
+              
+                  if(mcode > 255)
+                  {
+                      div     = 1;                            // Output DPLL for DCLK
+                      mcode   = (mcode + 2) >> 2;             // Round to integer
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 23  
+
+                  }
+                  else
+                  {
+                      div     = 2;                            // Output DPLL/2 for DCLK
+                      mcode   = (mcode + 1) >> 1;             // Round to integer
+                  }
+              
+                  // Original Formula : M_Code/Ich = 17.6 must be constant
+                  // Ich   = M_Code * 10 / 176
+                  // Ich   = 1u + D0[0]*1u + D0[1]*2u + D0[2]*4u + D0[3]*8u (A)
+              
+                  // Calculate the 4 * Ich,
+                  pData[5]    = ((WORD)mcode * 10 / 344) - 1; //V305 modify
+                  pData[6]    = 0x00;
+                  
+                  if(pData[5] >= 8)
+                  {
+                      pData[5]    -= 8;
+                      pData[6]    |= 0x08; //V307 modify
+                  }
+              
+                  if(pData[5] >= 4)
+                  {
+                      pData[5]    -= 4;
+                      pData[6]    |= 0x04;
+                  }
+              
+                  if(pData[5] >= 2)
+                  {
+                      pData[5]    -= 2;
+                      pData[6]    |= 0x02;
+                  }
+              
+                  if(pData[5] >= 1)
+                  {
+                      pData[5]    -= 1;
+                      pData[6]    |= 0x01;
+                  }
+              
+                  pData[0]    = mcode - 2;
+              #if(_M2PLL_USE == _ON)
+                  pData[1]    = ((1 == div) ? 0x00 : 0x10) | ((_DPLL_N_CODE / _RTD_M2PLL_RATIO) - 2);
+              #else
+                  pData[1]    = ((1 == div) ? 0x00 : 0x10) | (_DPLL_N_CODE - 2);
+              #endif
+                  pData[2]    = 0x80 | pData[6];  //V306 modify
+                  pData[3]    = 0x17; //V306 modify
+                  CScalerWrite(_DPLL_M_AE, 4, pData, _AUTOINC);
+              
+                  //V306 modify
+                  CScalerSetBit(_PLL_OTHER_B4, ~_BIT1, _BIT1);
+                  if((bit)CScalerGetBit(_DPLL_WD_B1, _BIT7))
+                  {
+                      CScalerSetBit(_DPLL_WD_B1, ~_BIT6, _BIT6);
+                      CTimerDelayXms(2);
+                      CScalerSetBit(_DPLL_WD_B1, ~_BIT6, 0);
+                  } //V306 modify
+              
+                  // Dclk frequency in Hz
+                  ((DWORD *)pData)[0] = (DWORD)_RTD_XTAL * 1000 / (div * 2) * mcode / _DPLL_N_CODE;
+              
+                  // Offset resolution (Dclk / 2^15) in Hz
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 24  
+
+                  ((DWORD *)pData)[1] = ((DWORD *)pData)[0] >> 15;
+              
+                  // Target frequency of Dclk in Hz
+                  mcode       = (((DWORD *)pData)[0] - (ulFreq * 1000)) / ((DWORD *)pData)[1];
+                  mcode       = mcode & 0x0fff;
+              
+                  //Enable DDS spread spectrum output function
+                  CScalerSetBit(_FIXED_LAST_LINE_CTRL_BB, ~_BIT0, _BIT0);
+              
+                  CAdjustDclkOffset(mcode);
+              }
+              
+              #elif (_SCALER_TYPE == _RTD2553V || _SCALER_TYPE == _RTD2546N || _SCALER_TYPE == _RTD2525L)
+1396          
+1397          //--------------------------------------------------
+1398          // Description  : Set display clock (Dclk) frequency in kHz
+1399          // Input Value  : ulFreq    --> Target Dclk frequency
+1400          // Output Value : None
+1401          //--------------------------------------------------
+1402          void CAdjustDPLL(DWORD ulFreq)
+1403          {
+1404   1          WORD mcode;
+1405   1          BYTE div;
+1406   1      
+1407   1          // We want to set DPLL offset to middle(2048), so the target DPLL M/N setting should be 16/15 of targe
+             -t frequency.
+1408   1          mcode   = ulFreq * 8 * _DPLL_N_CODE * 16 / ((DWORD)_RTD_XTAL * 15);
+1409   1      
+1410   1          if(mcode > 255)
+1411   1          {
+1412   2              div     = 1;                            // Output DPLL for DCLK
+1413   2              mcode   = (mcode + 2) >> 2;             // Round to integer
+1414   2          }
+1415   1          else
+1416   1          {
+1417   2              div     = 2;                            // Output DPLL/2 for DCLK
+1418   2              mcode   = (mcode + 1) >> 1;             // Round to integer
+1419   2          }
+1420   1      
+1421   1          // Original Formula : M_Code/Ich = 36.67 must be constant
+1422   1          // Ich   = M_Code * 100 / 3667
+1423   1          // Ich   = 1u + D0[0]*1u + D0[1]*2u + D0[2]*4u + D0[3]*8u (A)
+1424   1      
+1425   1          // Calculate the Ich,
+1426   1          pData[5]    = ((WORD)mcode * 100 / 3667) - 1;
+1427   1          pData[6]    = 0x00;
+1428   1      
+1429   1          if(pData[5] >= 8)
+1430   1          {
+1431   2              pData[5]    -= 8;
+1432   2              pData[6]    |= 0x80;
+1433   2          }
+1434   1      
+1435   1          if(pData[5] >= 4)
+1436   1          {
+1437   2              pData[5]    -= 4;
+1438   2              pData[6]    |= 0x04;
+1439   2          }
+1440   1      
+1441   1          if(pData[5] >= 2)
+1442   1          {
+1443   2              pData[5]    -= 2;
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 25  
+
+1444   2              pData[6]    |= 0x02;
+1445   2          }
+1446   1      
+1447   1          if(pData[5] >= 1)
+1448   1          {
+1449   2              pData[5]    -= 1;
+1450   2              pData[6]    |= 0x01;
+1451   2          }
+1452   1          
+1453   1          pData[0]    = mcode - 2;
+1454   1      #if(_M2PLL_USE == _ON)
+                  pData[1]    = ((1 == div) ? 0x00 : 0x10) | ((_DPLL_N_CODE / _RTD_M2PLL_RATIO) - 2);
+              #else
+1457   1          pData[1]    = ((1 == div) ? 0x00 : 0x10) | (_DPLL_N_CODE - 2);
+1458   1      #endif
+1459   1          pData[2]    = 0x80 | pData[6];
+1460   1          pData[3]    = 0x17;
+1461   1          CScalerWrite(_DPLL_M_AE, 4, pData, _AUTOINC);
+1462   1      
+1463   1          //V306 modify
+1464   1          CScalerSetBit(_DPLL_OTHER_B2, ~_BIT1, _BIT1);
+1465   1          if((bit)CScalerGetBit(_DPLL_WD_B1, _BIT7))
+1466   1          {
+1467   2              CScalerSetBit(_DPLL_WD_B1, ~_BIT6, _BIT6);
+1468   2              CTimerDelayXms(2);
+1469   2              CScalerSetBit(_DPLL_WD_B1, ~_BIT6, 0);
+1470   2          } //V306 modify
+1471   1      
+1472   1      
+1473   1          // Dclk frequency in Hz
+1474   1          ((DWORD *)pData)[0] = (DWORD)_RTD_XTAL * 1000 / (div * 2) * mcode / _DPLL_N_CODE;
+1475   1      
+1476   1          // Offset resolution (Dclk / 2^15) in Hz
+1477   1          ((DWORD *)pData)[1] = ((DWORD *)pData)[0] >> 15;
+1478   1      
+1479   1          // Target frequency of Dclk in Hz
+1480   1          mcode       = (((DWORD *)pData)[0] - (ulFreq * 1000)) / ((DWORD *)pData)[1];
+1481   1          mcode       = mcode & 0x0fff;
+1482   1      
+1483   1          //Enable DDS spread spectrum output function
+1484   1          CScalerSetBit(_FIXED_LAST_LINE_CTRL_BB, ~_BIT0, _BIT0);
+1485   1      
+1486   1          CAdjustDclkOffset(mcode);
+1487   1      }
+1488          
+1489          
+1490          #endif
+1491          
+1492          //--------------------------------------------------
+1493          // Description  : 
+1494          // Input Value  : 
+1495          // Output Value : 
+1496          //--------------------------------------------------
+1497          void CAdjustUpdateCenterData(void)
+1498          {
+1499   1          WORD delta;
+1500   1      
+1501   1          stModeUserCenterData.CenterHPos     = stModeUserData.HPosition;
+1502   1          stModeUserCenterData.CenterVPos     = stModeUserData.VPosition;
+1503   1      
+1504   1          CAdjustCheckAdcClockRange(stModeUserData.Clock, &delta);
+1505   1      
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 26  
+
+1506   1          if(delta < _CLOCK_BIAS)
+1507   1          {
+1508   2              stModeUserCenterData.CenterClock = stModeInfo.IHTotal;
+1509   2          }
+1510   1          else
+1511   1          {
+1512   2              if(stModeUserData.Clock < stModeInfo.IHTotal)
+1513   2              {
+1514   3                  if((stModeUserData.Clock - stModeInfo.IHTotal + delta) < _CLOCK_BIAS)
+1515   3                  {
+1516   4                      stModeUserCenterData.CenterClock = stModeInfo.IHTotal - delta + _CLOCK_BIAS;
+1517   4                  }
+1518   3                  else
+1519   3                  {
+1520   4                      stModeUserCenterData.CenterClock = stModeUserData.Clock;
+1521   4                  }
+1522   3              }
+1523   2              else
+1524   2              {
+1525   3                  if((stModeInfo.IHTotal + delta - stModeUserData.Clock) < _CLOCK_BIAS)
+1526   3                  {
+1527   4                      stModeUserCenterData.CenterClock = stModeInfo.IHTotal + delta - _CLOCK_BIAS;
+1528   4                  }
+1529   3                  else
+1530   3                  {
+1531   4                      stModeUserCenterData.CenterClock = stModeUserData.Clock;
+1532   4                  }
+1533   3              }
+1534   2          }
+1535   1      }
+1536          
+1537          //--------------------------------------------------
+1538          // Description  : Check if the ADC clock (IHTotal) is out of range. Range = (BackPorch + FrontPorch) * 2 /
+             - 5 .
+1539          // Input Value  : usClock   --> ADC Clock (IHTotal)
+1540          // Output Value : Return _TRUE if not out of range
+1541          //--------------------------------------------------
+1542          bit CAdjustCheckAdcClockRange(WORD usClock, WORD *delta)
+1543          {
+1544   1          *delta   = (stModeInfo.IHTotal - stModeInfo.IHWidth * 8 / 10) / 2;
+1545   1      
+1546   1          if((usClock > stModeInfo.IHTotal) && ((usClock - stModeInfo.IHTotal) > *delta))
+1547   1              return _FALSE;
+1548   1      
+1549   1          if((usClock <= stModeInfo.IHTotal) && ((stModeInfo.IHTotal - usClock) > *delta))
+1550   1              return _FALSE;
+1551   1      
+1552   1          return _TRUE;
+1553   1      }
+1554          
+1555          //--------------------------------------------------
+1556          // Description  : Set ADC clock (IHTotal)
+1557          // Input Value  : usClock   --> Target ADC clock
+1558          // Output Value : None
+1559          //--------------------------------------------------
+1560          void CAdjustAdcClock(WORD usClock)
+1561          {
+1562   1          BYTE mcode, ncode, temp0, temp1;
+1563   1          WORD delta;
+1564   1      
+1565   1          CAdjustEnableWatchDog(_WD_DV_TIMEOUT);
+1566   1      
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 27  
+
+1567   1          if(!CAdjustCheckAdcClockRange(usClock, &delta))
+1568   1              usClock = stModeInfo.IHTotal;
+1569   1      
+1570   1      #if(_SCALER_TYPE == _RTD2547D)
+                  CScalerPageSelect(_PAGE1);
+              #endif
+1573   1      
+1574   1      #if (_SCALER_TYPE == _RTD2553V || _SCALER_TYPE == _RTD2546N || _SCALER_TYPE == _RTD2525L || _SCALER_TYPE =
+             -= _RTD2547D)
+1575   1          pData[0]    = 0x04; //Select phase 32 for RTD2553V
+1576   1      #else
+                  pData[0]    = 0x0c;
+              #endif
+1579   1          pData[1]    = 0x4f;
+1580   1          pData[2]    = 0x24;
+1581   1          pData[3]    = 0x00 | _DDS_P_CODE;
+1582   1      #if(_SCALER_TYPE == _RTD2547D)
+                  CScalerWrite(_P1_PLL_DIV_CTRL_A1, 4, pData, _AUTOINC);
+              #else
+1585   1          CScalerWrite(_PLL_DIV_CTRL_98, 4, pData, _AUTOINC);
+1586   1      #endif
+1587   1      
+1588   1      #if(_M2PLL_USE == _ON)
+                  pData[0]    = ((_APLL1_M_CODE * _RTD_M2PLL_RATIO) - 2);
+              #else
+1591   1          pData[0]    = (_APLL1_M_CODE - 2);
+1592   1      #endif
+1593   1          pData[1]    = (_APLL1_N_CODE - 2);
+1594   1          pData[2]    = 0x37;
+1595   1      #if(_SCALER_TYPE == _RTD2547D)
+                  CScalerWrite(_P1_PLL1_M_AA, 3, pData, _AUTOINC);
+              #else
+1598   1          CScalerWrite(_PLL1_M_A1, 3, pData, _AUTOINC);
+1599   1      #endif
+1600   1      
+1601   1          // usClock * 2 -------------------------------------
+1602   1          if(((DWORD)stModeInfo.IHFreq * stModeInfo.IHTotal / 1000) < 530)
+1603   1          {
+1604   2              usClock = usClock * 2 * 2;
+1605   2          }
+1606   1          else
+1607   1          {
+1608   2              usClock = usClock * 2;
+1609   2          }
+1610   1          //--------------------------------------------------
+1611   1      
+1612   1          ((WORD *)pData)[2]  = 100;
+1613   1      
+1614   1          temp1   = 11;
+1615   1      
+1616   1          do
+1617   1          {
+1618   2              temp0   = ((DWORD)31 * _APLL1_N_CODE * temp1 * usClock)
+1619   2                        / ((DWORD)32 * _APLL1_M_CODE * stModeInfo.IHCount);
+1620   2      
+1621   2              ((WORD *)pData)[0] = ((DWORD)3100 * _APLL1_N_CODE * temp1 * usClock)
+1622   2                                   / ((DWORD)_APLL1_M_CODE * temp0 * stModeInfo.IHCount);
+1623   2      
+1624   2              if(((WORD *)pData)[0] > 3240)
+1625   2              {
+1626   3                  ((WORD *)pData)[0] = ((WORD *)pData)[0] - 3200;
+1627   3      
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 28  
+
+1628   3                  if(((WORD *)pData)[0] <= ((WORD *)pData)[2])
+1629   3                  {
+1630   4                      ((WORD *)pData)[2] = ((WORD *)pData)[0];
+1631   4       
+1632   4                      mcode   = temp0;
+1633   4                      ncode   = temp1;
+1634   4                  }
+1635   3      
+1636   3                  ((WORD *)pData)[1]  = ((DWORD)3100 * _APLL1_N_CODE * temp1 * usClock)
+1637   3                                        / ((DWORD)_APLL1_M_CODE * (temp0 + 1) * stModeInfo.IHCount);
+1638   3                  ((WORD *)pData)[1]  = 3200 > ((WORD *)pData)[1] ? 3200 - ((WORD *)pData)[1] : ((WORD *)pData)[
+             -1] - 3200;
+1639   3                  
+1640   3                  if(((WORD *)pData)[1] < 40)
+1641   3                  {
+1642   4                      mcode   = temp0 + 1;
+1643   4                      ncode   = temp1;
+1644   4                      break;
+1645   4                  }
+1646   3      
+1647   3                  if(((WORD *)pData)[1] <= ((WORD *)pData)[2])
+1648   3                  {
+1649   4                      ((WORD *)pData)[2] = ((WORD *)pData)[1];
+1650   4      
+1651   4                      mcode   = temp0 + 1;
+1652   4                      ncode   = temp1;
+1653   4                  }
+1654   3              }
+1655   2              else
+1656   2              {
+1657   3                  mcode   = temp0;
+1658   3                  ncode   = temp1;
+1659   3                  break;
+1660   3              }
+1661   2          }
+1662   1          while(++temp1 < 48);
+1663   1      
+1664   1          if(((DWORD)stModeInfo.IHFreq * stModeInfo.IHTotal / 1000) < 530)
+1665   1          {
+1666   2              usClock     = (usClock / 2 / 2);
+1667   2          }
+1668   1          else
+1669   1          {
+1670   2              usClock     = (usClock / 2);
+1671   2          }
+1672   1      
+1673   1      #if(_APLL_FAST_LOCK)
+1674   1      
+1675   1          if(GET_FIRST_ADCCLOCK())
+1676   1          {
+1677   2      #if(_SCALER_TYPE == _RTD2547D)
+                      CScalerPageSelect(_PAGE1);
+                      CScalerRead(_P1_PLL2_M_AE, 2, &pData[14], _AUTOINC);
+                      pData[14] = pData[14] + 2;      // Old M code
+                      pData[15] = pData[15] + 2;      // Old N code
+              
+                      CScalerRead(_P1_PLLDIV_H_B2, 2, &pData[12], _AUTOINC);
+                      ((WORD *)pData)[6] = ((((WORD)(pData[12] & 0x0f)) << 8) | pData[13]) + 1;
+                      
+                      CScalerSetByte(_P1_FAST_PLL_CTRL_A8, 0x00);
+                      CScalerSetByte(_P1_FAST_PLL_CTRL_A8, 0x07);
+                      CScalerRead(_P1_FAST_PLL_ISUM_A9, 4, pData, _NON_AUTOINC);
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 29  
+
+              #else
+1690   2              CScalerRead(_PLL2_M_A5, 2, &pData[14], _AUTOINC);
+1691   2              pData[14] = pData[14] + 2;      // Old M code
+1692   2              pData[15] = pData[15] + 2;      // Old N code
+1693   2      
+1694   2              CScalerRead(_PLLDIV_H_A9, 2, &pData[12], _AUTOINC);
+1695   2              ((WORD *)pData)[6] = ((((WORD)(pData[12] & 0x0f)) << 8) | pData[13]) + 1;
+1696   2      
+1697   2              CScalerSetByte(_FAST_PLL_CTRL_9F, 0x00);
+1698   2              CScalerSetByte(_FAST_PLL_CTRL_9F, 0x07);
+1699   2              CScalerRead(_FAST_PLL_ISUM_A0, 4, pData, _NON_AUTOINC);
+1700   2      #endif
+1701   2      
+1702   2              ((DWORD *)pData)[1] = (DWORD)pData[15] * mcode * (DWORD)((WORD *)pData)[6]; // H Up
+1703   2              ((DWORD *)pData)[2] = (DWORD)ncode * pData[14] * usClock;   // H Down
+1704   2              ((DWORD *)pData)[0] = ((DWORD *)pData)[0] / ((DWORD *)pData)[2] * ((DWORD *)pData)[1];
+1705   2      
+1706   2              if(((DWORD *)pData)[2] > ((DWORD *)pData)[1])
+1707   2                  ((DWORD *)pData)[0] += (DWORD)4294967295 / ((DWORD *)pData)[2] * 16 * (((DWORD *)pData)[2] - (
+             -(DWORD *)pData)[1]);
+1708   2              else
+1709   2                  ((DWORD *)pData)[0] -= (DWORD)4294967295 / ((DWORD *)pData)[2] * 16 * (((DWORD *)pData)[1] - (
+             -(DWORD *)pData)[2]);
+1710   2      
+1711   2      #if(_SCALER_TYPE == _RTD2547D)
+                      CScalerSetByte(_P1_FAST_PLL_CTRL_A8, 0x20);
+                      CScalerSetByte(_P1_FAST_PLL_CTRL_A8, 0x22);
+                      CScalerWrite(_P1_FAST_PLL_ISUM_A9, 4, pData, _NON_AUTOINC);
+              #else
+1716   2              CScalerSetByte(_FAST_PLL_CTRL_9F, 0x20);
+1717   2              CScalerSetByte(_FAST_PLL_CTRL_9F, 0x22);
+1718   2              CScalerWrite(_FAST_PLL_ISUM_A0, 4, pData, _NON_AUTOINC);
+1719   2      #endif
+1720   2          }
+1721   1      
+1722   1      #endif
+1723   1      
+1724   1      #if(_SCALER_TYPE == _RTD2547D)
+                  CScalerPageSelect(_PAGE1);
+                  if(((DWORD)stModeInfo.IHFreq * stModeInfo.IHTotal / 1000) < 530)
+                  {
+                      CScalerSetBit(_P1_PLLDIV_H_B2, 0xe0, 0x10 | (HIBYTE(usClock - 1) & 0x0f));
+                  }
+                  else
+                  {
+                      CScalerSetBit(_P1_PLLDIV_H_B2, 0xe0, 0x00 | HIBYTE(usClock - 1) & 0x0f);
+                  }
+              
+                  CScalerSetByte(_P1_PLLDIV_L_B3, LOBYTE(usClock - 1));
+                  CScalerSetByte(_P1_PLL2_M_AE, mcode - 2);
+                  CScalerSetByte(_P1_PLL2_N_AF, ncode - 2);
+              #else
+1739   1          if(((DWORD)stModeInfo.IHFreq * stModeInfo.IHTotal / 1000) < 530)
+1740   1          {
+1741   2              CScalerSetBit(_PLLDIV_H_A9, 0xe0, 0x10 | (HIBYTE(usClock - 1) & 0x0f));
+1742   2          }
+1743   1          else
+1744   1          {
+1745   2              CScalerSetBit(_PLLDIV_H_A9, 0xe0, 0x00 | HIBYTE(usClock - 1) & 0x0f);
+1746   2          }
+1747   1      
+1748   1          CScalerSetByte(_PLLDIV_L_AA, LOBYTE(usClock - 1));
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 30  
+
+1749   1          CScalerSetByte(_PLL2_M_A5, mcode - 2);
+1750   1          CScalerSetByte(_PLL2_N_A6, ncode - 2);
+1751   1      #endif
+1752   1      
+1753   1          // Original Formula : Icp/M2_Code = 0.4 must be constant
+1754   1          // Icp   = M2_Code * 4 / 10
+1755   1          // Icp   = 2.5u + A7[0]*2.5u + A7[1]*5u + A7[2]*10u + A7[3]*20u + A7[4]*30u (A)
+1756   1          // 2*Icp = 5u + A7[0]*5u + A7[1]*10u + A7[2]*20u + A7[3]*40u + A7[4]*60u (A)
+1757   1      
+1758   1          // Calculate the 2*Icp,
+1759   1          pData[5]    = (((WORD)mcode * 4 / 10) < 5) ? 0 : ((WORD)mcode * 4 / 10) - 5;
+1760   1          pData[6]    = 0x00;
+1761   1          
+1762   1          if(pData[5] >= 60)
+1763   1          {
+1764   2              pData[5]    -= 60;
+1765   2              pData[6]    |= 0x10;
+1766   2          }
+1767   1      
+1768   1          if(pData[5] >= 40)
+1769   1          {
+1770   2              pData[5]    -= 40;
+1771   2              pData[6]    |= 0x08;
+1772   2          }
+1773   1      
+1774   1          if(pData[5] >= 20)
+1775   1          {
+1776   2              pData[5]    -= 20;
+1777   2              pData[6]    |= 0x04;
+1778   2          }
+1779   1      
+1780   1          if(pData[5] >= 10)
+1781   1          {
+1782   2              pData[5]    -= 10;
+1783   2              pData[6]    |= 0x02;
+1784   2          }
+1785   1      
+1786   1          if(pData[5] >= 5)
+1787   1          {
+1788   2              pData[5]    -= 5;
+1789   2              pData[6]    |= 0x01;
+1790   2          }
+1791   1      
+1792   1          // Larger charge pump current (+2)
+1793   1          pData[6] += 2;
+1794   1      #if(_SCALER_TYPE == _RTD2547D)
+                  CScalerSetBit(_P1_PLL2_CRNT_B0, 0xe0, pData[6]);
+              #else
+1797   1          CScalerSetBit(_PLL2_CRNT_A7, 0xe0, pData[6]);
+1798   1      #endif
+1799   1      
+1800   1          if(GET_FIRST_ADCCLOCK())
+1801   1          {
+1802   2      
+1803   2          }
+1804   1          else
+1805   1          {
+1806   2              CPowerADCAPLLOn();
+1807   2      #if(_SCALER_TYPE == _RTD2547D)
+                      CScalerPageSelect(_PAGE1);
+                      CScalerSetByte(_P1_I_CODE_M_A3, 0x20);
+              #else
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 31  
+
+1811   2              CScalerSetByte(_I_CODE_M_9A, 0x20);
+1812   2      #endif
+1813   2              CTimerWaitForEvent(_EVENT_IVS);
+1814   2              CTimerWaitForEvent(_EVENT_IVS);
+1815   2      #if(_SCALER_TYPE == _RTD2547D)
+                      CScalerSetByte(_P1_I_CODE_M_A3, 0x24);
+              #else
+1818   2              CScalerSetByte(_I_CODE_M_9A, 0x24);
+1819   2      #endif
+1820   2              SET_FIRST_ADCCLOCK();
+1821   2          }
+1822   1      
+1823   1      #if(_APLL_FAST_LOCK)
+1824   1      
+1825   1          if(GET_FIRST_ADCCLOCK())
+1826   1          {
+1827   2      #if(_SCALER_TYPE == _RTD2547D)
+                      CScalerPageSelect(_PAGE1);
+                      CScalerSetByte(_P1_FAST_PLL_CTRL_A8, 0x68);
+              #else
+1831   2              CScalerSetByte(_FAST_PLL_CTRL_9F, 0x68);
+1832   2      #endif
+1833   2          }
+1834   1      
+1835   1      #endif
+1836   1      
+1837   1          CTimerWaitForEvent(_EVENT_IEN_STOP);
+1838   1          CTimerWaitForEvent(_EVENT_IEN_STOP);
+1839   1      #if(_SCALER_TYPE == _RTD2547D)
+                  CScalerPageSelect(_PAGE1);
+                  CScalerSetByte(_P1_FAST_PLL_CTRL_A8, 0x00);
+              #else
+1843   1          CScalerSetByte(_FAST_PLL_CTRL_9F, 0x00);
+1844   1      #endif
+1845   1      
+1846   1          CMiscClearStatusRegister();
+1847   1      
+1848   1          CAdjustEnableWatchDog(_WD_ALL);
+1849   1      }
+1850          
+1851          //--------------------------------------------------
+1852          // Description  : Set phase
+1853          // Input Value  : ucPhase   --> Target phase, ucPhase = N, N = 0 ~ 63
+1854          // Output Value : None
+1855          //--------------------------------------------------
+1856          void CAdjustPhase(BYTE ucPhase)
+1857          {
+1858   1          BYTE ctrl;
+1859   1          WORD select; //V306 modify
+1860   1      
+1861   1          CAdjustEnableWatchDog(_WD_DV_TIMEOUT_APLL_NONLOCK);
+1862   1      
+1863   1          ucPhase = ucPhase & 0x3f;
+1864   1      
+1865   1          // Code below is to select stable HSYNC latch edge.
+1866   1          // There is about 6.0736ns delay for RTD2323 between input clock into ADC and output from ADC.
+1867   1          // Calculating the corresponding phase delay for 6.0736ns 
+1868   1          // Original Formula :
+1869   1              // select = 64 * 6.0736 * ulRate / 1000000;
+1870   1      
+1871   1      #if (_SCALER_TYPE == _RTD2553V || _SCALER_TYPE == _RTD2546N || _SCALER_TYPE == _RTD2525L)
+1872   1          // There is about 2.025ns/2.579ns delay for RTD2553V/RTD2525L between input clock into ADC and output 
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 32  
+
+             -from ADC.
+1873   1          // Calculating the corresponding phase delay for 2.025ns/2.579ns     
+1874   1          // Original Formula :
+1875   1              // select = 64 * 2.025 * ulRate / 1000000; for RTD2553V series
+1876   1          // select = 64 * 2.579 * ulRate / 1000000; for RTD2525L series
+1877   1      
+1878   1          select      = (DWORD)_RTD_XTAL * stModeInfo.IHTotal / stModeInfo.IHCount * ((_SCALER_TYPE == _RTD2525L
+             -) ? 165 : 130) / 1000000; //V307 modify
+1879   1      #elif(_SCALER_TYPE == _RTD2547D)
+                  // There is about 2.025ns delay for RTD2528R between input clock into ADC and output from ADC.
+                  // Calculating the corresponding phase delay for 2.025ns 
+                  // Original Formula :
+                      // select = 64 * 0.015 * ulRate / 1000000;
+              
+                  select      = (DWORD)_RTD_XTAL * stModeInfo.IHTotal / stModeInfo.IHCount * 1 / 1000000;
+              #else
+                  select      = (DWORD)_RTD_XTAL * stModeInfo.IHTotal / stModeInfo.IHCount * 389 / 1000000;
+              #endif
+1889   1      
+1890   1          select      = (select <= 64) ? (64 - select) : (128 - select);
+1891   1      
+1892   1          // Calculate the absolute value from the selected phase to transition
+1893   1          pData[0]    = (ucPhase >= select) ? ucPhase - select : select - ucPhase;
+1894   1          ctrl        = (pData[0] > 12 && pData[0] < 52) ? 0x00 : 0x01;
+1895   1      
+1896   1          if((stModeInfo.IHStartPos < stModeUserData.HPosition) && ((stModeUserData.HPosition - stModeInfo.IHSta
+             -rtPos) > ucHStartBias))
+1897   1              stModeUserData.HPosition = stModeInfo.IHStartPos + ucHStartBias;
+1898   1      
+1899   1          if((stModeInfo.IHStartPos > stModeUserData.HPosition) && ((stModeInfo.IHStartPos - stModeUserData.HPos
+             -ition) > ucHStartBias))
+1900   1              stModeUserData.HPosition = stModeInfo.IHStartPos - ucHStartBias;
+1901   1      
+1902   1      //    pData[0]    = ucHStartBias + stModeInfo.IHStartPos - stModeUserData.HPosition  + _PROGRAM_HDELAY;
+1903   1          ((WORD *)pData)[0]  = ucHStartBias + stModeInfo.IHStartPos - stModeUserData.HPosition  + _PROGRAM_HDEL
+             -AY; //V306 modify
+1904   1      
+1905   1          // Compensate the H position shift due to the phase select
+1906   1          if (select > 12)
+1907   1              select  = ((ucPhase + 12) < select) ? (((WORD *)pData)[0] - 1) : ((WORD *)pData)[0]; //V306 modify
+1908   1          else
+1909   1              select  = (ucPhase < (select + 52)) ? (((WORD *)pData)[0] - 1) : ((WORD *)pData)[0]; //V306 modify
+1910   1      
+1911   1      #if(_SCALER_TYPE == _RTD2547D)
+                  CScalerPageSelect(_PAGE1);
+                  CScalerSetBit(_P1_PLLDIV_H_B2, ~_BIT6, _BIT6);
+              #else
+1915   1          CScalerSetBit(_PLLDIV_H_A9, ~_BIT6, _BIT6);
+1916   1      #endif
+1917   1      
+1918   1          if(((DWORD)stModeInfo.IHFreq * stModeInfo.IHTotal / 1000) < 530)
+1919   1          {
+1920   2      #if(_SCALER_TYPE == _RTD2547D)
+                      CScalerSetBit(_P1_PLLPHASE_CTRL1_B5, 0x80, ucPhase * 2);           // Set phase
+              #else
+1923   2              CScalerSetBit(_PLLPHASE_CTRL1_AC, 0x80, ucPhase * 2);           // Set phase
+1924   2      #endif
+1925   2          }
+1926   1          else
+1927   1          {
+1928   2      #if(_SCALER_TYPE == _RTD2547D)
+                      CScalerSetBit(_P1_PLLPHASE_CTRL1_B5, 0x80, ucPhase);               // Set phase
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 33  
+
+              #else
+1931   2              CScalerSetBit(_PLLPHASE_CTRL1_AC, 0x80, ucPhase);               // Set phase
+1932   2      #endif
+1933   2          }
+1934   1      
+1935   1          CAdjustIHSDelay(select);                                        // Compensate IHS delay
+1936   1      #if(_SCALER_TYPE == _RTD2547D)
+                  CScalerSetBit(_VGIP_DELAY_CTRL_12, ~_BIT3, (ctrl << 3));        // Select a correct edge to latch the 
+             -stable data
+              #else
+1939   1          CScalerSetBit(_VGIP_DELAY_CTRL_07, ~_BIT3, (ctrl << 3));        // Select a correct edge to latch the 
+             -stable data
+1940   1      #endif
+1941   1      
+1942   1          CMiscApplyDoubleBuffer();
+1943   1      
+1944   1          CMiscClearStatusRegister();
+1945   1      
+1946   1          CAdjustEnableWatchDog(_WD_ALL);
+1947   1      }
+1948          
+1949          //--------------------------------------------------
+1950          // Description  : Set H Position
+1951          // Input Value  : None
+1952          // Output Value : None
+1953          //--------------------------------------------------
+1954          void CAdjustHPosition(void)
+1955          {
+1956   1          // Update IHS delay according to phase
+1957   1          CAdjustPhase(stModeUserData.Phase);
+1958   1      }
+1959          
+1960          //--------------------------------------------------
+1961          // Description  : Set V Position
+1962          // Input Value  : None
+1963          // Output Value : None
+1964          //--------------------------------------------------
+1965          void CAdjustVPosition(void)
+1966          {
+1967   1          CAdjustEnableWatchDog(_WD_APLL_NONLOCK);
+1968   1      
+1969   1          if((stModeInfo.IVStartPos < stModeUserData.VPosition) && ((stModeUserData.VPosition - stModeInfo.IVSta
+             -rtPos) > ucVStartBias))
+1970   1              stModeUserData.VPosition = stModeInfo.IVStartPos + ucVStartBias;
+1971   1      
+1972   1          if((stModeInfo.IVStartPos > stModeUserData.VPosition) && ((stModeInfo.IVStartPos - stModeUserData.VPos
+             -ition) > ucVStartBias))
+1973   1              stModeUserData.VPosition = stModeInfo.IVStartPos - ucVStartBias;
+1974   1      
+1975   1      #if(_V_POSITION_DIRECTION == _V_POSITION_METHOD_0)
+1976   1      
+1977   1          CAdjustIVSDelay(ucVStartBias + stModeInfo.IVStartPos - stModeUserData.VPosition + _PROGRAM_VDELAY);
+1978   1      
+1979   1      #endif
+1980   1      
+1981   1      #if(_V_POSITION_DIRECTION == _V_POSITION_METHOD_1)
+              
+                  CAdjustIVSDelay(ucVStartBias - (stModeInfo.IVStartPos - stModeUserData.VPosition) + _PROGRAM_VDELAY);
+              
+              #endif
+1986   1      
+1987   1          CMiscApplyDoubleBuffer();
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 34  
+
+1988   1      
+1989   1          CTimerWaitForEvent(_EVENT_DEN_STOP);
+1990   1          CTimerWaitForEvent(_EVENT_DEN_START);
+1991   1      
+1992   1          CMiscClearStatusRegister();
+1993   1      
+1994   1          CAdjustEnableWatchDog(_WD_ALL);
+1995   1      }
+1996          
+1997          //--------------------------------------------------
+1998          // Description  : Adjust Digital Filter
+1999          // Input Value  : None
+2000          // Output Value : None
+2001          //--------------------------------------------------
+2002          void CAdjustDigitalFilter(BYTE ucAccess, BYTE ucOffset, BYTE ucDiv, BYTE ucEnable)
+2003          {
+2004   1      #if (_SCALER_TYPE == _RTD2553V || _SCALER_TYPE == _RTD2546N || _SCALER_TYPE == _RTD2525L || _SCALER_TYPE =
+             -= _RTD2547D)
+2005   1          pData[0] = ((ucAccess & 0x0f) << 4) | 0x00;
+2006   1      #else
+                  pData[0] = ((ucAccess & 0x07) << 5) | 0x00;
+              #endif
+2009   1      
+2010   1          if(ucAccess == _YPBPR_ACCESS_PORT)
+2011   1          {
+2012   2              pData[1] = ((ucOffset & 0x07) << 5) | 0x10;
+2013   2          }
+2014   1          else
+2015   1          {
+2016   2              pData[1] = ((ucEnable & 0x01) << 7) | ((ucOffset & 0x07) << 4) | ((ucDiv & 0x03) << 2);
+2017   2          }
+2018   1      
+2019   1      #if(_SCALER_TYPE == _RTD2547D)
+                  CScalerWrite(_DIGITAL_FILTER_CTRL_98, 2, pData, _AUTOINC);
+              
+                  CScalerSetByte(_DIGITAL_FILTER_CTRL_98, 0x00);
+              #else
+2024   1          CScalerWrite(_DIGITAL_FILTER_CTRL_17, 2, pData, _AUTOINC);
+2025   1      
+2026   1          CScalerSetByte(_DIGITAL_FILTER_CTRL_17, 0x00);
+2027   1      #endif
+2028   1      }
+2029          
+2030          #if (_SCALER_TYPE == _RTD2553V || _SCALER_TYPE == _RTD2546N || _SCALER_TYPE == _RTD2525L)
+2031          #if (_VGA_COLOR_SUPPORT)
+              /*
+              void CAdjustEnableHLWindow(void)
+              {
+                  CScalerSetBit(_HW_ACCESS_PORT_60, ~_BIT6, _BIT6);
+                  CAdjustHLWindowBrightness(stOsdUserData.MZBright);
+                  CAdjustHLWindowContrast(stOsdUserData.MZContrast);
+                  CAdjustMZHueSat(0);
+                  CAdjustMZHueSat(1);
+                  CAdjustMZHueSat(2);
+                  CAdjustFillDCCTable(tDCC_CONTROL[GET_MZ_DCC_TYPE()], tDCC_USERCURVE[GET_MZ_DCC_TYPE()]);
+              }
+              
+              void CAdjustDisableHLWindow(void)
+              {
+                  CAdjustMZHueSat(0);
+                  CAdjustMZHueSat(1);
+                  CAdjustMZHueSat(2);
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 35  
+
+                  CAdjustFillDCCTable(tDCC_CONTROL[GET_MZ_DCC_TYPE()], tDCC_USERCURVE[GET_MZ_DCC_TYPE()]);
+                  CScalerSetBit(_HW_ACCESS_PORT_60, ~_BIT6, 0x00);
+              }
+              
+              void CAdjustHLWindow(void)
+              {
+                  if(GET_MZ_WINDOW_CFG_TYPE() == _MZ_WINDOW_CFG_DISABLE)
+                  {
+                      CAdjustDisableHLWindow();
+                  }
+                  else if(GET_MZ_WINDOW_CFG_TYPE() == _MZ_WINDOW_CFG_FULL)
+                  {
+                      CAdjustHLWindowHV(0, stDisplayInfo.DHWidth, 0, stDisplayInfo.DVHeight);
+                      CAdjustNormalizeFactor(stDisplayInfo.DHWidth, stDisplayInfo.DVHeight);
+                      CAdjustEnableHLWindow();
+                  }
+                  else if(GET_MZ_WINDOW_CFG_TYPE() == _MZ_WINDOW_CFG_DEMO)
+                  {
+                      CAdjustHLWindowHV(0, stDisplayInfo.DHWidth / 2, 0, stDisplayInfo.DVHeight);
+                      CAdjustNormalizeFactor(stDisplayInfo.DHWidth / 2, stDisplayInfo.DVHeight);
+                      CAdjustEnableHLWindow();
+                  }
+                  else if(GET_MZ_WINDOW_CFG_TYPE() == _MZ_WINDOW_CFG_WINDOW)
+                  {
+                      CAdjustHLWindowHV(stOsdUserData.MZHPos, stOsdUserData.MZHWidth, stOsdUserData.MZVPos, stOsdUserDat
+             -a.MZVHeight);
+                      CAdjustNormalizeFactor(stOsdUserData.MZHWidth, stOsdUserData.MZVHeight);
+                      CAdjustEnableHLWindow();
+                  }
+              }
+              
+              void CAdjustHLWindowHV(WORD usHPos, WORD usHWidth, WORD usVPos, WORD usVHeight)
+              {
+                  if(usHWidth == 0 || usVHeight == 0)
+                      return;
+              
+                  CScalerSetBit(_HW_ACCESS_PORT_60, ~(_BIT7 | _BIT3 | _BIT2 | _BIT1 | _BIT0), _BIT7);
+              
+                  pData[0] = ((usHPos >> 8) & 0x07);
+                  pData[1] = (BYTE)(usHPos);
+                  pData[2] = (((usHPos + usHWidth) >> 8) & 0x07);
+                  pData[3] = (BYTE)(usHPos + usHWidth);
+                  pData[4] = ((usVPos >> 8) & 0x07);
+                  pData[5] = (BYTE)(usVPos);
+                  pData[6] = (((usVPos + usVHeight) >> 8) & 0x07);
+                  pData[7] = (BYTE)(usVPos + usVHeight);
+              
+                  CTimerWaitForEvent(_EVENT_DEN_STOP);
+              
+                  CScalerWrite(_HW_DATA_PORT_61, 8, pData, _NON_AUTOINC);
+              
+                  CScalerSetBit(_HW_ACCESS_PORT_60, ~(_BIT7 | _BIT3 | _BIT2 | _BIT1 | _BIT0), 0x00);
+              }
+              
+              //
+              void CAdjustHLWindowHVBorder(BYTE ucBorderWidth, BYTE ucRed, BYTE ucGreen, BYTE ucBlue)
+              {
+                  CScalerSetBit(_HW_ACCESS_PORT_60, ~(_BIT7 | _BIT3 | _BIT2 | _BIT1 | _BIT0), _BIT7 | 0x08);
+              
+                  pData[0] = (ucBorderWidth & 0x0f);
+                  pData[1] = (ucRed & 0x3f);
+                  pData[2] = (ucGreen & 0x3f);
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 36  
+
+                  pData[3] = (ucBlue & 0x3f);
+              
+                  CScalerWrite(_HW_DATA_PORT_61, 4, pData, _NON_AUTOINC);
+              
+                  CScalerSetBit(_HW_ACCESS_PORT_60, ~(_BIT7 | _BIT3 | _BIT2 | _BIT1 | _BIT0), 0x00);
+              }
+              //
+              
+              void CAdjustHLWindowBrightness(BYTE ucValue)
+              {
+                  if(GET_MZ_WINDOW_CFG_TYPE() == _MZ_WINDOW_CFG_FULL)
+                      ucValue = 128;
+              
+                  CScalerSetBit(_CB_ACCESS_PORT_64, ~(_BIT7 | _BIT3 | _BIT2 | _BIT1 | _BIT0), _BIT7 | 0x06);
+              
+                  pData[0] = pData[1] = pData[2] = ucValue;
+              
+                  CScalerWrite(_CB_DATA_PORT_65, 3, pData, _NON_AUTOINC);
+              
+                  CScalerSetByte(_CB_ACCESS_PORT_64, 0x00);
+              }
+              
+              void CAdjustHLWindowContrast(BYTE ucValue)
+              {
+                  if(GET_MZ_WINDOW_CFG_TYPE() == _MZ_WINDOW_CFG_FULL)
+                      ucValue = 128;
+              
+                  CScalerSetBit(_CB_ACCESS_PORT_64, ~(_BIT7 | _BIT3 | _BIT2 | _BIT1 | _BIT0), _BIT7 | 0x09);
+              
+                  pData[0] = pData[1] = pData[2] = ucValue;
+              
+                  CScalerWrite(_CB_DATA_PORT_65, 3, pData, _NON_AUTOINC);
+              
+                  CScalerSetByte(_CB_ACCESS_PORT_64, 0x00);
+              }
+              
+              void CAdjustNormalizeFactor(WORD usHWidth, WORD usVHeight)
+              {
+                  ((DWORD *)pData)[0] = (DWORD)4194304 * 255 / usHWidth / usVHeight;
+              
+                  CScalerSetBit(_DCC_CTRL0_E4, ~(_BIT1 | _BIT0), 0x00);
+              
+                  CScalerSetByte(_DCC_ACCESS_PORT_E6, 0x00);
+              
+                  ((DWORD *)pData)[0] &= 0x3fffff;
+              
+                  CScalerWrite(_DCC_DATA_PORT_E7, 3, &pData[1], _NON_AUTOINC);
+              }
+              
+              //--------------------------------------------------
+              // Description    : Fill DCC table , then enable DCC function
+              // Input Value   : pControlTable, pUserCurveTable, both parameters accroding to Vivid color software.
+              // Output Value : None
+              //--------------------------------------------------
+              void CAdjustFillDCCTable(BYTE *pControlTable, BYTE *pUserCurveTable)
+              {
+                  BYTE i;
+                      
+                  // switch to page 0
+                  CScalerRead(_DCC_CTRL0_E4, 1, &i, _NON_AUTOINC);
+                  i = i & 0xfc;   
+                  CScalerSetByte(_DCC_CTRL0_E4, i);      
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 37  
+
+              
+                  // fill DCC control table
+                  CScalerSetByte(_DCC_ACCESS_PORT_E6, 0x03);
+                  for (i =0; i<9; i++)
+                  {
+                      CScalerSetByte(_DCC_DATA_PORT_E7, *pControlTable);
+                      pControlTable++;
+                  }
+              
+                  // switch to page 1
+                  CScalerRead(_DCC_CTRL0_E4, 1, &i, _NON_AUTOINC);
+                  i = (i & 0xfc) | 0x01;
+                  CScalerSetByte(_DCC_CTRL0_E4, i);
+                  
+                  // fill DCC user curve table
+                  CScalerSetByte(_DCC_ACCESS_PORT_E6, 0x00); 
+                  for (i=0; i<20; i++)
+                  {                
+                      CScalerSetByte(_DCC_DATA_PORT_E7, *pUserCurveTable);
+                      pUserCurveTable++;
+                  }
+              
+                  // enable DCC func when _EVENT_DEN_STOP
+                  CTimerWaitForEvent(_EVENT_DEN_STOP);
+              
+                  if((GET_MZ_DCC_TYPE() == _MZ_DCC_NORMAL) || (GET_MZ_WINDOW_CFG_TYPE() == _MZ_WINDOW_CFG_DISABLE))
+                  {
+                      CScalerSetByte(_DCC_CTRL0_E4, 0x2c);
+                  }
+                  else
+                  {
+                      CScalerSetByte(_DCC_CTRL0_E4, 0xac);
+                  }
+              
+                  CScalerSetByte(_DCC_CTRL1_E5, 0x80);
+              }
+              
+              BYTE code SatPlus[8]  = { 41, 44, 43, 39, 31, 22, 11, 0 }; // by 1/256
+              BYTE code SatMinus[8] = { 24, 35, 40, 41, 36, 28, 16, 0 }; // by 1/256
+              
+              int CAdjustColorGammaCal(BYTE color, BYTE n) // n = 1~8
+              {
+                  int temp = (color == 0) ? stOsdUserData.MZICMRedSat : (color == 1) ? stOsdUserData.MZICMGreenSat : stO
+             -sdUserData.MZICMBlueSat;
+              
+                  temp *= 2;
+              
+                  if (temp >= 16)
+                  {
+                      return ((int)(512*n) + (int)((temp-16)*(int)SatPlus[n-1])) / 64 ;
+                  }
+                  else
+                  {
+                      return ((int)(512*n) - (int)((16-temp)*(int)SatMinus[n-1])) / 64 ;
+                  }
+              }
+              
+              void CAdjustHueSatSet(BYTE color, SWORD TempU1, SWORD TempU2, SWORD TempV1, SWORD TempV2)
+              {
+                  BYTE i;
+                  SWORD u,v;
+              
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 38  
+
+                  CScalerSetByte(0xe1,(color & 0x0f));
+                  CScalerSetByte(0xe2,0x00);
+              
+                  if((color & 0x0f) == 0)
+                  {
+                      CScalerSetByte(0xe3,0x02);
+                      CScalerSetByte(0xe3,0xd2);
+                      CScalerSetByte(0xe3,0xee);
+                  }
+                  else if((color & 0x0f) == 1)
+                  {
+                      CScalerSetByte(0xe3,0x08);
+                      CScalerSetByte(0xe3,0x00);
+                      CScalerSetByte(0xe3,0xee);
+                  }
+                  else if((color & 0x0f) == 2)
+                  {
+                      CScalerSetByte(0xe3,0x0d);
+                      CScalerSetByte(0xe3,0x2e);
+                      CScalerSetByte(0xe3,0xbe);
+                  }
+              
+                  
+                  CScalerSetByte(0xe1,(color & 0x0f));
+                  CScalerSetByte(0xe2,((color & 0xf0)+0x03)); 
+              
+                  for(i=1; i<9; i++)
+                  {
+                      u = ((TempU1+TempU2)*CAdjustColorGammaCal(color, i)/64) - ((TempU1*i)/8);
+                      v = ((TempV1+TempV2)*CAdjustColorGammaCal(color, i)/64) - ((TempV1*i)/8);
+              
+                      CScalerSetByte(0xe3,u);
+                      CScalerSetByte(0xe3,v);
+                  }
+              //
+                  for(i=1; i<33; i++)
+                  {
+                      CScalerSetByte(0xe3,0x00);
+                  }
+              //
+                  CScalerSetByte(0xe0,0xdc);
+              }
+              
+              void CAdjustMZComboHueSat(BYTE ucVar, SWORD sTempU1, SWORD sTempV1, SWORD sConst0, SWORD sConst1, SWORD sC
+             -onst2, SWORD sConst3, BYTE ucPar)
+              {
+                  SWORD sTempU2, sTempV2;
+              
+                  if(ucVar < 8)
+                  {
+                      sTempU2 = (SWORD)(sConst0) * (8 - ucVar) / 8;
+                      sTempV2 = (SWORD)(sConst1) * (8 - ucVar) / 8;
+                  }
+                  else
+                  {
+                      sTempU2 = (SWORD)(sConst2) * (ucVar - 8) / 8;
+                      sTempV2 = (SWORD)(sConst3) * (ucVar - 8) / 8;
+                  }
+              
+                  CAdjustHueSatSet(ucPar, sTempU1, sTempU2, sTempV1, sTempV2);
+              }
+              
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 39  
+
+              void CAdjustMZHueSat(BYTE color)
+              {
+                  if(color == 0)
+                  {
+                      CAdjustMZComboHueSat(stOsdUserData.MZICMRedHue, 255, 510, (64 - 8), (-128 + 16), (-128 + 16), (-48
+             -), 0x00);
+              
+                      CAdjustMZComboHueSat(stOsdUserData.MZICMRedHue, 437, 146, (64 - 8), (-128 + 16), (-64 + 8), (128 -
+             - 16), 0x10);
+              
+                      CAdjustMZComboHueSat(stOsdUserData.MZICMRedHue, -170, 510, (128 - 16), (-48), (-128 + 16), (-48), 
+             -0x20);
+              
+                      }
+                  else if(color == 1)
+                  {
+                      CAdjustMZComboHueSat(stOsdUserData.MZICMGreenHue, -510, 0, (64 - 8), (128 - 16), (64 - 8), (-128 +
+             - 16), 0x01);
+              
+                      CAdjustMZComboHueSat(stOsdUserData.MZICMGreenHue, -340, 340, (64 - 8), (128 - 16), (-64 + 8), (-12
+             -8 + 16), 0x11);
+              
+                      CAdjustMZComboHueSat(stOsdUserData.MZICMGreenHue, -340, -340, (-64 + 8), (128 - 16), (64 - 8), (-1
+             -28 + 16), 0x21);
+              
+                      }
+                  else if(color == 2)
+                  {
+                      CAdjustMZComboHueSat(stOsdUserData.MZICMBlueHue, 255, -510, (-128 + 16), (48), (64 - 8), (128 - 16
+             -), 0x02);
+              
+                      CAdjustMZComboHueSat(stOsdUserData.MZICMBlueHue, -170, -510, (-128 + 16), (48), (128 - 16), (48), 
+             -0x12);
+              
+                      CAdjustMZComboHueSat(stOsdUserData.MZICMBlueHue, 355, -310, (-64 + 8), (-128 + 16), (64 - 8), (128
+             - - 16), 0x22);
+                      }
+              
+                  if((GET_MZ_ICM_ON_OFF_TYPE() == _ON) && (GET_MZ_WINDOW_CFG_TYPE() != _MZ_WINDOW_CFG_DISABLE))
+                      CScalerSetBit(_ICM_CTRL_E0, ~_BIT7, _BIT7);
+                  else
+                      CScalerSetBit(_ICM_CTRL_E0, ~_BIT7, 0x00);
+              }
+              */
+              
+              //--------------------------------------------------
+              // Description  : 
+              // Input Value  : 
+              // Output Value : 
+              //--------------------------------------------------
+              void CAdjustHLWindowPeaking(BYTE ucValue)
+              {
+                      CAdjustPeakingFilter(ucValue);
+              
+              //Six Axes Color
+                  if(ucValue == 0)
+                      SET_MZ_PEAKING_ON_OFF_TYPE(_OFF);
+                  else
+                      SET_MZ_PEAKING_ON_OFF_TYPE(_ON);
+              }
+              
+              //--------------------------------------------------
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 40  
+
+              // Description  : Adjust Peaking Filter and Coring Control
+              // Input Value  : Coefficient C0 of Peaking Filter
+              // Output Value : None
+              //--------------------------------------------------
+              void CAdjustPeakingFilter(SBYTE ucPeaking)
+              {
+                      if(ucPeaking > 126)
+                              ucPeaking = 126;
+                      if(ucPeaking < 14 && ucPeaking > 0)
+                              ucPeaking = 14;
+              
+                      pData[0] = ((ucPeaking +1) >> 1) << 1;
+              
+                  switch(_GET_INPUT_SOURCE())
+                  {
+                      case _SOURCE_VGA:
+                      case _SOURCE_DVI:
+                      case _SOURCE_HDMI:
+                                      if((bit)(ucPeaking & 0x01))
+                                      {
+                                              pData[1] = (SWORD)-63 * pData[0] / 126;
+                                              pData[2] = 0;
+                                      }
+                                      else
+                                      {
+                                              pData[1] = (SWORD)-64 * pData[0] / 126;
+                                              pData[2] = 2;
+                                      }
+                          break;
+              
+                      case _SOURCE_VIDEO_AV:
+                      case _SOURCE_VIDEO_SV:
+                      //case _SOURCE_VIDEO_YUV:
+                      case _SOURCE_VIDEO_TV:
+                      case _SOURCE_YPBPR:
+                      case _SOURCE_VIDEO_SCART:
+                       case _SOURCE_VIDEO_DVD:
+                                      if((bit)(ucPeaking & 0x01))
+                                      {
+                                              pData[1] = (SWORD)-72 * pData[0] / 126;
+                                              pData[2] = (SWORD)-(pData[0] + 2*pData[1]) / 2;
+                                      }
+                                      else
+                                      {
+                                              pData[1] = (SWORD)-73 * pData[0] / 126;
+                                              pData[2] = (SWORD)-(pData[0] + 2*pData[1]) / 2;
+                                      }
+                              break;
+                      }
+              
+                      pData[3] = (BYTE)_CORING_MIN;
+                      pData[4] = (BYTE)_CORING_MAX_POS;
+                      pData[5] = (SBYTE)_CORING_MAX_NEG; 
+              
+                  CScalerSetByte(_PC_ACCESS_PORT_26, 0x80);
+                  CScalerWrite(_PC_DATA_PORT_27, 6, pData, _NON_AUTOINC);
+                  CScalerSetByte(_PC_ACCESS_PORT_26, 0x40);
+              }
+              
+              
+              //*************** Six Axes Color ***************//
+              
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 41  
+
+              
+              void CAdjustAccessICMTable(BYTE ucNum)
+              {
+                  BYTE i=0;
+              
+                  if(ucNum == _SAC_DCC_GRAPHIC)    
+                  {
+                      for (i=0; i<5; i++)
+                      {            
+                          CScalerSetByte(_ICM_SEL_E1, (0x00 + i));
+                          CScalerSetByte(_ICM_ACCESS_PORT_E2, 0x00);
+                          CScalerWrite(_ICM_DATA_PORT_E3, 51, tICM_SAC_PHOTO[i], _NON_AUTOINC);
+                      }
+                      CScalerSetByte(_ICM_CTRL_E0, 0xdf);    
+                  }
+                  else
+                  {
+                      for (i=0; i<4; i++)
+                      {            
+                          CScalerSetByte(_ICM_SEL_E1, (0x00 + i));
+                          CScalerSetByte(_ICM_ACCESS_PORT_E2, 0x00);
+                          CScalerWrite(_ICM_DATA_PORT_E3, 51, tICM_SAC[ucNum * 4 + i], _NON_AUTOINC);
+                      }
+                      CScalerSetByte(_ICM_CTRL_E0, 0xde);
+                  }
+              
+              }
+              //--------------------------------------------------
+              // Description    : Fill DCC table , then enable DCC function
+              // Input Value   : pControlTable, pUserCurveTable, both parameters accroding to Vivid color software.
+              // Output Value : None
+              //--------------------------------------------------
+              void CAdjustFillDCCTable(BYTE *pControlTable, BYTE *pUserCurveTable)
+              {
+                  BYTE i;
+                      
+                  // switch to page 0
+                  CScalerRead(_DCC_CTRL0_E4, 1, &i, _NON_AUTOINC);
+                  i = i & 0xfc;   
+                  CScalerSetByte(_DCC_CTRL0_E4, i);      
+              
+                  // fill DCC control table
+                  CScalerSetByte(_DCC_ACCESS_PORT_E6, 0x03);
+                  for (i =0; i<9; i++)
+                  {
+                      CScalerSetByte(_DCC_DATA_PORT_E7, *pControlTable);
+                      pControlTable++;
+                  }
+              
+                  // switch to page 1
+                  CScalerRead(_DCC_CTRL0_E4, 1, &i, _NON_AUTOINC);
+                  i = (i & 0xfc) | 0x01;
+                  CScalerSetByte(_DCC_CTRL0_E4, i);
+                  
+                  // fill DCC user curve table
+                  CScalerSetByte(_DCC_ACCESS_PORT_E6, 0x00); 
+                  for (i=0; i<20; i++)
+                  {                
+                      CScalerSetByte(_DCC_DATA_PORT_E7, *pUserCurveTable);
+                      pUserCurveTable++;
+                  }
+              
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 42  
+
+                  // enable DCC func when _EVENT_DEN_STOP
+                  CTimerWaitForEvent(_EVENT_DEN_STOP);
+              
+                  if(((GET_MZ_DCC_TYPE() == _MZ_DCC_NORMAL) || (GET_MZ_WINDOW_CFG_TYPE() == _MZ_WINDOW_CFG_DISABLE)))
+                  {
+                      CScalerSetByte(_DCC_CTRL0_E4, 0x2c);
+                  }
+                  else
+                  {
+                      CScalerSetByte(_DCC_CTRL0_E4, 0xac);
+                  }
+              
+                  CScalerSetByte(_DCC_CTRL1_E5, 0x80);
+              }
+              
+              
+              BYTE code SatPlus[8]  = { 61, 64, 63, 59, 51, 40, 28, 0 }; // by 1/256
+              BYTE code SatMinus[8] = { 44, 45, 60, 61, 56, 48, 26, 0 }; // by 1/256
+              
+              
+              void CAdjustEnableHLWindow(void)
+              {
+                  CScalerSetBit(_HW_ACCESS_PORT_60, ~_BIT6, _BIT6);
+                  CScalerSetBit(_ICM_CTRL_E0, ~_BIT7, _BIT7);
+                  CScalerSetBit(_DCC_CTRL0_E4, ~_BIT7, _BIT7);
+                  CAdjustHLWindowBrightness(stOsdUserData.MZBright);
+                  CAdjustHLWindowContrast(stOsdUserData.MZContrast);
+              //    CAdjustMZHueSat(0);
+              //    CAdjustMZHueSat(1);
+              //    CAdjustMZHueSat(2);
+              //    CAdjustFillDCCTable(tDCC_CONTROL[GET_MZ_DCC_TYPE()], tDCC_USERCURVE[GET_MZ_DCC_TYPE()]);
+              }
+              
+              void CAdjustDisableHLWindow(void)
+              {
+              //    CAdjustMZHueSat(0);
+              //    CAdjustMZHueSat(1);
+              //    CAdjustMZHueSat(2);
+                  CAdjustFillDCCTable(tDCC_CONTROL[GET_MZ_DCC_TYPE()], tDCC_USERCURVE[GET_MZ_DCC_TYPE()]);
+                  CScalerSetBit(_HW_ACCESS_PORT_60, ~_BIT6, 0x00);
+                  CScalerSetBit(_ICM_CTRL_E0, ~_BIT7, 0x00);
+                  CScalerSetBit(_DCC_CTRL0_E4, ~_BIT7, 0x00);
+              }
+              
+              void CAdjustHLWindow(void)
+              {
+                  if((GET_SAC_DCC_TYPE() == _SAC_DCC_NORMAL) || ((GET_SAC_DCC_TYPE() == _SAC_DCC_USER) && (GET_MZ_DCC_TY
+             -PE() == _MZ_DCC_NORMAL) && (GET_MZ_ICM_ON_OFF_TYPE() == _OFF)))
+                      SET_MZ_WINDOW_CFG_TYPE(_MZ_WINDOW_CFG_DISABLE);
+                  else
+                      SET_MZ_WINDOW_CFG_TYPE(_MZ_WINDOW_CFG_FULL);
+              
+                  if(GET_MZ_WINDOW_CFG_TYPE() == _MZ_WINDOW_CFG_DISABLE)
+                  {
+                      CAdjustDisableHLWindow();
+                  }
+                  else if(GET_MZ_WINDOW_CFG_TYPE() == _MZ_WINDOW_CFG_FULL)
+                  {
+                      CAdjustHLWindowHV(0, stDisplayInfo.DHWidth, 0, stDisplayInfo.DVHeight);
+                      CAdjustNormalizeFactor(stDisplayInfo.DHWidth, stDisplayInfo.DVHeight);
+              
+                      if(GET_SAC_DCC_TYPE() == _SAC_DCC_NORMAL)
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 43  
+
+                          CAdjustDisableHLWindow();
+                      else
+                          CAdjustEnableHLWindow(); 
+                  }
+              /*
+                  else if(GET_MZ_WINDOW_CFG_TYPE() == _MZ_WINDOW_CFG_DEMO)
+                  {
+                      CAdjustHLWindowHV(0, stDisplayInfo.DHWidth / 2, 0, stDisplayInfo.DVHeight);
+                      CAdjustNormalizeFactor(stDisplayInfo.DHWidth / 2, stDisplayInfo.DVHeight);
+                      CAdjustEnableHLWindow();
+                  }
+                  else if(GET_MZ_WINDOW_CFG_TYPE() == _MZ_WINDOW_CFG_WINDOW)
+                  {
+                      CAdjustHLWindowHV(stOsdUserData.MZHPos, stOsdUserData.MZHWidth, stOsdUserData.MZVPos, stOsdUserDat
+             -a.MZVHeight);
+                      CAdjustNormalizeFactor(stOsdUserData.MZHWidth, stOsdUserData.MZVHeight);
+                      CAdjustEnableHLWindow();
+                  }
+              */
+              }
+              
+              void CAdjustHLWindowHV(WORD usHPos, WORD usHWidth, WORD usVPos, WORD usVHeight)
+              {
+                  if(usHWidth == 0 || usVHeight == 0)
+                      return;
+              
+                  CScalerSetBit(_HW_ACCESS_PORT_60, ~(_BIT7 | _BIT3 | _BIT2 | _BIT1 | _BIT0), _BIT7);
+              
+                  pData[0] = ((usHPos >> 8) & 0x07);
+                  pData[1] = (BYTE)(usHPos);
+                  pData[2] = (((usHPos + usHWidth) >> 8) & 0x07);
+                  pData[3] = (BYTE)(usHPos + usHWidth);
+                  pData[4] = ((usVPos >> 8) & 0x07);
+                  pData[5] = (BYTE)(usVPos);
+                  pData[6] = (((usVPos + usVHeight) >> 8) & 0x07);
+                  pData[7] = (BYTE)(usVPos + usVHeight);
+              
+                  CTimerWaitForEvent(_EVENT_DEN_STOP);
+              
+                  CScalerWrite(_HW_DATA_PORT_61, 8, pData, _NON_AUTOINC);
+              
+                  CScalerSetBit(_HW_ACCESS_PORT_60, ~(_BIT7 | _BIT3 | _BIT2 | _BIT1 | _BIT0), 0x00);
+              }
+              
+              void CAdjustNormalizeFactor(WORD usHWidth, WORD usVHeight)
+              {
+                  ((DWORD *)pData)[0] = (DWORD)4194304 * 255 / usHWidth / usVHeight;
+              
+                  CScalerSetBit(_DCC_CTRL0_E4, ~(_BIT1 | _BIT0), 0x00);
+              
+                  CScalerSetByte(_DCC_ACCESS_PORT_E6, 0x00);
+              
+                  ((DWORD *)pData)[0] &= 0x3fffff;
+              
+                  CScalerWrite(_DCC_DATA_PORT_E7, 3, &pData[1], _NON_AUTOINC);
+              }
+              
+              void CAdjustHLWindowBrightness(BYTE ucValue)
+              {
+                  if(GET_MZ_WINDOW_CFG_TYPE() == _MZ_WINDOW_CFG_FULL)
+                      ucValue = 128;
+              
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 44  
+
+                  CScalerSetBit(_CB_ACCESS_PORT_64, ~(_BIT7 | _BIT3 | _BIT2 | _BIT1 | _BIT0), _BIT7 | 0x06);
+              
+                  pData[0] = pData[1] = pData[2] = ucValue;
+              
+                  CScalerWrite(_CB_DATA_PORT_65, 3, pData, _NON_AUTOINC);
+              
+                  CScalerSetByte(_CB_ACCESS_PORT_64, 0x00);
+              }
+              
+              void CAdjustHLWindowContrast(BYTE ucValue)
+              {
+                  if(GET_MZ_WINDOW_CFG_TYPE() == _MZ_WINDOW_CFG_FULL)
+                      ucValue = 128;
+              
+                  CScalerSetBit(_CB_ACCESS_PORT_64, ~(_BIT7 | _BIT3 | _BIT2 | _BIT1 | _BIT0), _BIT7 | 0x09);
+              
+                  pData[0] = pData[1] = pData[2] = ucValue;
+              
+                  CScalerWrite(_CB_DATA_PORT_65, 3, pData, _NON_AUTOINC);
+              
+                  CScalerSetByte(_CB_ACCESS_PORT_64, 0x00);
+              }
+              
+              int CAdjustColorGammaCal(BYTE color, BYTE n) 
+              {
+                 int temp;
+                  switch(color&0x0f)
+                      {
+                          case _V_RED: // CM0
+                          if(( color & 0xf0 ) == 0x00)
+                                  temp = stOsdUserData.MZICMRedSat;
+                          else if(( color & 0xf0 ) == 0x10) 
+                              temp = stOsdUserData.MZICMRedSat/2 + stOsdUserData.MZICMMagentaSat ;
+                          else if(( color & 0xf0 ) == 0x20)
+                              temp = (stOsdUserData.MZICMRedSat + stOsdUserData.MZICMYellowSat)/2 ;
+                              break;
+              
+                              case _V_GREEN: // CM1
+                                  if(( color & 0xf0 ) == 0x00)
+                                          temp = stOsdUserData.MZICMYellowSat;
+                          else if(( color & 0xf0 ) == 0x10) 
+                                          temp = (stOsdUserData.MZICMRedSat + stOsdUserData.MZICMYellowSat)/2 ;
+                          else if(( color & 0xf0 ) == 0x20)
+                                  temp = (stOsdUserData.MZICMGreenSat + stOsdUserData.MZICMYellowSat)/2 ;                         
+                              break;
+              
+                              case _V_BLUE: // CM2 
+                                  if(( color & 0xf0 ) == 0x00)
+                                          temp = stOsdUserData.MZICMGreenSat ;
+                          else if(( color & 0xf0 ) == 0x10)
+                              temp = (stOsdUserData.MZICMGreenSat + stOsdUserData.MZICMYellowSat)/2 ;
+                          else if(( color & 0xf0 ) == 0x20)
+                                          temp = (stOsdUserData.MZICMGreenSat + stOsdUserData.MZICMCyanSat)/2 ;
+                              break;
+              
+                              case _V_YELLOW: // CM3
+                                  if(( color & 0xf0 ) == 0x00)
+                                          temp = stOsdUserData.MZICMCyanSat ;
+                          else if(( color & 0xf0 ) == 0x10)
+                                          temp = stOsdUserData.MZICMGreenSat + stOsdUserData.MZICMCyanSat/2 ;
+                          else if(( color & 0xf0 ) == 0x20)
+                                          temp = stOsdUserData.MZICMCyanSat/4 + stOsdUserData.MZICMBlueSat;
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 45  
+
+              
+                              break;
+              
+                              case _V_CYAN: //CM4
+                                  if(( color & 0xf0 ) == 0x00)
+                              temp = stOsdUserData.MZICMBlueSat/2 + stOsdUserData.MZICMMagentaSat; 
+                          else if(( color & 0xf0 ) == 0x10) 
+                                          temp = stOsdUserData.MZICMCyanSat/4 + stOsdUserData.MZICMBlueSat;  
+                          else if(( color & 0xf0 ) == 0x20)
+                                          temp = stOsdUserData.MZICMRedSat/2 +  stOsdUserData.MZICMMagentaSat;
+                              break;
+              
+                      }
+                  temp *= 2;
+              
+                  if (temp >= 16)
+                  {
+                      return ((int)(512*n) + (int)((temp-16)*(int)SatPlus[n-1])) / 64 ;
+                  }
+                  else
+                  {
+                      return ((int)(512*n) - (int)((16-temp)*(int)SatMinus[n-1])) / 64 ;
+                  }
+              }
+              
+              void CAdjustHueSatSet(BYTE color, SWORD TempU1, SWORD TempU2, SWORD TempV1, SWORD TempV2)
+              {
+                  BYTE i;
+                  SWORD u,v;
+                  
+                  CScalerSetByte(0xe1,(color & 0x0f));
+                  CScalerSetByte(0xe2,0x00);
+              
+                  if((color & 0x0f) == _V_RED) //CM0
+                  {
+                      CScalerSetByte(0xe3,0x03);
+                      CScalerSetByte(0xe3,0x00);
+                              CScalerSetByte(0xe3,0x8c);
+                  }
+                  else if((color & 0x0f) == _V_GREEN) //CM1
+                  {
+                      CScalerSetByte(0xe3,0x05);
+                      CScalerSetByte(0xe3,0x00);
+                      CScalerSetByte(0xe3,0x88);
+                  }
+                  else if((color & 0x0f) == _V_YELLOW) //CM3
+                  {
+                      CScalerSetByte(0xe3,0x0b);
+                      CScalerSetByte(0xe3,0x00);
+                              CScalerSetByte(0xe3,0xc8);
+                  }
+                  else if((color & 0x0f) == _V_CYAN) //CM4
+                  {
+                      CScalerSetByte(0xe3,0x0f);
+                              CScalerSetByte(0xe3,0x00);
+                              CScalerSetByte(0xe3,0xcc);
+                  }
+                      else if(((color & 0x0f) == _V_BLUE)) // CM2
+                  {
+                      CScalerSetByte(0xe3,0x08);
+                      CScalerSetByte(0xe3,0x00);
+                              CScalerSetByte(0xe3,0xcc);
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 46  
+
+                  }
+              
+                  
+                  CScalerSetByte(0xe1,(color & 0x0f));
+                  CScalerSetByte(0xe2,((color & 0xf0)+0x03)); 
+              
+                  for(i=1; i<9; i++)
+                  {
+                      u = ((TempU1+TempU2)*CAdjustColorGammaCal(color, i)/64) - ((TempU1*i)/8);
+                      v = ((TempV1+TempV2)*CAdjustColorGammaCal(color, i)/64) - ((TempV1*i)/8);
+              
+                              if(u>127)
+                              u=127;
+                              else if(u<-128) 
+                                  u=-128;
+              
+                              if(v>127)
+                              v=127;
+                              else if(v<-128) 
+                                  v=-128;
+              
+                      CScalerSetByte(0xe3,u);
+                      CScalerSetByte(0xe3,v);
+                  }
+              
+                  CScalerSetByte(0xe0,0xdf);
+              }
+              
+              void CAdjustMZComboHueSat(BYTE ucVar, SWORD sTempU1, SWORD sTempV1, SWORD sConst0, SWORD sConst1, SWORD sC
+             -onst2, SWORD sConst3, BYTE ucPar)
+              {
+                  SWORD sTempU2, sTempV2;
+              
+                  if(ucVar < 8)
+                  {
+                      sTempU2 = (SWORD)(sConst0) * (8 - ucVar) / 8;
+                      sTempV2 = (SWORD)(sConst1) * (8 - ucVar) / 8;
+                  }
+                  else
+                  {
+                      sTempU2 = (SWORD)(sConst2) * (ucVar - 8) / 8;
+                      sTempV2 = (SWORD)(sConst3) * (ucVar - 8) / 8;
+                  }
+              
+                  CAdjustHueSatSet(ucPar, sTempU1, sTempU2, sTempV1, sTempV2);
+              }
+              
+              void CAdjustMZHueSat(BYTE color)
+              {
+                  if((GET_SAC_DCC_TYPE() == _SAC_DCC_NORMAL) || ((GET_SAC_DCC_TYPE() == _SAC_DCC_USER) && (GET_MZ_DCC_TY
+             -PE() == _MZ_DCC_NORMAL) && (GET_MZ_ICM_ON_OFF_TYPE() == _OFF)))
+                      SET_MZ_WINDOW_CFG_TYPE(_MZ_WINDOW_CFG_DISABLE);
+                  else
+                      SET_MZ_WINDOW_CFG_TYPE(_MZ_WINDOW_CFG_FULL);
+              
+                  if(color == _V_RED)
+                  {
+                      // CM0 master ---1
+                      CAdjustMZComboHueSat(stOsdUserData.MZICMRedHue, 255, 510, (64 - 8), (-128 + 16), (-128 + 16), (-48
+             -), 0x00); 
+                      // CM0 right  ---2                             //U,  V,   the maximum u v can adjust,the field to 
+             -modify                                     
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 47  
+
+                      CAdjustMZComboHueSat(stOsdUserData.MZICMRedHue/2 + stOsdUserData.MZICMMagentaHue, 422, 175, (64 - 
+             -8), (-128 + 16), (-64 + 8), (128 - 16), 0x10); 
+                      // CM0 left   ---3
+                      CAdjustMZComboHueSat((stOsdUserData.MZICMRedHue + stOsdUserData.MZICMYellowHue)/2, 0, 510, (128 - 
+             -16), (-48), (-128 + 16), (-48), 0x20); 
+                      // CM1 right  ---5
+                      CAdjustMZComboHueSat((stOsdUserData.MZICMRedHue + stOsdUserData.MZICMYellowHue)/2, 0, 510, (128 - 
+             -16), (-48), (-128 + 16), (-48), 0x11); 
+                      // CM4 left   ---15
+                      CAdjustMZComboHueSat(stOsdUserData.MZICMRedHue/2 + stOsdUserData.MZICMMagentaHue, 422, 175, (64 - 
+             -8), (-128 + 16), (-64 + 8), (128 - 16), 0x24);          
+              
+                  }
+                  else if(color == _V_GREEN)
+                  {     
+                      // CM1 left   ---6
+                      CAdjustMZComboHueSat((stOsdUserData.MZICMYellowHue + stOsdUserData.MZICMGreenHue)/2 , -340, 340, (
+             -64 - 8), (128 - 16), (-64 + 8), (-128 + 16), 0x21);   
+                      // CM2 master ---7                      
+                          CAdjustMZComboHueSat(stOsdUserData.MZICMGreenHue, -510, 0, (64 - 8), (128 - 16), (64 - 8), (-128 + 16
+             -), 0x02);
+                      // CM2 right  ---8
+                      CAdjustMZComboHueSat((stOsdUserData.MZICMYellowHue + stOsdUserData.MZICMGreenHue)/2 , -340, 340, (
+             -64 - 8), (128 - 16), (-64 + 8), (-128 + 16), 0x12);
+                      // CM2 left   ---9
+                      CAdjustMZComboHueSat((stOsdUserData.MZICMGreenHue + stOsdUserData.MZICMCyanHue)/2, -340, -340, (-6
+             -4 + 8), (128 - 16), (64 - 8), (-128 + 16), 0x22);        
+                      // CM3 right  ---11          
+                      CAdjustMZComboHueSat((stOsdUserData.MZICMGreenHue + stOsdUserData.MZICMCyanHue)/2, -340, -340, (-6
+             -4 + 8), (128 - 16), (64 - 8), (-128 + 16), 0x23);
+                      }
+                  else if(color == _V_YELLOW)
+                  {
+                      // CM1 master ---4
+                      CAdjustMZComboHueSat(stOsdUserData.MZICMYellowHue, -255, 510, (128 - 16), (-48), (-64 + 8), (-128 
+             -+ 16), 0x01);
+                      // CM1 right  ---5
+                      CAdjustMZComboHueSat((stOsdUserData.MZICMRedHue + stOsdUserData.MZICMYellowHue)/2, 0, 510, (128 - 
+             -16), (-48), (-128 + 16), (-48), 0x11);         
+                      // CM1 left   ---6
+                      CAdjustMZComboHueSat((stOsdUserData.MZICMYellowHue + stOsdUserData.MZICMGreenHue)/2 , -340, 340, (
+             -64 - 8), (128 - 16), (-64 + 8), (-128 + 16), 0x21);
+                      // CM0 left   ---3
+                      CAdjustMZComboHueSat((stOsdUserData.MZICMRedHue + stOsdUserData.MZICMYellowHue)/2, 0, 510, (128 - 
+             -16), (-48), (-128 + 16), (-48), 0x20); 
+                      // CM2 right  ---8
+                      CAdjustMZComboHueSat((stOsdUserData.MZICMYellowHue + stOsdUserData.MZICMGreenHue)/2 , -340, 340, (
+             -64 - 8), (128 - 16), (-64 + 8), (-128 + 16), 0x12);
+                  }
+                  else if(color == _V_CYAN)
+                  {
+                      // CM3 master ---10
+                      CAdjustMZComboHueSat(stOsdUserData.MZICMCyanHue, -255, -510, (-64 + 8), (128-16), (128 - 16), (48)
+             -, 0x03);
+                      // CM3 right  ---11
+                      CAdjustMZComboHueSat((stOsdUserData.MZICMGreenHue + stOsdUserData.MZICMCyanHue)/2, -340, -340, (-6
+             -4 + 8), (128 - 16), (64 - 8), (-128 + 16), 0x13);
+                      // CM3 left   ---12
+                      CAdjustMZComboHueSat(stOsdUserData.MZICMCyanHue/4 + stOsdUserData.MZICMBlueHue, 255, -510, (-128 +
+             - 16), (48), (128 - 16), (48), 0x23);
+                      // CM2 left   ---9
+                      CAdjustMZComboHueSat((stOsdUserData.MZICMGreenHue + stOsdUserData.MZICMCyanHue)/2, -340, -340, (-6
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 48  
+
+             -4 + 8), (128 - 16), (64 - 8), (-128 + 16), 0x22);
+                          // CM4 right  ---14
+                          CAdjustMZComboHueSat(stOsdUserData.MZICMCyanHue/4 + stOsdUserData.MZICMBlueHue, 255, -510, (-128 + 
+             -16), (48), (128 - 16), (48), 0x14);
+                  }
+                  else if(color == _V_BLUE)
+                  {
+                      // CM3 left   ---12
+                      CAdjustMZComboHueSat(stOsdUserData.MZICMCyanHue/4 + stOsdUserData.MZICMBlueHue, 255, -510, (-128 +
+             - 16), (48), (128 - 16), (48), 0x23);
+                      // CM4 master ---13        
+                      CAdjustMZComboHueSat(stOsdUserData.MZICMBlueHue/2 + stOsdUserData.MZICMMagentaHue, 422, -175, (-64
+             - + 8),(-128 + 16), (64 - 8), (128 - 16), 0x04);
+                      // CM4 right  ---14
+                          CAdjustMZComboHueSat(stOsdUserData.MZICMCyanHue/4 + stOsdUserData.MZICMBlueHue, 255, -510, (-128 + 16
+             -), (48), (128 - 16), (48), 0x14);
+                      
+                      //CAdjustMZComboHueSat(stOsdUserData.MZICMBlueHue, 255, -510, (-128 + 16), (48), (64 - 8), (128 - 
+             -16), 0x02);
+                      //CAdjustMZComboHueSat(stOsdUserData.MZICMBlueHue, 139, -510, (-128 + 16), (48), (128 - 16), (48),
+             - 0x12);
+                      //CAdjustMZComboHueSat(stOsdUserData.MZICMBlueHue, 310, -400, (-64 + 8), (-128 + 16), (64 - 8), (1
+             -28 - 16), 0x22);
+                      //CAdjustMZComboHueSat(0, 139, -510, 0, 0, 0, 0, 0x02);
+                      //CAdjustMZComboHueSat(stOsdUserData.MZICMBlueHue, 255, -510, (-128 + 16), (48), (64 - 8), (128 - 
+             -16), 0x12);
+                  }
+                  else if(color == _V_MAGENTA)
+                  {
+                      // CM0 right  ---2
+                      CAdjustMZComboHueSat(stOsdUserData.MZICMRedHue/2 + stOsdUserData.MZICMMagentaHue, 422, 175, (64 - 8),
+             - (-128 + 16), (-64 + 8), (128 - 16), 0x10); 
+                      // CM4 master ---13        
+                      CAdjustMZComboHueSat(stOsdUserData.MZICMBlueHue/2 + stOsdUserData.MZICMMagentaHue, 422, -175, (-64
+             - + 8),(-128 + 16), (64 - 8), (128 - 16), 0x04);
+                      // CM4 left   ---15
+                      CAdjustMZComboHueSat(stOsdUserData.MZICMRedHue/2 + stOsdUserData.MZICMMagentaHue, 422, 175, (64 - 
+             -8), (-128 + 16), (-64 + 8), (128 - 16), 0x24);
+                      
+                      //CAdjustMZComboHueSat(0, 139, -510, 0, 0, 0, 0, 0x02);
+                      //CAdjustMZComboHueSat(stOsdUserData.MZICMMagentaHue, 510, 0, (-64 + 8), (128 - 16), (-64 + 8), (-
+             -128 + 16), 0x22);             
+                  }
+              
+                  if((GET_MZ_ICM_ON_OFF_TYPE() == _ON) && (GET_MZ_WINDOW_CFG_TYPE() != _MZ_WINDOW_CFG_DISABLE))
+                      CScalerSetBit(_ICM_CTRL_E0, ~_BIT7, _BIT7);
+                  else
+                      CScalerSetBit(_ICM_CTRL_E0, ~_BIT7, 0x00);
+              }
+              
+              void CSetSACMode(BYTE DDCtype)
+              {
+                  SET_SAC_DCC_TYPE(DDCtype);
+              
+                      if(DDCtype == _SAC_DCC_NORMAL)
+                  {
+                          CAdjustHLWindow();
+                  }
+                      else if(DDCtype == _SAC_DCC_USER)
+                      {
+                      if(GET_MZ_ICM_ON_OFF_TYPE() == _ON)
+                      {
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 49  
+
+                          CAdjustMZHueSat(0);
+                          CAdjustMZHueSat(1);
+                          CAdjustMZHueSat(2);
+                          CAdjustMZHueSat(3);
+                          CAdjustMZHueSat(4);
+                          CAdjustMZHueSat(5);
+                          CScalerSetBit(_ICM_CTRL_E0, ~_BIT7, 0x80);
+                      }
+                      else
+                              {
+                          CScalerSetBit(_ICM_CTRL_E0, ~_BIT7, 0x00);
+                      }
+              
+                      if(GET_MZ_DCC_TYPE() == _MZ_DCC_NORMAL)
+                      {
+                          CScalerSetByte(_DCC_CTRL0_E4, 0x2c);
+                          if(GET_MZ_ICM_ON_OFF_TYPE() == _OFF)
+                              CAdjustHLWindow();
+                      }
+                      else
+                      {
+                          CAdjustHLWindow();
+                          CAdjustFillDCCTable(tDCC_CONTROL[GET_MZ_DCC_TYPE()], tDCC_USERCURVE[GET_MZ_DCC_TYPE()]);
+                      }
+                      }
+                      else
+                      {
+                      CAdjustFillDCCTable(tDCC_CONTROL[GET_SAC_DCC_TYPE()], tDCC_USERCURVE[GET_SAC_DCC_TYPE()]);
+                      CAdjustAccessICMTable(GET_SAC_DCC_TYPE());
+                          CAdjustHLWindow();
+                      }
+              }
+              #endif // end #if (_VGA_COLOR_SUPPORT)
+2902          
+2903          
+2904          
+2905          #endif // #if (_SCALER_TYPE == _RTD2553V || _SCALER_TYPE == _RTD2546N || _SCALER_TYPE == _RTD2525L)
+2906          
+2907          
+2908          #if(_SCALER_TYPE == _RTD2547D && _VGA_COLOR_SUPPORT)
+              // Description  : Enable Highlight Window
+              // Input Value  : None
+              // Output Value : None
+              //--------------------------------------------------
+              void CAdjustEnableHLWindow(void)
+              {
+                  CScalerSetBit(_HW_ACCESS_PORT_60, ~_BIT6, _BIT6);
+                  CAdjustHLWindowBrightness(stOsdUserData.MZBright);
+                  CAdjustHLWindowContrast(stOsdUserData.MZContrast);
+                  if(GET_MZ_MODE_TYPE() == _MZ_MODE_USER)
+                  {
+                      CAdjustMZHueSat(0);
+                      CAdjustMZHueSat(1);
+                      CAdjustMZHueSat(2);
+                      CAdjustFillDCCTable(tDCC_CONTROL[GET_MZ_DCC_TYPE()], tDCC_USERCURVE[GET_MZ_DCC_TYPE()]);
+                  }
+                  else
+                  {
+                      CAdjustFillICMTable(GET_MZ_MODE_TYPE());
+                      CAdjustFillDCCTable(tDCC_CONTROL[GET_MZ_MODE_TYPE()], tDCC_USERCURVE[GET_MZ_MODE_TYPE()]);
+                  }
+              }
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 50  
+
+              
+              //--------------------------------------------------
+              // Description  : Disable Highlight Window
+              // Input Value  : None
+              // Output Value : None
+              //--------------------------------------------------
+              void CAdjustDisableHLWindow(void)
+              {
+                  CAdjustMZHueSat(0);
+                  CAdjustMZHueSat(1);
+                  CAdjustMZHueSat(2);
+                  CAdjustFillDCCTable(tDCC_CONTROL[GET_MZ_DCC_TYPE()], tDCC_USERCURVE[GET_MZ_DCC_TYPE()]);
+                  CScalerSetBit(_HW_ACCESS_PORT_60, ~_BIT6, 0x00);
+              }
+              
+              //--------------------------------------------------
+              // Description  : Adjust Highlight Window
+              // Input Value  : None
+              // Output Value : None
+              //--------------------------------------------------
+              void CAdjustHLWindow(void)
+              {
+                  if(GET_MZ_WINDOW_CFG_TYPE() == _MZ_WINDOW_CFG_DISABLE)
+                  {
+                      CAdjustDisableHLWindow();
+                  }
+                  else if(GET_MZ_WINDOW_CFG_TYPE() == _MZ_WINDOW_CFG_FULL)
+                  {
+                      CAdjustHLWindowHV(0, stDisplayInfo.DHWidth, 0, stDisplayInfo.DVHeight);
+                      CAdjustNormalizeFactor(stDisplayInfo.DHWidth, stDisplayInfo.DVHeight);
+                      CAdjustEnableHLWindow();
+                  }
+                  else if(GET_MZ_WINDOW_CFG_TYPE() == _MZ_WINDOW_CFG_DEMO)
+                  {
+                      CAdjustHLWindowHV(0, stDisplayInfo.DHWidth / 2, 0, stDisplayInfo.DVHeight);
+                      CAdjustNormalizeFactor(stDisplayInfo.DHWidth / 2, stDisplayInfo.DVHeight);
+                      CAdjustEnableHLWindow();
+                  }
+                  else if(GET_MZ_WINDOW_CFG_TYPE() == _MZ_WINDOW_CFG_WINDOW)
+                  {
+                      CAdjustHLWindowHV(stOsdUserData.MZHPos, stOsdUserData.MZHWidth, stOsdUserData.MZVPos, stOsdUserDat
+             -a.MZVHeight);
+                      CAdjustNormalizeFactor(stOsdUserData.MZHWidth, stOsdUserData.MZVHeight);
+                      CAdjustEnableHLWindow();
+                  }
+              }
+              
+              //--------------------------------------------------
+              // Description  : Adjust Highlight Window Size
+              // Input Value  : usHPos, usHWidth, usVPos, usVHeight
+              // Output Value : None
+              //--------------------------------------------------
+              void CAdjustHLWindowHV(WORD usHPos, WORD usHWidth, WORD usVPos, WORD usVHeight)
+              {
+                  if(usHWidth == 0 || usVHeight == 0)
+                      return;
+              
+                  CScalerSetBit(_HW_ACCESS_PORT_60, ~(_BIT7 | _BIT3 | _BIT2 | _BIT1 | _BIT0), _BIT7);
+              
+                  pData[0] = ((usHPos >> 8) & 0x07);
+                  pData[1] = (BYTE)(usHPos);
+                  pData[2] = (((usHPos + usHWidth) >> 8) & 0x07);
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 51  
+
+                  pData[3] = (BYTE)(usHPos + usHWidth);
+                  pData[4] = ((usVPos >> 8) & 0x07);
+                  pData[5] = (BYTE)(usVPos);
+                  pData[6] = (((usVPos + usVHeight) >> 8) & 0x07);
+                  pData[7] = (BYTE)(usVPos + usVHeight);
+              
+                  CTimerWaitForEvent(_EVENT_DEN_STOP);
+              
+                  CScalerWrite(_HW_DATA_PORT_61, 8, pData, _NON_AUTOINC);
+              
+                  CScalerSetBit(_HW_ACCESS_PORT_60, ~(_BIT7 | _BIT3 | _BIT2 | _BIT1 | _BIT0), 0x00);
+              }
+              
+              //--------------------------------------------------
+              // Description  : Adjust Brightness Value For Highlight Window
+              // Input Value  : ucValue
+              // Output Value : None
+              //--------------------------------------------------
+              void CAdjustHLWindowBrightness(BYTE ucValue)
+              {
+                  if(GET_MZ_WINDOW_CFG_TYPE() == _MZ_WINDOW_CFG_FULL)
+                      ucValue = 128;
+              
+                  CScalerSetBit(_CB_ACCESS_PORT_64, ~(_BIT7 | _BIT3 | _BIT2 | _BIT1 | _BIT0), (_BIT7 | _BIT2 | _BIT1));
+              
+                  pData[0] = pData[1] = pData[2] = ucValue;
+              
+                  CScalerWrite(_CB_DATA_PORT_65, 3, pData, _NON_AUTOINC);
+              
+                  CScalerSetByte(_CB_ACCESS_PORT_64, 0x00);
+              }
+              
+              //--------------------------------------------------
+              // Description  : Adjust Contrast Value For Highlight Window
+              // Input Value  : ucValue
+              // Output Value : None
+              //--------------------------------------------------
+              void CAdjustHLWindowContrast(BYTE ucValue)
+              {
+                  if(GET_MZ_WINDOW_CFG_TYPE() == _MZ_WINDOW_CFG_FULL)
+                      ucValue = 128;
+              
+                  CScalerSetBit(_CB_ACCESS_PORT_64, ~(_BIT7 | _BIT3 | _BIT2 | _BIT1 | _BIT0), (_BIT7 | _BIT3 | _BIT0));
+              
+                  pData[0] = pData[1] = pData[2] = ucValue;
+              
+                  CScalerWrite(_CB_DATA_PORT_65, 3, pData, _NON_AUTOINC);
+              
+                  CScalerSetByte(_CB_ACCESS_PORT_64, 0x00);
+              }
+              
+              //--------------------------------------------------
+              // Description  : Adjust Normalize Factor
+              // Input Value  : usHWidth, usVHeight)
+              // Output Value : None
+              //--------------------------------------------------
+              void CAdjustNormalizeFactor(WORD usHWidth, WORD usVHeight)
+              {
+                  ((DWORD *)pData)[0] = (DWORD)4194304 * 255 / usHWidth / usVHeight;
+              
+                  CScalerSetBit(_DCC_CTRL0_E4, ~(_BIT1 | _BIT0), _PAGE0);
+              
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 52  
+
+                  CScalerSetByte(_DCC_ACCESS_PORT_E6, _DCC_P0_NOR_FACTOR_H_00);
+              
+                  ((DWORD *)pData)[0] &= 0x3fffff;
+              
+                  CScalerWrite(_DCC_DATA_PORT_E7, 3, &pData[1], _NON_AUTOINC);
+              }
+              
+              //--------------------------------------------------
+              // Description    : Fill DCC table , then enable DCC function
+              // Input Value   : pControlTable, pUserCurveTable, both parameters accroding to Vivid color software.
+              // Output Value : None
+              //--------------------------------------------------
+              void CAdjustFillDCCTable(BYTE *pControlTable, BYTE *pUserCurveTable)
+              {
+                  BYTE i;
+                      
+                  // switch to page 0
+                  CScalerRead(_DCC_CTRL0_E4, 1, &i, _NON_AUTOINC);
+                  i = (i & 0xfc) | _PAGE0;   
+                  CScalerSetByte(_DCC_CTRL0_E4, i);      
+              
+                  // fill DCC control table
+                  CScalerSetByte(_DCC_ACCESS_PORT_E6, 0x03);
+                  for (i =0; i<9; i++)
+                  {
+                      CScalerSetByte(_DCC_DATA_PORT_E7, *pControlTable);
+                      pControlTable++;
+                  }
+              
+                  // switch to page 1
+                  CScalerRead(_DCC_CTRL0_E4, 1, &i, _NON_AUTOINC);
+                  i = (i & 0xfc) | _PAGE1;
+                  CScalerSetByte(_DCC_CTRL0_E4, i);
+                  
+                  // fill DCC user curve table
+                  CScalerSetByte(_DCC_ACCESS_PORT_E6, 0x00); 
+                  for (i=0; i<20; i++)
+                  {                
+                      CScalerSetByte(_DCC_DATA_PORT_E7, *pUserCurveTable);
+                      pUserCurveTable++;
+                  }
+              
+                  // enable DCC func when _EVENT_DEN_STOP
+                  CTimerWaitForEvent(_EVENT_DEN_STOP);
+              
+                  if(((GET_MZ_DCC_TYPE() == _MZ_DCC_NORMAL) && (GET_MZ_MODE_TYPE() == _MZ_MODE_USER)) || (GET_MZ_WINDOW_
+             -CFG_TYPE() == _MZ_WINDOW_CFG_DISABLE))
+                  {
+                      CScalerSetByte(_DCC_CTRL0_E4, 0x2c);
+                  }
+                  else
+                  {
+                      CScalerSetByte(_DCC_CTRL0_E4, 0xac);
+                  }
+              
+                  CScalerSetByte(_DCC_CTRL1_E5, 0x80);
+              }
+              
+              BYTE code SatPlus[8]  = { 41, 44, 43, 39, 31, 22, 11, 0 }; // by 1/256
+              BYTE code SatMinus[8] = { 24, 35, 40, 41, 36, 28, 16, 0 }; // by 1/256
+              
+              int CAdjustColorGammaCal(BYTE color, BYTE n) // n = 1~8
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 53  
+
+              {
+                  int temp = (color == 0) ? stOsdUserData.MZICMRedSat : (color == 1) ? stOsdUserData.MZICMGreenSat : stO
+             -sdUserData.MZICMBlueSat;
+              
+                  temp *= 2;
+              
+                  if (temp >= 16)
+                  {
+                      return ((int)(512*n) + (int)((temp-16)*(int)SatPlus[n-1])) / 64 ;
+                  }
+                  else
+                  {
+                      return ((int)(512*n) - (int)((16-temp)*(int)SatMinus[n-1])) / 64 ;
+                  }
+              }
+              
+              void CAdjustHueSatSet(BYTE color, SWORD TempU1, SWORD TempU2, SWORD TempV1, SWORD TempV2)
+              {
+                  BYTE i;
+                  SWORD u,v;
+              
+                  CScalerSetByte(_ICM_SEL_E1,(color & 0x0f));
+                  CScalerSetByte(_ICM_ACCESS_PORT_E2,0x00);
+              
+                  if((color & 0x0f) == 0)
+                  {
+                      CScalerSetByte(_ICM_DATA_PORT_E3,0x02);
+                      CScalerSetByte(_ICM_DATA_PORT_E3,0xd2);
+                      CScalerSetByte(_ICM_DATA_PORT_E3,0xee);
+                  }
+                  else if((color & 0x0f) == 1)
+                  {
+                      CScalerSetByte(_ICM_DATA_PORT_E3,0x08);
+                      CScalerSetByte(_ICM_DATA_PORT_E3,0x00);
+                      CScalerSetByte(_ICM_DATA_PORT_E3,0xee);
+                  }
+                  else if((color & 0x0f) == 2)
+                  {
+                      CScalerSetByte(_ICM_DATA_PORT_E3,0x0d);
+                      CScalerSetByte(_ICM_DATA_PORT_E3,0x2e);
+                      CScalerSetByte(_ICM_DATA_PORT_E3,0xbe);
+                  }
+              
+                  
+                  CScalerSetByte(_ICM_SEL_E1,(color & 0x0f));
+                  CScalerSetByte(_ICM_ACCESS_PORT_E2,((color & 0xf0)+0x03));  
+              
+                  for(i=1; i<9; i++)
+                  {
+                      u = ((TempU1+TempU2)*CAdjustColorGammaCal(color, i)/64) - ((TempU1*i)/8);
+                      v = ((TempV1+TempV2)*CAdjustColorGammaCal(color, i)/64) - ((TempV1*i)/8);
+              
+                      CScalerSetByte(_ICM_DATA_PORT_E3,u);
+                      CScalerSetByte(_ICM_DATA_PORT_E3,v);
+                  }
+                      /*
+                  for(i=1; i<33; i++)
+                  {
+                      CScalerSetByte(0xe3,0x00);
+                  }
+              */
+                  CScalerSetByte(_ICM_CTRL_E0,0xdc);
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 54  
+
+              }
+              
+              void CAdjustMZComboHueSat(BYTE ucVar, SWORD sTempU1, SWORD sTempV1, SWORD sConst0, SWORD sConst1, SWORD sC
+             -onst2, SWORD sConst3, BYTE ucPar)
+              {
+                  SWORD sTempU2, sTempV2;
+              
+                  if(ucVar < 8)
+                  {
+                      sTempU2 = (SWORD)(sConst0) * (8 - ucVar) / 8;
+                      sTempV2 = (SWORD)(sConst1) * (8 - ucVar) / 8;
+                  }
+                  else
+                  {
+                      sTempU2 = (SWORD)(sConst2) * (ucVar - 8) / 8;
+                      sTempV2 = (SWORD)(sConst3) * (ucVar - 8) / 8;
+                  }
+              
+                  CAdjustHueSatSet(ucPar, sTempU1, sTempU2, sTempV1, sTempV2);
+              }
+              
+              void CAdjustMZHueSat(BYTE color)
+              {
+                  if(color == 0)
+                  {
+                      CAdjustMZComboHueSat(stOsdUserData.MZICMRedHue, 255, 510, (64 - 8), (-128 + 16), (-128 + 16), (-48
+             -), 0x00);
+              
+                      CAdjustMZComboHueSat(stOsdUserData.MZICMRedHue, 437, 146, (64 - 8), (-128 + 16), (-64 + 8), (128 -
+             - 16), 0x10);
+              
+                      CAdjustMZComboHueSat(stOsdUserData.MZICMRedHue, -170, 510, (128 - 16), (-48), (-128 + 16), (-48), 
+             -0x20);
+              
+                      }
+                  else if(color == 1)
+                  {
+                      CAdjustMZComboHueSat(stOsdUserData.MZICMGreenHue, -510, 0, (64 - 8), (128 - 16), (64 - 8), (-128 +
+             - 16), 0x01);
+              
+                      CAdjustMZComboHueSat(stOsdUserData.MZICMGreenHue, -340, 340, (64 - 8), (128 - 16), (-64 + 8), (-12
+             -8 + 16), 0x11);
+              
+                      CAdjustMZComboHueSat(stOsdUserData.MZICMGreenHue, -340, -340, (-64 + 8), (128 - 16), (64 - 8), (-1
+             -28 + 16), 0x21);
+              
+                      }
+                  else if(color == 2)
+                  {
+                      CAdjustMZComboHueSat(stOsdUserData.MZICMBlueHue, 255, -510, (-128 + 16), (48), (64 - 8), (128 - 16
+             -), 0x02);
+              
+                      CAdjustMZComboHueSat(stOsdUserData.MZICMBlueHue, -170, -510, (-128 + 16), (48), (128 - 16), (48), 
+             -0x12);
+              
+                      CAdjustMZComboHueSat(stOsdUserData.MZICMBlueHue, 355, -310, (-64 + 8), (-128 + 16), (64 - 8), (128
+             - - 16), 0x22);
+                      }
+              
+                  if((GET_MZ_ICM_ON_OFF_TYPE() == _ON) && (GET_MZ_WINDOW_CFG_TYPE() != _MZ_WINDOW_CFG_DISABLE))
+                      CScalerSetBit(_ICM_CTRL_E0, ~_BIT7, _BIT7);
+                  else
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 55  
+
+                      CScalerSetBit(_ICM_CTRL_E0, ~_BIT7, 0x00);
+              }
+              
+              //--------------------------------------------------
+              // Description      : Fill ICM table , then enable ICM function
+              // Input Value      : None
+              // Output Value     : None
+              //--------------------------------------------------
+              void CAdjustFillICMTable(BYTE ucNum)
+              {
+                  BYTE i=0;
+              
+                  for (i=0; i<4; i++)
+                  {            
+                      CScalerSetByte(_ICM_SEL_E1, (0x00 + i));
+                      CScalerSetByte(_ICM_ACCESS_PORT_E2, 0x00);
+                      CScalerWrite(_ICM_DATA_PORT_E3, 51, tICM_TABLE[ucNum * 4 + i], _NON_AUTOINC);
+                  }
+              
+                  if(ucNum == _MZ_MODE_MOVIE)
+                      CScalerSetByte(_ICM_CTRL_E0, 0xde);
+                  if(ucNum == _MZ_MODE_TEXT)
+                      CScalerSetByte(_ICM_CTRL_E0, 0xc0);
+                  if(ucNum == _MZ_MODE_PHOTO)
+                      CScalerSetByte(_ICM_CTRL_E0, 0xdc);
+              }
+              
+              #if (_OD_SUPPORT == _ON)
+              //--------------------------------------------------
+              // Description  : 
+              // Input Value  : OD Delta Gain = ucValue/64
+              // Output Value : 
+              //--------------------------------------------------
+              void CAdjustODeltaGain(BYTE ucValue)
+              {
+                  CScalerPageSelect(_PAGE3);
+                  CScalerSetByte(_P3_LS_DELTA_GAIN_B1, (ucValue & 0x7F));
+              }
+              #endif  //End if #if (_OD_SUPPORT == _ON)
+              
+              #endif  // #if(_SCALER_TYPE == _RTD2547D && _VGA_COLOR_SUPPORT)
+3269          
+3270          
+3271          
+3272          #if(_VIDEO_VIVID_COLOR_SUPPORT)
+3273          //============================================================================== 
+3274          static BYTE code TDCC_Control1[] =
+3275          {
+3276                  0x00,  0x03,  0x30, // Do not modify these three bytes
+3277                  0x84,  0x66,  0xc3,
+3278                  0x7c,  0xce,  0x1e,
+3279                  0x10,  0x10,  0x14,
+3280          };
+3281          
+3282          static BYTE code TDCC_UserCurve1[] =
+3283          {
+3284                  0x05,  0x10,  0x1f,  0x30,
+3285                  0x43,  0x57,  0x6d,  0x80,
+3286                  0x95,  0xa9,  0xbd,  0xce,
+3287                  0xe0,  0xed,  0xf7,  0x10,  0x00,
+3288                  0x80,  0x14,  0x34,
+3289          };
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 56  
+
+3290          
+3291          static BYTE code TDCC_Control2[] =      // sony mode
+3292          {
+3293                  0x00,  0x03,  0x30,
+3294                  0x84,  0x66,  0xc3,
+3295                  0x00,  0xe6,  0x1e,  
+3296                  0x10,  0x00,  0xff,
+3297          
+3298          /*
+3299                  0x00,  0x03,  0x30,
+3300                  0x84,  0x66,  0xc3,
+3301                  0x5c,  0xce,  0x1e,
+3302                  0x10,  0x10,  0x14,
+3303          */      
+3304          };
+3305          
+3306          static BYTE code TDCC_UserCurve2[] =    // sony mode
+3307          {
+3308                  0x0c,  0x1a,  0x2c,  0x40,  
+3309                  0x50,  0x60,  0x70,  0x80,  
+3310                  0x90,  0xa0,  0xb0,  0xc0,  
+3311                  0xd0,  0xe0,  0xf0,  0x10,  0x00,
+3312                  0x50,  0x14,  0x34,
+3313          /*
+3314                  0x0e,  0x1d,  0x2d,  0x3d,
+3315                  0x4d,  0x5d,  0x6d,  0x7d,
+3316                  0x8e,  0x9d,  0xad,  0xbc,
+3317                  0xca,  0xdb,  0xeb,  0x10,  0x00,
+3318                  0x41,  0x14,  0x34,
+3319          */      
+3320          };
+3321          
+3322          static BYTE code TDCC_Control3[] =
+3323          {
+3324                  0x00,  0x03,  0x30,
+3325                  0x84,  0x66,  0xc3,
+3326                  0x7c,  0xce,  0x1e,
+3327                  0x10,  0x10,  0x14,
+3328          };
+3329          
+3330          
+3331          static BYTE code TDCC_UserCurve3[] =
+3332          {
+3333                  0x0f,  0x1d,  0x2d,  0x3e,
+3334                  0x4b,  0x5c,  0x6d,  0x80,
+3335                  0x91,  0xa2,  0xb3,  0xc4,
+3336                  0xd4,  0xe3,  0xf2,  0x10,  0x00,
+3337                  0x5d,  0x14,  0x30,
+3338          };
+3339          
+3340          
+3341          static BYTE code TDCC_Control4[] =
+3342          {
+3343                  0x00,  0x03,  0x30,
+3344                  0x84,  0x66,  0xc3,
+3345                  0x64,  0xce,  0x1e,
+3346                  0x10,  0x10,  0x14,
+3347          };
+3348          
+3349          static BYTE code TDCC_UserCurve4[] =
+3350          {
+3351                  0x18,  0x2c,  0x3f,  0x50,
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 57  
+
+3352                  0x61,  0x73,  0x85,  0x99,
+3353                  0xad,  0xc0,  0xd2,  0xe0,
+3354                  0xeb,  0xf5,  0xfc,  0x10,  0x00,
+3355                  0x64,  0x14,  0x3a,
+3356          };
+3357          
+3358          code BYTE *TDCC_Control12[4] =
+3359          {
+3360                  TDCC_Control2, TDCC_Control3, TDCC_Control1, TDCC_Control4
+3361          };
+3362          
+3363          code BYTE  *TDCC_UserCurve12[4] =
+3364          {
+3365                  TDCC_UserCurve2, TDCC_UserCurve3, TDCC_UserCurve1, TDCC_UserCurve4
+3366          };
+3367          
+3368          void CAccAdjustVividColorForVideo(BYTE mode)
+3369          {
+3370   1              BYTE *DCCContol,*DCCCurve;
+3371   1              BYTE i,j;
+3372   1        
+3373   1      
+3374   1              switch (mode) {
+3375   2                      case  0:                // disable DCC and ICM
+3376   2                              CScalerSetByte(_DCC_CTRL0_E4, 0x00);  //disable dcc, page0
+3377   2                              CScalerSetByte(_DCC_CTRL1_E5, 0x00);  //disable
+3378   2                              //CScalerSetByte(_ICM_CTRL_E0, 0x00);  //disable icm
+3379   2                              return;
+3380   2                              //break;
+3381   2      
+3382   2                      case 1:
+3383   2                              DCCContol = TDCC_Control12[0];
+3384   2                              DCCCurve =  TDCC_UserCurve12[0];
+3385   2                              break;
+3386   2                      case 2:
+3387   2                              DCCContol = TDCC_Control12[1];
+3388   2                              DCCCurve =  TDCC_UserCurve12[1];
+3389   2                              break;
+3390   2                      case 3:
+3391   2                              DCCContol = TDCC_Control12[2];
+3392   2                              DCCCurve =  TDCC_UserCurve12[2];
+3393   2                              break;
+3394   2                      case 4:
+3395   2                              DCCContol = TDCC_Control12[3];
+3396   2                              DCCCurve =  TDCC_UserCurve12[3];
+3397   2                              break;
+3398   2      
+3399   2                      default :
+3400   2                              break;
+3401   2              }
+3402   1      
+3403   1              CScalerRead(_DCC_CTRL0_E4, 1, &i, _NON_AUTOINC);
+3404   1              i = i & 0xfc;
+3405   1              CScalerRead(_DCC_CTRL1_E5, 1, &j, _NON_AUTOINC);
+3406   1              CScalerSetByte(_DCC_CTRL0_E4, i);
+3407   1              CScalerSetByte(_DCC_CTRL1_E5, j);
+3408   1      
+3409   1              CScalerSetByte(_DCC_ACCESS_PORT_E6, 0x00);
+3410   1              for (i=0; i<12; i++) {
+3411   2                      CScalerSetByte(_DCC_DATA_PORT_E7, *DCCContol );
+3412   2                      DCCContol++;
+3413   2              }
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 58  
+
+3414   1      
+3415   1              CScalerRead(_DCC_CTRL0_E4, 1, &i, _NON_AUTOINC);
+3416   1              i = (i & 0xfc) | 0x01;
+3417   1              CScalerSetByte(_DCC_CTRL0_E4, i);
+3418   1      
+3419   1              CScalerSetByte(_DCC_ACCESS_PORT_E6, 0x00);
+3420   1              for (i=0; i<20; i++) {
+3421   2                      CScalerSetByte(_DCC_DATA_PORT_E7, *DCCCurve);
+3422   2                      DCCCurve++;
+3423   2              }
+3424   1      
+3425   1              CTimerWaitForEvent(_EVENT_DEN_STOP);
+3426   1              CScalerSetByte(_DCC_CTRL0_E4, 0xac);  //enable dcc
+3427   1              //CScalerSetByte(_DCC_CTRL1_E5, 0x80);
+3428   1              CScalerSetByte(_DCC_CTRL1_E5, 0x00);
+3429   1      
+3430   1              CScalerSetByte(_HW_ACCESS_PORT_60, 0x00);         // disable Hightlight Window
+3431   1      } 
+3432                      
+3433          void CAdjustPeakingFilterForVideo(SBYTE ucPeaking)
+3434          {
+3435   1      #if(_SCALER_TYPE == _RTD2547D)
+                      BYTE code PeakingCoeff[][3] =
+                      {
+                              //Peaking_Coef0,  Peaking_Coef1,  Peaking_Coef2,  Coring_Min,  Coring_Max_Pos,  Coring_Max_Neg ,
+              
+                              //level=1 :
+                              0x08, 0x00, 0xFC, 0x00, 0x28, 0xF8,
+                              //level=2 :
+                              0x0C, 0x00, 0xFA, 0x00, 0x28, 0xF8,
+                              //level=3 :
+                              0x10, 0x00, 0xF8, 0x00, 0x28, 0xF8,
+                              //level=4 :
+                              0x18, 0x00, 0xF4, 0x00, 0x28, 0xF8,     //3
+                              //level=5 :
+                              0x20, 0x00, 0xF0, 0x00, 0x28, 0xF8,
+                              //level=6 :
+                              0x28, 0x00, 0xEC, 0x00, 0x28, 0xF8,
+                              //level=7 :
+                              0x30, 0x00, 0xE8, 0x00, 0x28, 0xF8,
+                              //level=8 :
+                              0x38, 0x00, 0xE4, 0x00, 0x28, 0xF8,
+                              //level=9 :
+                              0x40, 0x00, 0xE0, 0x00, 0x28, 0xF8,
+                              //level=10 :
+                              0x46, 0x00, 0xDD, 0x00, 0x28, 0xF8,
+                              //level=11 :
+                              0x4E, 0x00, 0xD9, 0x00, 0x28, 0xF8,
+                              //level=12 :
+                              0x56, 0x00, 0xD5, 0x00, 0x28, 0xF8,
+                              //level=13 :
+                              0x5E, 0x00, 0xD1, 0x00, 0x28, 0xF8,
+                              //level=14 :
+                              0x66, 0x00, 0xCD, 0x00, 0x28, 0xF8,
+                              //level=15 :
+                              0x6E, 0x00, 0xC9, 0x00, 0x28, 0xF8,
+                              //level=16 :
+                              0x76, 0x00, 0xC5, 0x00, 0x28, 0xF8,
+                 };
+              #else
+3474   1              BYTE code PeakingCoeff[][3] =
+3475   1              {
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 59  
+
+3476   1                      0x08,    2,    0xFa, //0
+3477   1                      0x10,    2,    0xF6,//1                  
+3478   1                      0x18,    2,    0xF2,//2   
+3479   1                      0x20,    4,    0xec,//3
+3480   1                      0x28,    4,    0xE8,//4
+3481   1                      0x30,    4,    0xE4, //5
+3482   1                      0x38,    5,    0xdf, //6
+3483   1                      0x40,    5,    0xdb,//7
+3484   1                      0x46,    5,    0xD9,//8
+3485   1                      0x4E,    5,    0xD4,//9
+3486   1                      0x56,    5,    0xD0,//10
+3487   1                      0x5E,    6,    0xcb,//11
+3488   1                      0x66,    6,    0xC7,//12
+3489   1                      0x6E,    6,    0xC2,//13
+3490   1                      0x76,    6,    0xbf,//14
+3491   1                      0x7E,    6,    0xbb,//15
+3492   1              };
+3493   1      #endif
+3494   1      
+3495   1              BYTE Peaking = ucPeaking%16;                                          
+3496   1      
+3497   1              if((_GET_INPUT_SOURCE()==_SOURCE_VGA) || (_GET_INPUT_SOURCE()==_SOURCE_DVI) || (_GET_INPUT_SOURCE()==_SOU
+             -RCE_HDMI))
+3498   1          {
+3499   2                              
+3500   2      #if(_SCALER_TYPE == _RTD2547D)
+                                  CScalerSetByte(_PC_ACCESS_PORT_9A, 0x00);
+              #else
+3503   2                          CScalerSetByte(_PC_ACCESS_PORT_26, 0x00);
+3504   2      #endif
+3505   2                              return;
+3506   2              }
+3507   1          else
+3508   1          {           
+3509   2              
+3510   2      #if(_SCALER_TYPE == _RTD2547D)
+                              pData[0] = PeakingCoeff[ucPeaking][0];
+                              pData[1] = PeakingCoeff[ucPeaking][1];// PeakingCoeff[ucPeaking][2]
+                              pData[2] = PeakingCoeff[ucPeaking][2];// PeakingCoeff[ucPeaking][1]
+                          pData[3] = PeakingCoeff[ucPeaking][3];
+                              pData[4] = PeakingCoeff[ucPeaking][4];
+                      pData[5] = PeakingCoeff[ucPeaking][5];
+              
+                      CScalerSetByte(_PC_ACCESS_PORT_9A, 0x80);
+                      CScalerWrite(_PC_DATA_PORT_9B, 6, pData, _NON_AUTOINC);
+                      CScalerSetByte(_PC_ACCESS_PORT_9A, 0x40);
+              #else
+3522   2                      pData[0] = PeakingCoeff[ucPeaking][0];
+3523   2                      pData[1] = PeakingCoeff[ucPeaking][1];// PeakingCoeff[ucPeaking][2]
+3524   2                      pData[2] = PeakingCoeff[ucPeaking][2];// PeakingCoeff[ucPeaking][1]
+3525   2                  pData[3] = 0x12;    //
+3526   2                      pData[4] = 0x80;        //(OAa)
+3527   2              pData[5] = 0xF8;        //(?AAa)
+3528   2      
+3529   2              CScalerSetByte(_PC_ACCESS_PORT_26, 0x80);
+3530   2              CScalerWrite(_PC_DATA_PORT_27, 6, pData, _NON_AUTOINC);
+3531   2              CScalerSetByte(_PC_ACCESS_PORT_26, 0x40);
+3532   2      #endif
+3533   2      
+3534   2              }       
+3535   1      
+3536   1      }      
+C51 COMPILER V8.16   ADJUST                                                                04/05/2012 11:15:19 PAGE 60  
+
+3537          #endif  // #if(_VIDEO_VIVID_COLOR_SUPPORT)
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   4603    ----
+   CONSTANT SIZE    =    200    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----      81
+   IDATA SIZE       =      1    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
