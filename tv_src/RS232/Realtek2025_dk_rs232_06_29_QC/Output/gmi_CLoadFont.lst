@@ -1,0 +1,31 @@
+C51 COMPILER V8.16   GMI_CLOADFONT                                                         07/15/2011 14:39:57 PAGE 1   
+
+
+C51 COMPILER V8.16, COMPILATION OF MODULE GMI_CLOADFONT
+OBJECT MODULE PLACED IN .\Output\gmi_CLoadFont.obj
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE Lib\gmi_CLoadFont.c OPTIMIZE(9,SIZE) BROWSE DEFINE(CMOS_CHIP_TYPE=PCB_2025L
+                    -V13) PRINT(.\Output\gmi_CLoadFont.lst) OBJECT(.\Output\gmi_CLoadFont.obj)
+
+line level    source
+
+   1          //----------------------------------------------------------------------------------------------------
+   2          // ID Code      : Scaler.c No.0004
+   3          // Update Note  : 
+   4          //
+   5          //----------------------------------------------------------------------------------------------------
+   6          
+   7          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   ----    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
