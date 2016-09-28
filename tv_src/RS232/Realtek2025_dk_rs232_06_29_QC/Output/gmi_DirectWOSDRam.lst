@@ -1,0 +1,72 @@
+C51 COMPILER V8.16   GMI_DIRECTWOSDRAM                                                     04/05/2012 11:15:34 PAGE 1   
+
+
+C51 COMPILER V8.16, COMPILATION OF MODULE GMI_DIRECTWOSDRAM
+OBJECT MODULE PLACED IN .\Output\gmi_DirectWOSDRam.obj
+COMPILER INVOKED BY: D:\安装文件\keil\C51\BIN\C51.EXE Lib\gmi_DirectWOSDRam.C OPTIMIZE(9,SIZE) BROWSE DEFINE(CMOS_CHIP_T
+                    -YPE=PCB_2025LV13) PRINT(.\Output\gmi_DirectWOSDRam.lst) OBJECT(.\Output\gmi_DirectWOSDRam.obj)
+
+line level    source
+
+   1          ////////////////////////////////////////////////////////////////////////////
+   2          //         Copyright of Vector Co.,Ltd.                                   //
+   3          //                                                                        //
+   4          //                                                                        //
+   5          //                              GMI function                              //
+   6          //   Ver: 0.00                                                            //
+   7          //   Creat file time: 2006.7.31                                           //
+   8          //   End modify time: 2006.7.31                                           //
+   9          //   For RTD2523B/RTD2553V/RTD2525L                                       //
+  10          ////////////////////////////////////////////////////////////////////////////
+  11          
+  12          #include "Header\Include.h"
+  13          
+  14          
+  15          
+  16          //-------------------------------------------------------------
+  17          //                                                           //
+  18          //                       OSD function                        //
+  19          //                                                           //
+  20          //-------------------------------------------------------------
+  21                               
+  22          //-------------------------------------------------------------
+  23          void DirectWOSDRam(WORD iAddress, WORD iLen, BYTE TheByte, BYTE Value)
+  24          {
+  25   1      
+  26   1           CScalerSendAddr(_OSD_ADDR_MSB_90, _WRITE, _AUTOINC);
+  27   1           CScalerSendByte(TheByte | ((iAddress >> 8) & 0x0f));
+  28   1           CScalerSendByte((BYTE)(iAddress & 0xff));
+  29   1           CScalerSendWriteStop();
+  30   1      
+  31   1           if(TheByte == ALL_BYTE)  
+  32   1              iLen *= 3;
+  33   1      
+  34   1           CScalerSendAddr(_OSD_DATA_PORT_92, _WRITE, _NON_AUTOINC);
+  35   1      
+  36   1           while(iLen)
+  37   1           {
+  38   2               CScalerSendByte(Value);
+  39   2               iLen--;
+  40   2           }
+  41   1           CScalerSendWriteStop();
+  42   1      }
+  43          
+  44          
+  45          
+  46          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     92    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       6
+C51 COMPILER V8.16   GMI_DIRECTWOSDRAM                                                     04/05/2012 11:15:34 PAGE 2   
+
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
