@@ -1,0 +1,49 @@
+C51 COMPILER V8.16   GMI_SETOSDDOUBLE                                                      04/05/2012 11:15:36 PAGE 1   
+
+
+C51 COMPILER V8.16, COMPILATION OF MODULE GMI_SETOSDDOUBLE
+OBJECT MODULE PLACED IN .\Output\gmi_SetOSDDouble.obj
+COMPILER INVOKED BY: D:\安装文件\keil\C51\BIN\C51.EXE Lib\gmi_SetOSDDouble.C OPTIMIZE(9,SIZE) BROWSE DEFINE(CMOS_CHIP_TY
+                    -PE=PCB_2025LV13) PRINT(.\Output\gmi_SetOSDDouble.lst) OBJECT(.\Output\gmi_SetOSDDouble.obj)
+
+line level    source
+
+   1          ////////////////////////////////////////////////////////////////////////////
+   2          //         Copyright of Vector Co.,Ltd.                                   //
+   3          //                                                                        //
+   4          //                                                                        //
+   5          //                       SetOSDDouble function                              //
+   6          //   Ver: 0.00                                                            //
+   7          //   Creat file time: 2006.7.31                                           //
+   8          //   End modify time: 2006.7.31                                           //
+   9          //   For RTD2523B/RTD2553V/RTD2525L                                       //
+  10          ////////////////////////////////////////////////////////////////////////////
+  11          
+  12          #include "Header\Include.h"
+  13          
+  14          
+  15          //-------------------------------------------------------------
+  16          void SetOSDDouble(BYTE ucAttr)
+  17          {
+  18   1           CScalerSendAddr(_OSD_ADDR_MSB_90, _WRITE, _AUTOINC);
+  19   1           CScalerSendByte(0x40);
+  20   1           CScalerSendByte(0x03);
+  21   1           CScalerSendByte(ucAttr);
+  22   1           CScalerSendWriteStop();
+  23   1      }
+  24          
+  25          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     29    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       1
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
