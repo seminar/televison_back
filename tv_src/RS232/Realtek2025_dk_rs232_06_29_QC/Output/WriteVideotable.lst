@@ -1,0 +1,372 @@
+C51 COMPILER V8.16   WRITEVIDEOTABLE                                                       04/05/2012 11:15:38 PAGE 1   
+
+
+C51 COMPILER V8.16, COMPILATION OF MODULE WRITEVIDEOTABLE
+OBJECT MODULE PLACED IN .\Output\WriteVideotable.obj
+COMPILER INVOKED BY: D:\安装文件\keil\C51\BIN\C51.EXE Lib\WriteVideotable.C OPTIMIZE(9,SIZE) BROWSE DEFINE(CMOS_CHIP_TYP
+                    -E=PCB_2025LV13) PRINT(.\Output\WriteVideotable.lst) OBJECT(.\Output\WriteVideotable.obj)
+
+line level    source
+
+   1          ////////////////////////////////////////////////////////////////////////////
+   2          //         Copyright of Vector Co.,Ltd.                                   //
+   3          //                                                                        //
+   4          //                                                                        //
+   5          //                              WriteVideotable                           //
+   6          //   Ver: 5.00                                                            //
+   7          //   Creat file time: 2006.8.24                                           //
+   8          //   End modify time: 2006.11.08                                          //
+   9          //   For RTD2523B/RTD2553V/RTD2525L                                       //
+  10          ////////////////////////////////////////////////////////////////////////////
+  11          
+  12          #include "Header\Include.h"
+  13          
+  14          
+  15          extern void CTimerDelayXms(WORD usNum);
+  16          
+  17          void CWriteAllReg(BYTE ucScalerType, BYTE ucVideoMode, BYTE ucDisplayMode)
+  18          {
+  19   1          bit bRegCtrl = 0;
+  20   1          BYTE ucCount = 0;
+  21   1      
+  22   1          for(ucCount = 0; ucCount < 0xFF; ucCount++)
+  23   1          {
+  24   2             bRegCtrl = 1;
+  25   2      
+  26   2             switch(ucCount)
+  27   2             {
+  28   3                // For RTD2547D
+  29   3                case 0x2A:
+  30   3                case 0x2B:
+  31   3                case 0x30:
+  32   3                case 0x31:
+  33   3                case 0x33:
+  34   3                case 0x34:
+  35   3                case 0x8D:
+  36   3                case 0x8E:
+  37   3                case 0x8B:
+  38   3                case 0x8C:
+  39   3                    if (ucScalerType == _RTD2547D)
+  40   3                        bRegCtrl = 0;
+  41   3                    break;
+  42   3      
+  43   3                case 0x90:  //_OSD_ADDR_MSB_90:
+  44   3                case 0x91:  //_OSD_ADDR_LSB_91:
+  45   3                case 0x92:  //_OSD_DATA_PORT_92:
+  46   3                case 0x6C:  //_OVERLAY_CTRL_6C:
+  47   3                case 0x6D:  //_BGND_COLOR_CTRL_6D:
+  48   3                case 0x6E:  //_OVERLAY_LUT_ADDR_6E:
+  49   3                case 0x6F:  //_COLOR_LUT_PORT_6F:
+  50   3                    bRegCtrl = 0;
+  51   3                    break;
+  52   3             }
+  53   2      
+  54   2             if (bRegCtrl)
+C51 COMPILER V8.16   WRITEVIDEOTABLE                                                       04/05/2012 11:15:38 PAGE 2   
+
+  55   2             {
+  56   3                if (ucVideoMode == 60)     // NTSC
+  57   3                {
+  58   4                    if (ucDisplayMode == 0x00)  // 16:9
+  59   4                       CScalerSetByte(ucCount, tNTSC_16_9[ucCount]);
+  60   4                    else
+  61   4                       CScalerSetByte(ucCount, tNTSC_4_3[ucCount]);
+  62   4                }
+  63   3                else
+  64   3                {
+  65   4                    if (ucDisplayMode == 0x00)  // 16:9
+  66   4                       CScalerSetByte(ucCount, tPAL_16_9[ucCount]);
+  67   4                    else
+  68   4                       CScalerSetByte(ucCount, tPAL_4_3[ucCount]);
+  69   4                }
+  70   3             }
+  71   2          }
+  72   1                    
+  73   1          // Select RTD2547D page1
+  74   1          if (ucScalerType == _RTD2547D)
+  75   1          {
+  76   2              CScalerSetByte(0xA0, 0x01);
+  77   2              if (ucVideoMode == 60)     // NTSC
+  78   2              {
+  79   3                  if (ucDisplayMode == 0x00)  // 16:9
+  80   3                     CScalerWrite(0xA0, 0x5F, tNTSC_PAGE1_16_9, _AUTOINC);
+  81   3                  else
+  82   3                     CScalerWrite(0xA0, 0x5F, tNTSC_PAGE1_4_3, _AUTOINC);
+  83   3              }
+  84   2              else
+  85   2              {
+  86   3                  if (ucDisplayMode == 0x00)  // 16:9
+  87   3                     CScalerWrite(0xA0, 0x5F, tPAL_PAGE1_16_9, _AUTOINC);
+  88   3                  else
+  89   3                     CScalerWrite(0xA0, 0x5F, tPAL_PAGE1_4_3, _AUTOINC);
+  90   3              }
+  91   2          }      
+  92   1      }
+  93                 
+  94          //-----------------------------------------------------------------------
+  95          
+  96          void CSetScalingFactor(BYTE ucVideoMode, BYTE ucDisplayMode)
+  97          {
+  98   1          // Set scaling
+  99   1          CScalerSetByte(0x1A, 0x80);
+ 100   1          if (ucVideoMode == 60)     // NTSC
+ 101   1          {
+ 102   2              if (ucDisplayMode == 0x00)  // 16:9
+ 103   2                 CScalerWrite(0x1B, 6, tNTSC_SCALING_FACTOR_1A_16_9, _NON_AUTOINC);
+ 104   2              else
+ 105   2                 CScalerWrite(0x1B, 6, tNTSC_SCALING_FACTOR_1A_4_3, _NON_AUTOINC);
+ 106   2          }
+ 107   1          else
+ 108   1          {
+ 109   2              if (ucDisplayMode == 0x00)  // 16:9
+ 110   2                 CScalerWrite(0x1B, 6, tPAL_SCALING_FACTOR_1A_16_9, _NON_AUTOINC);
+ 111   2              else
+ 112   2                 CScalerWrite(0x1B, 6, tPAL_SCALING_FACTOR_1A_4_3, _NON_AUTOINC);
+ 113   2          }
+ 114   1          CScalerSetByte(0x1A, 0x00);
+ 115   1      }
+ 116          //-----------------------------------------------------------------------
+C51 COMPILER V8.16   WRITEVIDEOTABLE                                                       04/05/2012 11:15:38 PAGE 3   
+
+ 117          
+ 118          void CSetRtdVScalingDown(BYTE ucVideoMode, BYTE ucDisplayMode, BYTE ucCount)
+ 119          {
+ 120   1          CScalerSetByte(0x24, 0x80); // _SD_ACCESS_PORT_24
+ 121   1          if (ucVideoMode == 60)     // NTSC
+ 122   1          {
+ 123   2              if (ucDisplayMode == 0x00)  // 16:9
+ 124   2                 CScalerWrite(0x25, ucCount, tNTSC_SCALING_DOWN_24_16_9, _NON_AUTOINC);
+ 125   2              else
+ 126   2                 CScalerWrite(0x25, ucCount, tNTSC_SCALING_DOWN_24_4_3, _NON_AUTOINC);
+ 127   2          }
+ 128   1          else
+ 129   1          {
+ 130   2              if (ucDisplayMode == 0x00)  // 16:9
+ 131   2                 CScalerWrite(0x25, ucCount, tPAL_SCALING_DOWN_24_16_9, _NON_AUTOINC);
+ 132   2              else
+ 133   2                 CScalerWrite(0x25, ucCount, tPAL_SCALING_DOWN_24_4_3, _NON_AUTOINC);
+ 134   2          }
+ 135   1          CScalerSetByte(0x24, 0x00);
+ 136   1      }
+ 137          //-----------------------------------------------------------------------
+ 138          
+ 139          // For RTD2547D
+ 140          void CSetDisplayFormat(BYTE ucVideoMode, BYTE ucDisplayMode)
+ 141          {
+ 142   1          CScalerSetByte(0x2A, 0x00); 
+ 143   1          if (ucVideoMode == 60)     // NTSC
+ 144   1          {
+ 145   2              if (ucDisplayMode == 0x00)  // 16:9
+ 146   2                 CScalerWrite(0x2B, 0x23, tNTSC_DISP_FORMAT_2A_16_9, _NON_AUTOINC);
+ 147   2              else
+ 148   2                 CScalerWrite(0x2B, 0x23, tNTSC_DISP_FORMAT_2A_4_3, _NON_AUTOINC);
+ 149   2          }
+ 150   1          else
+ 151   1          {
+ 152   2              if (ucDisplayMode == 0x00)  // 16:9
+ 153   2                 CScalerWrite(0x2B, 0x23, tPAL_DISP_FORMAT_2A_16_9, _NON_AUTOINC);
+ 154   2              else
+ 155   2                 CScalerWrite(0x2B, 0x23, tPAL_DISP_FORMAT_2A_4_3, _NON_AUTOINC);
+ 156   2          }
+ 157   1      }
+ 158          //-----------------------------------------------------------------------
+ 159          
+ 160          // FIFO window
+ 161          void CSetFIFOWindow(BYTE ucVideoMode, BYTE ucDisplayMode)
+ 162          {
+ 163   1          CScalerSetByte(0x30, 0x00); 
+ 164   1          if (ucVideoMode == 60)     // NTSC
+ 165   1          {
+ 166   2              if (ucDisplayMode == 0x00)  // 16:9
+ 167   2                 CScalerWrite(0x31, 0x12, tNTSC_FIFO_WINDOW_30_16_9, _NON_AUTOINC);
+ 168   2              else
+ 169   2                 CScalerWrite(0x31, 0x12, tNTSC_FIFO_WINDOW_30_4_3, _NON_AUTOINC);
+ 170   2          }                             
+ 171   1          else
+ 172   1          {
+ 173   2              if (ucDisplayMode == 0x00)  // 16:9
+ 174   2                 CScalerWrite(0x31, 0x12, tPAL_FIFO_WINDOW_30_16_9, _NON_AUTOINC);
+ 175   2              else
+ 176   2                 CScalerWrite(0x31, 0x12, tPAL_FIFO_WINDOW_30_4_3, _NON_AUTOINC);
+ 177   2          }
+ 178   1      }
+C51 COMPILER V8.16   WRITEVIDEOTABLE                                                       04/05/2012 11:15:38 PAGE 4   
+
+ 179          //-----------------------------------------------------------------------
+ 180          
+ 181          
+ 182          // SF access port
+ 183          void CSetSFAccessPort(BYTE ucVideoMode, BYTE ucDisplayMode)
+ 184          {
+ 185   1          CScalerSetByte(0x33, 0x80);
+ 186   1          if (ucVideoMode == 60)     // NTSC
+ 187   1          {
+ 188   2              if (ucDisplayMode == 0x00)  // 16:9
+ 189   2                 CScalerWrite(0x34, 0x11, tNTSC_SF_ACCESS_PORT_33_16_9, _NON_AUTOINC);
+ 190   2              else
+ 191   2                 CScalerWrite(0x34, 0x11, tNTSC_SF_ACCESS_PORT_33_4_3, _NON_AUTOINC);
+ 192   2          }                             
+ 193   1          else
+ 194   1          {
+ 195   2              if (ucDisplayMode == 0x00)  // 16:9
+ 196   2                 CScalerWrite(0x34, 0x11, tPAL_SF_ACCESS_PORT_33_16_9, _NON_AUTOINC);
+ 197   2              else
+ 198   2                 CScalerWrite(0x34, 0x11, tPAL_SF_ACCESS_PORT_33_4_3, _NON_AUTOINC);
+ 199   2          }
+ 200   1          CScalerSetByte(0x33, 0x00);
+ 201   1      }
+ 202          //-----------------------------------------------------------------------
+ 203          
+ 204          void CTB1334VideoMode(BYTE ucVideoMode, BYTE ucScalerType)
+ 205          {
+ 206   1          WORD ustemp,ModeIHTotal;
+ 207   1          BYTE temp;
+ 208   1      
+ 209   1          ModeIHTotal = (ucVideoMode == 60) ? 858 : 864;
+ 210   1      
+ 211   1          if (ucScalerType == _RTD2547D)
+ 212   1          {
+ 213   2              CScalerSetBit(0x32, ~_BIT7, _BIT7);
+ 214   2              CScalerSetByte(0xA0, (5 & 0x07));
+ 215   2              CScalerSetBit(0xB9, ~_BIT7, _BIT7);//For interlace mode odd field toggle
+ 216   2              CScalerSetBit(0x13, ~_BIT0, _BIT0);
+ 217   2          }
+ 218   1          else
+ 219   1          {
+ 220   2              CScalerSetBit(0x19, ~_BIT7, _BIT7);
+ 221   2              CScalerSetBit(0x08, ~_BIT0, _BIT0);
+ 222   2          }
+ 223   1                   
+ 224   1          // Change to even/odd field frame sync
+ 225   1          if (ucScalerType == _RTD2547D)   
+ 226   1             CScalerSetByte(0x19, CScalerGetBit(0x19, 0xff) + 1);              
+ 227   1          else
+ 228   1             CScalerSetByte(0x0E, CScalerGetBit(0x0E, 0xff) + 1);   
+ 229   1      
+ 230   1          CScalerRead(0x41, 1, &temp, _NON_AUTOINC);
+ 231   1          ustemp = (WORD)temp * 16 + 16;
+ 232   1          ustemp += ModeIHTotal;
+ 233   1          CScalerSetByte(0x41, (ustemp - 16) / 16);
+ 234   1          ustemp -= ModeIHTotal / 2;
+ 235   1          CScalerSetByte(0x42, (ustemp - 16) / 16);
+ 236   1          CScalerSetBit(0x43, ~(_BIT1), _BIT1);
+ 237   1                                                      
+ 238   1          if (ucScalerType == _RTD2547D)
+ 239   1          {
+ 240   2              CScalerSetByte(0xA0, (5 & 0x07));
+C51 COMPILER V8.16   WRITEVIDEOTABLE                                                       04/05/2012 11:15:38 PAGE 5   
+
+ 241   2              CScalerSetByte(0xCF,0x05);
+ 242   2              CTimerDelayXms(100);
+ 243   2              CScalerSetByte(0xD0,0x10);
+ 244   2          }
+ 245   1          else
+ 246   1              CScalerSetBit(0xC2, ~_BIT5, 0x00); //V304 modify    
+ 247   1      
+ 248   1      }
+ 249          
+ 250          void gmi_CSetMode(BYTE ucVideoMode, BYTE ucDisplayMode, BYTE ucScalerType)
+ 251          {
+ 252   1          BYTE value;
+ 253   1      
+ 254   1      
+ 255   1          // Select RTD2547D page0
+ 256   1          if (ucScalerType == _RTD2547D)
+ 257   1             CScalerSetByte(0xA0, (0 & 0x07));
+ 258   1      
+ 259   1          // Set ADC input to ADC1
+ 260   1          if (ucScalerType == _RTD2553V || ucScalerType == _RTD2525L)
+ 261   1          {                     
+ 262   2            //  CScalerSetDataPortBit(0xDC, 0x00, ~_BIT3, _BIT3);
+ 263   2              
+ 264   2              CScalerSetByte(0xDC, 0x80);
+ 265   2              CScalerRead(0xDD, 1, &value, _AUTOINC);
+ 266   2              
+ 267   2              value |= _BIT3;
+ 268   2              
+ 269   2              CScalerSetByte(0xDC, 0x80);
+ 270   2              CScalerSetByte(0xDD, value);
+ 271   2              CScalerSetByte(0xDC, 0x00);
+ 272   2          }
+ 273   1      
+ 274   1          //--------------------------------------------------
+ 275   1          // 256 regsister
+ 276   1          CWriteAllReg(ucScalerType, ucVideoMode, ucDisplayMode);
+ 277   1      
+ 278   1      
+ 279   1          //--------------------------------------------------
+ 280   1          // Scaling factor
+ 281   1          if (ucScalerType != _RTD2547D)
+ 282   1             CSetScalingFactor(ucVideoMode, ucDisplayMode);
+ 283   1      
+ 284   1          //--------------------------------------------------
+ 285   1          // Scaling V scaling down
+ 286   1          if (ucScalerType == _RTD2553V || ucScalerType == _RTD2525L || ucScalerType == _RTD2547D)
+ 287   1          {
+ 288   2              BYTE ucCount = 0x0D; // Normal to 2553V/2525L
+ 289   2      
+ 290   2              if(ucScalerType == _RTD2547D)
+ 291   2                 ucCount = 0x14;
+ 292   2      
+ 293   2              CSetRtdVScalingDown(ucVideoMode, ucDisplayMode, ucCount);
+ 294   2          }
+ 295   1                           
+ 296   1          //--------------------------------------------------
+ 297   1          if (ucScalerType == _RTD2547D)
+ 298   1          {
+ 299   2              // Display format
+ 300   2              CSetDisplayFormat(ucVideoMode, ucDisplayMode);
+ 301   2      
+ 302   2              // FIFO window
+C51 COMPILER V8.16   WRITEVIDEOTABLE                                                       04/05/2012 11:15:38 PAGE 6   
+
+ 303   2              CSetFIFOWindow(ucVideoMode, ucDisplayMode);
+ 304   2      
+ 305   2              // SF access port
+ 306   2              CSetSFAccessPort(ucVideoMode, ucDisplayMode);
+ 307   2          }
+ 308   1                             
+ 309   1          // Write coefficient for sharpness
+ 310   1          CAdjustSharpness();
+ 311   1      
+ 312   1          //--------------------------------------------------
+ 313   1          // Power up ADC
+ 314   1          if (ucScalerType == _RTD2553V || ucScalerType == _RTD2525L)  // RTD2553V/RTD2525L
+ 315   1          {
+ 316   2                // CScalerSetDataPortBit(_ADC_ACCESS_PORT_DC, 0x0c, ~(_BIT2 | _BIT1 | _BIT0), (_BIT2 | _BIT1 | _BIT0));
+             -        
+ 317   2              CScalerSetByte(0xDC, 0x8C);
+ 318   2              CScalerRead(0xDD, 1, &value, _AUTOINC);
+ 319   2              
+ 320   2              value = value | _BIT2 | _BIT1 | _BIT0;
+ 321   2              
+ 322   2              CScalerSetByte(0xDC, 0x8C);
+ 323   2              CScalerSetByte(0xDD, value);
+ 324   2              CScalerSetByte(0xDC, 0x00);
+ 325   2          }
+ 326   1      
+ 327   1          // Read source video8 or vga
+ 328   1          if (ucScalerType == _RTD2547D)
+ 329   1             CScalerRead(0x10, 1, &value, _AUTOINC);
+ 330   1          else
+ 331   1             CScalerRead(0x05, 1, &value, _AUTOINC);
+ 332   1          if ((value & 0x0C) == 0x00)             // VGA  only for TB334 write table
+ 333   1          {
+ 334   2              CTB1334VideoMode(ucVideoMode, ucScalerType);
+ 335   2          }
+ 336   1      }
+ 337          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1131    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----      26
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----       1
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
