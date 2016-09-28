@@ -1,0 +1,166 @@
+C51 COMPILER V8.16   MCU                                                                   04/05/2012 11:15:23 PAGE 1   
+
+
+C51 COMPILER V8.16, COMPILATION OF MODULE MCU
+OBJECT MODULE PLACED IN .\Output\Mcu.obj
+COMPILER INVOKED BY: D:\安装文件\keil\C51\BIN\C51.EXE Code\Mcu.c OPTIMIZE(9,SIZE) BROWSE DEFINE(CMOS_CHIP_TYPE=PCB_2025L
+                    -V13) PRINT(.\Output\Mcu.lst) OBJECT(.\Output\Mcu.obj)
+
+line level    source
+
+   1          //----------------------------------------------------------------------------------------------------
+   2          // ID Code      : Mcu.c No.0002
+   3          // Update Note  : 
+   4          //
+   5          //----------------------------------------------------------------------------------------------------
+   6          
+   7          #define __MCU__
+   8          
+   9          #include  "Header\Include.h"
+  10          #if(_MCU_TYPE == _MYSON_MTV512 || _MCU_TYPE == _MYSON_MTV312 || _MCU_TYPE == _RTD_2120)
+  11          //--------------------------------------------------
+  12          //  MCU Initial
+  13          //--------------------------------------------------
+  14          void CMcuInitial(void)
+  15          {
+  16   1      #if(_MCU_TYPE == _RTD_2120)
+  17   1          CKCON = 0x00;
+  18   1      #endif
+  19   1      
+  20   1          IE      = 0x00;                         // Disable all interrupts
+  21   1          TMOD    = 0x11;                         // Program Timer0 & Timer1 to Mode#1
+  22   1          TR0     = 0;                            // Stop Timer0
+  23   1          TF0     = 0;                            // Clear Timer0 Overflow Bit
+  24   1          TL0     = _TIMER0_COUNT_LBYTE;          // Load Timer0 low-byte   (for 1ms)
+  25   1          TH0     = _TIMER0_COUNT_HBYTE;          // Load Timer0 high-byte  (for 1ms)
+  26   1          TR1     = 0;                            // Stop Timer1
+  27   1          TF1     = 0;                            // Clear Timer1 Overflow Bit
+  28   1      
+  29   1      #if(_IR_ENABLE)
+  30   1          gmi_CInitial_IR();
+  31   1      #endif
+  32   1      
+  33   1          // For MCU pad type control
+  34   1          _MCU_PORT1_TYPE = _MCU_P1_TYPE_DEF;
+  35   1          _MCU_PORT5_TYPE = _MCU_P5_TYPE_DEF;
+  36   1          _MCU_PORT6_TYPE = _MCU_P6_TYPE_DEF;
+  37   1         
+  38   1          // For MCU pad mode control(input/output)
+  39   1          _MCU_PORT5_I_O = _MCU_P5_MODE_DEF;
+  40   1          _MCU_PORT6_I_O = _MCU_P6_MODE_DEF;
+  41   1          _MCU_PORT7_I_O = _MCU_P7_MODE_DEF;
+  42   1                                   
+  43   1      #if(_MCU_TYPE == _MYSON_MTV512 || _MCU_TYPE == _MYSON_MTV312)
+              
+                  _MCU_PORT7_TYPE = _MCU_P76_TYPE_DEF;
+                  MCU_PADMODE_F52 = _MCU_PADMODE_F52_DEF;
+              
+                  MCU_OPTION_F56  = MCU_OPTION_F56_DEF;
+                  MCU_PADMODE_F5E = _MCU_PORT7_6_TYPE << 6;
+              
+                  MCU_INTEN_F04   = MCU_INTEN_F04_DEF;                     // Detect WslvA1 IIC Stop Condition
+                  MCU_INTFLG_F03  = MCU_INTFLG_F03_DEF;                    // Clear IIC Interrupt register
+                  MCU_CTRSLVB_F0A = MCU_CTRSLVB_F0A_DEF;                   // Define IIC Protocal Slave Address Bit
+                  MCU_DDCCTRA1_F06 = MCU_DDCCTRA1_F06_DEF;                 // Enable DDC1 and DDCRAM 128 Access
+C51 COMPILER V8.16   MCU                                                                   04/05/2012 11:15:23 PAGE 2   
+
+                  MCU_SLVA1ADR_F07 = MCU_SLVA1ADR_F07_DEF;                 // DDC Slave A1 address
+                  MCU_DDCCTRA2_F86 = MCU_DDCCTRA2_F86_DEF;                 // Enable DDC1 and DDCRAM 128 Access
+                  MCU_SLVA2ADR_F87 = MCU_SLVA2ADR_F87_DEF;                 //DDC Slave A2 address
+              
+              #elif(_MCU_TYPE == _RTD_2120)
+  60   1      
+  61   1              MCU_PIN_SHARE1_FF01             = MCU_PINSHARE_FF01_DEF;                //P7.6 is P7.6, P3.1,p3.0 is IIC and set P3.3 to GPIO           
+  62   1          MCU_ADC_DDC_ENA_FF20        = 0x07;
+  63   1              MCU_DVI_DDC_ENA_FF23    = 0x07;
+  64   1              MCU_I2C_IRQ_CTRL_FF2C   = 0x0c;
+  65   1      
+  66   1          // Enable MCU PWM
+  67   1          MCU_PWM_CLK_CTRL_FF30   = 0x90;
+  68   1           MCU_PWM_DIV_N_FF31 = 0x01;   
+  69   1                 //             MCU_PWM_DIV_N_FF31                    PWM FREQ
+  70   1                                      //  0x00                                          93.7KHz  
+  71   1                                    //    0x01                                           46.7KHz  
+  72   1                                    //    0x02                                            31.25KHz   
+  73   1                                     //   0x03                                            23.4KHz
+  74   1          MCU_PWM_SRC_SELECT_FF35 = 0x00;  // eric 1227 add
+  75   1      
+  76   1      #endif
+  77   1      
+  78   1      /*
+  79   1                            PNL1=1;
+  80   1                            PNL2=1;
+  81   1                            PNL3=0;
+  82   1      */
+  83   1      
+  84   1      #if(PowerUpLED==RedLED)                 
+  85   1                      CPowerLedRed(); 
+  86   1      #elif(PowerUpLED==GreenLED)                     
+                              CPowerLedGreen(); 
+              #elif(PowerUpLED==OrangeLED)                    
+                              CPowerLedOrange(); 
+              #elif(PowerUpLED==BlackLED)                     
+                              CPowerLedBlack(); 
+              #endif
+  93   1              #if(DVD_EN)
+  94   1              bDVD_PWR_OFF() ;
+  95   1              #endif
+  96   1      
+  97   1          IE      = 0x82;                         // Enable interrupts of Timer0
+  98   1      }
+  99          
+ 100          #endif    //end #if(_MCU_TYPE == _MYSON_MTV512 || _MCU_TYPE == _MYSON_MTV312 || _MCU_TYPE == _RTD_2120)
+ 101          
+ 102          
+ 103          
+ 104          #if(_MCU_TYPE == _STK_6021)
+              
+              void CMcuInitial(void)
+              {
+                  IE      = 0x00;                         // Disable all interrupts
+                  TMOD    = 0x11;                         // Program Timer0 & Timer1 to Mode#1
+                  TR0     = 0;                            // Stop Timer0
+                  TF0     = 0;                            // Clear Timer0 Overflow Bit
+                  TL0     = _TIMER0_COUNT_LBYTE;          // Load Timer0 low-byte   (for 1ms)
+                  TH0     = _TIMER0_COUNT_HBYTE;          // Load Timer0 high-byte  (for 1ms)
+                  TR1     = 0;                            // Stop Timer1
+                  TF1     = 0;                            // Clear Timer1 Overflow Bit
+                  IE      = 0x8a;                         // Enable interrupts of Timer0
+C51 COMPILER V8.16   MCU                                                                   04/05/2012 11:15:23 PAGE 3   
+
+                    
+                  MCU_PADOPT_F50 = MCU_PADOPT_F50_DEF;
+                  MCU_PADOPT_F51 = MCU_PADOPT_F51_DEF;
+                  MCU_PADOPT_F56 = MCU_PADOPT_F56_DEF;
+              #if(_IR_ENABLE)
+                  CInitial_IR();
+              #endif
+              
+              #if(PowerUpLED==RedLED)                 
+                              CPowerLedRed(); 
+              #elif(PowerUpLED==GreenLED)                     
+                              CPowerLedGreen(); 
+              #elif(PowerUpLED==OrangeLED)                    
+                              CPowerLedOrange(); 
+              #elif(PowerUpLED==BlackLED)                     
+                              CPowerLedBlack(); 
+              #endif
+              
+              
+              }
+              
+              #endif    //#if(_MCU_TYPE == _STK_6021)
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     99    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
