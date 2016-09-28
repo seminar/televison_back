@@ -1,0 +1,178 @@
+### uVision2 Project, (C) Keil Software
+### Do not modify !
+
+ cExt (*.c)
+ aExt (*.s*; *.src; *.a*)
+ oExt (*.obj)
+ lExt (*.lib)
+ tExt (*.txt; *.h; *.inc)
+ pExt (*.plm)
+ CppX (*.cpp)
+ DaveTm { 0,0,0,0,0,0,0,0 }
+
+Target (RTD2025LV13), 0x0000 // Tools: 'MCS-51'
+Target (RTD2120Extend), 0x0000 // Tools: 'MCS-51'
+GRPOPT 1,(Source),0,0,0
+GRPOPT 2,(Header),0,0,0
+GRPOPT 3,(0SD007),0,0,0
+GRPOPT 4,(FUNC),0,0,0
+GRPOPT 5,(Pcb),0,0,0
+GRPOPT 6,(Panel),0,0,0
+GRPOPT 7,(LANGUAGE),0,0,0
+GRPOPT 8,(FACTORY),0,0,0
+GRPOPT 9,(LOGO),0,0,0
+GRPOPT 10,(DDC),0,0,0
+GRPOPT 11,(DDCCI),0,0,0
+GRPOPT 12,(Lib),0,0,0
+GRPOPT 13,(Rs232),1,0,0
+
+OPTFFF 1,1,1,0,0,0,0,0,<.\Code\Adjust.c><Adjust.c> 
+OPTFFF 1,2,1,0,0,0,0,0,<.\Code\Align.c><Align.c> 
+OPTFFF 1,3,1,0,0,0,0,0,<.\Code\Auto.c><Auto.c> 
+OPTFFF 1,4,1,0,0,0,0,0,<.\Code\Eeprom.c><Eeprom.c> 
+OPTFFF 1,5,1,0,0,0,0,0,<.\Code\FrameSync.c><FrameSync.c> 
+OPTFFF 1,6,1,0,0,0,0,0,<.\Code\I2c.c><I2c.c> 
+OPTFFF 1,7,1,0,0,141,141,0,<.\Code\Int.c><Int.c> { 44,0,0,0,0,0,0,0,1,0,0,0,255,255,255,255,255,255,255,255,252,255,255,255,226,255,255,255,22,0,0,0,29,0,0,0,18,3,0,0,220,0,0,0 }
+OPTFFF 1,8,1,0,0,820,820,0,<.\Code\Key.c><Key.c> { 44,0,0,0,0,0,0,0,1,0,0,0,255,255,255,255,255,255,255,255,252,255,255,255,226,255,255,255,0,0,0,0,0,0,0,0,54,2,0,0,34,0,0,0 }
+OPTFFF 1,9,1,0,0,0,0,0,<.\Code\Main.c><Main.c> 
+OPTFFF 1,10,1,0,0,0,0,0,<.\Code\Mcu.c><Mcu.c> 
+OPTFFF 1,11,1,0,0,0,0,0,<.\Code\Misc.c><Misc.c> 
+OPTFFF 1,12,1,0,0,0,0,0,<.\Code\Mode.c><Mode.c> 
+OPTFFF 1,13,1,100663296,0,0,0,0,<.\Code\Power.c><Power.c> 
+OPTFFF 1,14,1,587202560,0,0,0,0,<.\Code\Scaler.c><Scaler.c> 
+OPTFFF 1,15,1,0,0,0,0,0,<.\Code\Source.c><Source.c> 
+OPTFFF 1,16,1,0,0,0,0,0,<.\Code\Struct.c><Struct.c> 
+OPTFFF 1,17,1,0,0,0,0,0,<.\Code\Sync.c><Sync.c> 
+OPTFFF 1,18,1,0,0,0,0,0,<.\Code\Timer.c><Timer.c> 
+OPTFFF 1,19,1,0,0,0,0,0,<.\Code\Video.c><Video.c> 
+OPTFFF 1,20,1,0,0,454,454,0,<.\Code\Uart.c><Uart.c> { 44,0,0,0,0,0,0,0,1,0,0,0,255,255,255,255,255,255,255,255,252,255,255,255,226,255,255,255,0,0,0,0,0,0,0,0,207,3,0,0,70,0,0,0 }
+OPTFFF 1,21,1,0,0,0,0,0,<.\Code\YPbPr.c><YPbPr.c> 
+OPTFFF 1,22,1,0,0,0,0,0,<.\gmiOSD\gmiOSDFunc.c><gmiOSDFunc.c> 
+OPTFFF 1,23,1,0,0,0,0,0,<.\Code\Memory.c><Memory.c> 
+OPTFFF 1,24,1,0,0,0,0,0,<.\Code\Hdmi.c><Hdmi.c> 
+OPTFFF 2,25,5,0,0,0,0,0,<.\Header\Adjust.h><Adjust.h> 
+OPTFFF 2,26,5,0,0,0,0,0,<.\Header\Align.h><Align.h> 
+OPTFFF 2,27,5,0,0,0,0,0,<.\Header\Auto.h><Auto.h> 
+OPTFFF 2,28,5,0,0,0,0,0,<.\Header\Eeprom.h><Eeprom.h> 
+OPTFFF 2,29,5,0,0,0,0,0,<.\Header\EepromDefault.h><EepromDefault.h> 
+OPTFFF 2,30,5,0,0,0,0,0,<.\Header\FrameSync.h><FrameSync.h> 
+OPTFFF 2,31,5,0,0,0,0,0,<.\Header\Global.h><Global.h> 
+OPTFFF 2,32,5,0,0,0,0,0,<.\Header\I2c.h><I2c.h> 
+OPTFFF 2,33,5,0,0,0,0,0,<.\Header\Include.h><Include.h> 
+OPTFFF 2,34,5,0,0,0,0,0,<.\Header\Key.h><Key.h> 
+OPTFFF 2,35,5,0,0,0,0,0,<.\Header\Main.h><Main.h> 
+OPTFFF 2,36,5,738197504,0,0,0,0,<.\Header\MainDef.h><MainDef.h> 
+OPTFFF 2,37,5,0,0,0,0,0,<.\Header\Mcu.h><Mcu.h> 
+OPTFFF 2,38,5,0,0,0,0,0,<.\Header\Misc.h><Misc.h> 
+OPTFFF 2,39,5,0,0,0,0,0,<.\Header\Mode.h><Mode.h> 
+OPTFFF 2,40,5,0,0,0,0,0,<.\Header\ModeTable.h><ModeTable.h> 
+OPTFFF 2,41,5,0,0,0,0,0,<.\Header\Power.h><Power.h> 
+OPTFFF 2,42,5,0,0,0,0,0,<.\Header\Scaler.h><Scaler.h> 
+OPTFFF 2,43,5,0,0,0,0,0,<.\Header\ScalerDef.h><ScalerDef.h> 
+OPTFFF 2,44,5,0,0,0,0,0,<.\Header\Source.h><Source.h> 
+OPTFFF 2,45,5,0,0,0,0,0,<.\Header\Struct.h><Struct.h> 
+OPTFFF 2,46,5,0,0,0,0,0,<.\Header\Sync.h><Sync.h> 
+OPTFFF 2,47,5,0,0,0,0,0,<.\Header\SystemTable.h><SystemTable.h> 
+OPTFFF 2,48,5,0,0,0,0,0,<.\Header\Timer.h><Timer.h> 
+OPTFFF 2,49,5,469762048,0,0,0,0,<.\Header\Uart.h><Uart.h> 
+OPTFFF 2,50,5,0,0,0,0,0,<.\Header\Video.h><Video.h> 
+OPTFFF 2,51,5,0,0,0,0,0,<.\Header\YPbPr.h><YPbPr.h> 
+OPTFFF 2,52,5,0,0,0,0,0,<.\Header\VideoDec.H><VideoDec.H> 
+OPTFFF 2,53,5,0,0,0,0,0,<.\Header\GmiFunc.H><GmiFunc.H> 
+OPTFFF 2,54,5,0,0,0,0,0,<.\gmiOSD\gmiOSDFunc.h><gmiOSDFunc.h> 
+OPTFFF 2,55,5,0,0,0,0,0,<.\Header\Hdmi.h><Hdmi.h> 
+OPTFFF 2,56,5,0,0,0,0,0,<.\Header\Memory.h><Memory.h> 
+OPTFFF 3,57,1,0,0,19,25,0,<.\gmiOSD\OSD007\OsdPub007.c><OsdPub007.c> { 44,0,0,0,0,0,0,0,1,0,0,0,255,255,255,255,255,255,255,255,252,255,255,255,226,255,255,255,44,0,0,0,58,0,0,0,40,3,0,0,40,1,0,0 }
+OPTFFF 3,58,5,0,0,0,0,0,<.\gmiOSD\OSD007\Osdpub007.h><Osdpub007.h> 
+OPTFFF 3,59,1,0,0,0,0,0,<.\gmiOSD\OSD007\OsdVga007.c><OsdVga007.c> 
+OPTFFF 3,60,5,0,0,0,0,0,<.\gmiOSD\OSD007\OsdVga007.h><OsdVga007.h> 
+OPTFFF 3,61,1,0,0,0,0,0,<.\gmiOSD\OSD007\OsdAV007.c><OsdAV007.c> 
+OPTFFF 3,62,5,0,0,0,0,0,<.\gmiOSD\OSD007\OsdAV007.h><OsdAV007.h> 
+OPTFFF 3,63,1,0,0,0,0,0,<.\gmiOSD\OSD007\OsdTV007.c><OsdTV007.c> 
+OPTFFF 3,64,5,0,0,0,0,0,<.\gmiOSD\OSD007\OsdTV007.h><OsdTV007.h> 
+OPTFFF 3,65,1,0,0,0,0,0,<.\gmiOSD\OSD007\RTD2120Extend\RTD2120OSDExtend.c><RTD2120OSDExtend.c> 
+OPTFFF 3,66,5,0,0,0,0,0,<.\gmiOSD\OSD007\RTD2120Extend\RTD2120OSDExtend.h><RTD2120OSDExtend.h> 
+OPTFFF 3,67,5,0,0,0,0,0,<.\gmiOSD\UserSetting\UserSetting.h><UserSetting.h> 
+OPTFFF 4,68,1,0,0,0,0,0,<.\Func\Func.c><Func.c> 
+OPTFFF 4,69,5,0,0,0,0,0,<.\Func\Func.h><Func.h> 
+OPTFFF 4,70,1,0,0,0,0,0,<.\TV\TV.c><TV.c> 
+OPTFFF 4,71,5,0,0,0,0,0,<.\TV\TV.H><TV.H> 
+OPTFFF 4,72,1,0,0,1,1,0,<.\IR\IR.C><IR.C> { 44,0,0,0,0,0,0,0,1,0,0,0,255,255,255,255,255,255,255,255,252,255,255,255,226,255,255,255,22,0,0,0,29,0,0,0,54,2,0,0,154,0,0,0 }
+OPTFFF 4,73,5,0,0,355,361,0,<.\IR\IR.H><IR.H> { 44,0,0,0,0,0,0,0,1,0,0,0,255,255,255,255,255,255,255,255,252,255,255,255,226,255,255,255,0,0,0,0,0,0,0,0,238,2,0,0,195,0,0,0 }
+OPTFFF 5,74,5,0,0,0,0,0,<.\Pcb\Pcb.h><Pcb.h> 
+OPTFFF 5,75,5,754974720,0,0,0,0,<.\Pcb\PCB_2023L_TB1334.h><PCB_2023L_TB1334.h> 
+OPTFFF 6,76,5,0,0,0,0,0,<.\Header\Panel.h><Panel.h> 
+OPTFFF 6,77,5,805306368,0,0,0,0,<.\Panel\PNL_LVDS17.h><PNL_LVDS17.h> 
+OPTFFF 6,78,5,0,0,0,0,0,<.\Panel\PNL_TTL_SHARP8.h><PNL_TTL_SHARP8.h> 
+OPTFFF 7,79,1,0,0,0,0,0,<.\Language\Langage.c><Langage.c> 
+OPTFFF 7,80,5,0,0,0,0,0,<.\Language\Langage.h><Langage.h> 
+OPTFFF 8,81,1,335544320,0,0,0,0,<.\gmiOSD\FactoryMenu\Lcd_osdFac.c><Lcd_osdFac.c> 
+OPTFFF 8,82,5,0,0,0,0,0,<.\gmiOSD\FactoryMenu\Lcd_osdFac.h><Lcd_osdFac.h> 
+OPTFFF 8,83,5,0,0,0,0,0,<.\gmiOSD\FactoryMenu\OsdFac.h><OsdFac.h> 
+OPTFFF 9,84,1,0,0,0,0,0,<.\Logo\Logo.c><Logo.c> 
+OPTFFF 9,85,5,0,0,0,0,0,<.\Logo\Logo.h><Logo.h> 
+OPTFFF 10,86,1,0,0,0,0,0,<.\DDC\Ddc.c><Ddc.c> 
+OPTFFF 10,87,5,0,0,0,0,0,<.\DDC\Ddc.h><Ddc.h> 
+OPTFFF 10,88,1,0,0,0,0,0,<.\DDC\DDCRTDEE.c><DDCRTDEE.c> 
+OPTFFF 10,89,5,0,0,0,0,0,<.\DDC\DDCRTDEE.h><DDCRTDEE.h> 
+OPTFFF 11,90,5,0,0,0,0,0,<.\DDCCI\DDCCI.h><DDCCI.h> 
+OPTFFF 11,91,5,0,0,0,0,0,<.\DDCCI\DDCCIDBG.H><DDCCIDBG.H> 
+OPTFFF 12,92,1,0,0,0,0,0,<.\Lib\AV_TV.C><AV_TV.C> 
+OPTFFF 12,93,1,0,0,0,0,0,<.\Lib\DDCCI.C><DDCCI.C> 
+OPTFFF 12,94,1,0,0,0,0,0,<.\Lib\DDCCIDBG.C><DDCCIDBG.C> 
+OPTFFF 12,95,1,0,0,0,0,0,<.\Lib\gmi_CLoadFont.c><gmi_CLoadFont.c> 
+OPTFFF 12,96,1,0,0,0,0,0,<.\Lib\gmi_COsdFxCloseWindow.C><gmi_COsdFxCloseWindow.C> 
+OPTFFF 12,97,1,0,0,0,0,0,<.\Lib\gmi_CShowNumber.C><gmi_CShowNumber.C> 
+OPTFFF 12,98,1,0,0,0,0,0,<.\Lib\gmi_DirectWOSDRam.C><gmi_DirectWOSDRam.C> 
+OPTFFF 12,99,1,0,0,0,0,0,<.\Lib\gmi_Gotoxy.C><gmi_Gotoxy.C> 
+OPTFFF 12,100,1,0,0,0,0,0,<.\Lib\gmi_IRFunc.C><gmi_IRFunc.C> 
+OPTFFF 12,101,1,0,0,0,0,0,<.\Lib\gmi_Mode.c><gmi_Mode.c> 
+OPTFFF 12,102,1,0,0,0,0,0,<.\Lib\gmi_OutputChar.C><gmi_OutputChar.C> 
+OPTFFF 12,103,1,0,0,0,0,0,<.\Lib\gmi_PWM.c><gmi_PWM.c> 
+OPTFFF 12,104,1,0,0,0,0,0,<.\Lib\gmi_Scaler.c><gmi_Scaler.c> 
+OPTFFF 12,105,1,0,0,0,0,0,<.\Lib\gmi_SetOSDDouble.C><gmi_SetOSDDouble.C> 
+OPTFFF 12,106,1,0,0,0,0,0,<.\Lib\gmi_SetOSDRamAddress.C><gmi_SetOSDRamAddress.C> 
+OPTFFF 12,107,1,0,0,0,0,0,<.\Lib\gmi_SetRowCmds.C><gmi_SetRowCmds.C> 
+OPTFFF 12,108,1,0,0,0,0,0,<.\Lib\gmi_TunerFunc.C><gmi_TunerFunc.C> 
+OPTFFF 12,109,1,0,0,0,0,0,<.\Lib\gmi_ValueInRangeChange.c><gmi_ValueInRangeChange.c> 
+OPTFFF 12,110,1,0,0,0,0,0,<.\Lib\TB1334.C><TB1334.C> 
+OPTFFF 12,111,1,553648128,0,0,0,0,<.\Lib\WriteVideotable.C><WriteVideotable.C> 
+OPTFFF 13,112,1,2,0,442,453,0,<.\Rs232\Rs232.c><Rs232.c> { 44,0,0,0,2,0,0,0,3,0,0,0,255,255,255,255,255,255,255,255,252,255,255,255,226,255,255,255,44,0,0,0,58,0,0,0,40,3,0,0,40,1,0,0 }
+
+
+TARGOPT 1, (RTD2025LV13)
+ CLK51=12000000
+  OPTTT 1,1,1,0
+  OPTHX 0,65535,0,0,0
+  OPTLX 120,65,8,<.\Output\>
+  OPTOX 16
+  OPTLT 1,1,1,0,1,1,0,1,0,0,0,0
+  OPTXL 1,1,1,1,1,1,1,0,0
+  OPTFL 1,0,1
+  OPTAX 0
+  OPTDL (S8051.DLL)()(DP51.DLL)(-p52)(S8051.DLL)()(TP51.DLL)(-p52)
+  OPTDBG 509,-1,()()()()()()()()()() ()()()()
+  OPTBB 0,0,96,1,0,0,0,0,0,0,<gmi_Mode.c>()()
+  OPTBB 1,0,82,1,0,0,0,0,0,0,<gmi_Mode.c>()()
+  OPTDF 0x0
+  OPTLE <>
+  OPTLC <>
+EndOpt
+
+TARGOPT 2, (RTD2120Extend)
+ CLK51=12000000
+  OPTTT 0,1,1,0
+  OPTHX 0,65535,0,0,0
+  OPTLX 120,65,8,<.\Output\>
+  OPTOX 16
+  OPTLT 1,1,1,0,1,1,0,1,0,0,0,0
+  OPTXL 1,1,1,1,1,1,1,0,0
+  OPTFL 1,0,0
+  OPTAX 0
+  OPTDL (S8051.DLL)()(DP51.DLL)(-p52)(S8051.DLL)()(TP51.DLL)(-p52)
+  OPTDBG 509,-1,()()()()()()()()()() ()()()()
+  OPTDF 0x0
+  OPTLE <>
+  OPTLC <>
+EndOpt
+
