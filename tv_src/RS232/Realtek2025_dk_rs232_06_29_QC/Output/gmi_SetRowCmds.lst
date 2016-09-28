@@ -1,0 +1,61 @@
+C51 COMPILER V8.16   GMI_SETROWCMDS                                                        04/05/2012 11:15:37 PAGE 1   
+
+
+C51 COMPILER V8.16, COMPILATION OF MODULE GMI_SETROWCMDS
+OBJECT MODULE PLACED IN .\Output\gmi_SetRowCmds.obj
+COMPILER INVOKED BY: D:\安装文件\keil\C51\BIN\C51.EXE Lib\gmi_SetRowCmds.C OPTIMIZE(9,SIZE) BROWSE DEFINE(CMOS_CHIP_TYPE
+                    -=PCB_2025LV13) PRINT(.\Output\gmi_SetRowCmds.lst) OBJECT(.\Output\gmi_SetRowCmds.obj)
+
+line level    source
+
+   1          ////////////////////////////////////////////////////////////////////////////
+   2          //         Copyright of Vector Co.,Ltd.                                   //
+   3          //                                                                        //
+   4          //                                                                        //
+   5          //                       SetRowCmds function                              //
+   6          //   Ver: 0.00                                                            //
+   7          //   Creat file time: 2006.7.31                                           //
+   8          //   End modify time: 2006.7.31                                           //
+   9          //   For RTD2523B/RTD2553V/RTD2525L                                       //
+  10          ////////////////////////////////////////////////////////////////////////////
+  11          
+  12          #include "Header\Include.h"
+  13          
+  14          
+  15          void SetRowCmds(BYTE ucRowCnt, BYTE ucRowLenght)
+  16          {
+  17   1      
+  18   1          // Row Command Byte 0
+  19   1          // 0x80
+  20   1          //   Character border/shadow      000: None
+  21   1          //   Double character width         0: 0x01
+  22   1          //   Double character height        0: 0x01
+  23   1          DirectWOSDRam(0x00, ucRowCnt, THE_BYTE0, 0x80);
+  24   1      
+  25   1          //Row End Command
+  26   1          OutputChar(0x00);
+  27   1      
+  28   1          // Row Command Byte 1
+  29   1          //    0x90
+  30   1          //    Row height (1~32) : 18
+  31   1          //    Column space        : 0
+  32   1          DirectWOSDRam(0x00,ucRowCnt,THE_BYTE1,0x88);
+  33   1      
+  34   1          // Row Command Byte 2
+  35   1          DirectWOSDRam(0x00,ucRowCnt,THE_BYTE2,ucRowLenght);  
+  36   1      }
+  37          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     56    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       2
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
