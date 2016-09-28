@@ -1,0 +1,794 @@
+C51 COMPILER V8.16   LCD_OSDFAC                                                            04/05/2012 11:15:30 PAGE 1   
+
+
+C51 COMPILER V8.16, COMPILATION OF MODULE LCD_OSDFAC
+OBJECT MODULE PLACED IN .\Output\Lcd_osdFac.obj
+COMPILER INVOKED BY: D:\安装文件\keil\C51\BIN\C51.EXE gmiOSD\FactoryMenu\Lcd_osdFac.c OPTIMIZE(9,SIZE) BROWSE DEFINE(CMO
+                    -S_CHIP_TYPE=PCB_2025LV13) PRINT(.\Output\Lcd_osdFac.lst) OBJECT(.\Output\Lcd_osdFac.obj)
+
+line level    source
+
+   1          #define __FAC_LCD_OSD__
+   2          
+   3          #include "Header\Include.h"
+   4          #if(_FACTORY_MENU_EN)
+   5          
+   6          //-----------------------------------------------------------
+   7          void COsdFacHandler()
+   8          {
+   9   1          switch(ucOsdState)
+  10   1          {
+  11   2          case FAC_RESET:
+  12   2          case FAC_ADC_OFFSET:
+  13   2          case FAC_ADC_GAIN:
+  14   2          case FAC_9300K:
+  15   2          case FAC_6500K:
+  16   2          case FAC_USER:
+  17   2          case FAC_BRIGHTNESS:
+  18   2          case FAC_CONTRAST:
+  19   2          case FAC_BURIN_IN:
+  20   2          case FAC_OSD_LANGUAGE:
+  21   2          case FAC_POWER_SET:
+  22   2          case FAC_LOGO_EN:
+  23   2          case FAC_EMC:
+  24   2          case FAC_EXIT:
+  25   2              FMMainProc();
+  26   2              break;
+  27   2              
+  28   2          case FAC_OFFSET_R:
+  29   2          case FAC_OFFSET_G:
+  30   2          case FAC_OFFSET_B:
+  31   2              
+  32   2          case FAC_GAIN_R:
+  33   2          case FAC_GAIN_G:
+  34   2          case FAC_GAIN_B:
+  35   2              
+  36   2          case FAC_9300_R:
+  37   2          case FAC_9300_G:
+  38   2          case FAC_9300_B:
+  39   2              
+  40   2          case FAC_6500_R:
+  41   2          case FAC_6500_G:
+  42   2          case FAC_6500_B:
+  43   2              
+  44   2          case FAC_USER_R:
+  45   2          case FAC_USER_G:
+  46   2          case FAC_USER_B:
+  47   2              FMColorProc();
+  48   2              break;
+  49   2          }
+  50   1      
+  51   1          // In factory mode : not clear osd
+  52   1         //     CTimerReactiveTimerEvent(SEC(stOsdUserData.OsdTimeout),COsdDispOsdTimerEvent);
+  53   1      }       
+  54          //-----------------------------------------------------------
+C51 COMPILER V8.16   LCD_OSDFAC                                                            04/05/2012 11:15:30 PAGE 2   
+
+  55          void EnterFactoryMenu()
+  56          {   
+  57   1               BYTE uctemp=0;
+  58   1              if (ucCurrState == _SLEEP_STATE)
+  59   1              {
+  60   2              CModeResetMode();
+  61   2              ucCurrState = _NOSIGNAL_STATE;
+  62   2                      if(GET_LIGHTPOWERSTATUS() == _OFF)
+  63   2                      {
+  64   3                      CPowerPanelOn();
+  65   3                      CPowerLightPowerOn();
+  66   3                      }
+  67   2              }
+  68   1              
+  69   1              if (ucCurrState == _SLEEP_STATE&&ucCurrState == _NOSIGNAL_STATE)
+  70   1                      SET_OSD_READYFORDISPLAY();
+  71   1              
+  72   1              CTimerCancelTimerEvent(CModeNoSignalEvent);
+  73   1              CTimerCancelTimerEvent(CModePowerSavingEvent);
+  74   1              CTimerCancelTimerEvent(COsdDispOsdTimerEvent);
+  75   1              CTimerCancelTimerEvent(CModeNoCableEvent);
+  76   1              CTimerCancelTimerEvent(CModeNoSupportEvent);
+  77   1              //CTimerCancelTimerEvent(CPowerDownEvent);
+  78   1      
+  79   1              // CAdjustColorPalette(tFacPALETTE_0);
+  80   1      
+  81   1              //Draw
+  82   1              SetOSDRamAddress(FAC_ROW_COUNT,FAC_COL_WIDTH,FONT_BASE_ADDRESS);
+  83   1              SetRowCmds(FAC_ROW_COUNT,FAC_COL_WIDTH);
+  84   1              COsdFxCodeWrite(ucCloseAllWindow);
+  85   1              CClearWindow(0x40);  // Clear window and set character color to black
+  86   1      
+  87   1              SetOSDDouble(0);
+  88   1      
+  89   1              // Init OSD Attrib & Clear Display & Set Color
+  90   1              OSDClear(0, FAC_ROW_COUNT, 0, FAC_COL_WIDTH, 0x8C, BYTE_ATTRIB);     // Set as 1bit
+  91   1              OSDClear(0, FAC_ROW_COUNT, 0, FAC_COL_WIDTH, 0x00, BYTE_DISPLAY);    // Clear Display
+  92   1              OSDClear(0, FAC_ROW_COUNT, 0, FM_COL_R, 0x71,  BYTE_COLOR);
+  93   1              OSDClear(0, FAC_ROW_COUNT, FM_COL_R,FAC_COL_WIDTH-FM_COL_R, 0x7B,  BYTE_COLOR);
+  94   1      
+  95   1              // Output Menu Item
+  96   1              Gotoxy(1,uctemp++,BYTE_DISPLAY);
+  97   1              Textout(sFacVersion);
+  98   1              Gotoxy(1,uctemp++,BYTE_DISPLAY);
+  99   1              Textout(sFacReset);
+ 100   1              Gotoxy(1,uctemp++,BYTE_DISPLAY);
+ 101   1              Textout(sFacADCOffset);
+ 102   1              Gotoxy(1,uctemp++,BYTE_DISPLAY);
+ 103   1              Textout(sFacADCGain);
+ 104   1              Gotoxy(1,uctemp++,BYTE_DISPLAY);
+ 105   1              Textout(sFac9300K);
+ 106   1              Gotoxy(1,uctemp++,BYTE_DISPLAY);
+ 107   1              Textout(sFac6500K);
+ 108   1              Gotoxy(1,uctemp++,BYTE_DISPLAY);
+ 109   1              Textout(sFacUser);
+ 110   1              Gotoxy(1,uctemp++,BYTE_DISPLAY);
+ 111   1              Textout(sFacBright);
+ 112   1              Gotoxy(1,uctemp++,BYTE_DISPLAY);
+ 113   1              Textout(sFacContrast);
+ 114   1              Gotoxy(1,uctemp++,BYTE_DISPLAY);
+ 115   1              Textout(sFacBurinIn);
+ 116   1              Gotoxy(1,uctemp++,BYTE_DISPLAY);
+C51 COMPILER V8.16   LCD_OSDFAC                                                            04/05/2012 11:15:30 PAGE 3   
+
+ 117   1              Textout(sFacOsdLanguage);               Gotoxy(FM_COL_R+1 ,uctemp-1,BYTE_DISPLAY);Textout((BYTE *)sLangNam
+             -e[_GET_FAC_OSD_LANGUAGE()]); 
+ 118   1              Gotoxy(1,uctemp++,BYTE_DISPLAY);  
+ 119   1              Textout(sFacPowerSet);                          
+ 120   1              Gotoxy(FM_COL_R+1 ,uctemp-1,BYTE_DISPLAY);
+ 121   1             switch(_GET_FAC_POWER_SET())
+ 122   1              {
+ 123   2                    case 0:        Textout(sFacPowerDown);   break;       
+ 124   2                    case 1:        Textout(sFacPowerUp);   break;       
+ 125   2                    case 2:        Textout(sFacPowerSave);   break;     
+ 126   2              }
+ 127   1              Gotoxy(1,uctemp++,BYTE_DISPLAY);
+ 128   1              Textout(sFacLOGOEN);
+ 129   1              Gotoxy(1,uctemp++,BYTE_DISPLAY);
+ 130   1              Textout(sFacEMC);
+ 131   1              Gotoxy(1,uctemp++,BYTE_DISPLAY);
+ 132   1              Textout(sFacExit);
+ 133   1              
+ 134   1             Gotoxy(FM_COL_R,0,BYTE_DISPLAY);
+ 135   1              Textout(sFacVersionCode);
+ 136   1              Gotoxy(FM_COL_R+1,1,BYTE_DISPLAY);
+ 137   1              OutputChar('R');
+ 138   1              Gotoxy(FM_COL_G+1,1,BYTE_DISPLAY);
+ 139   1              OutputChar('G');
+ 140   1              Gotoxy(FM_COL_B+1,1,BYTE_DISPLAY);
+ 141   1              OutputChar('B');
+ 142   1      
+ 143   1              FMOutputAllData();
+ 144   1      
+ 145   1              OSDPosition(FAC_COL_WIDTH * 12,FAC_ROW_COUNT * 18,5,5,0x01);
+ 146   1              ucOsdState = FAC_RESET;
+ 147   1              FMItemState(1);
+ 148   1      
+ 149   1              COsdFxEnableOsd();
+ 150   1      }
+ 151          
+ 152          void OUTPUT_LOGO(void)
+ 153          {
+ 154   1          OSDLine(FM_ROW_LOGO_EN, FM_COL_R+1, 5, 0x00, BYTE_DISPLAY);
+ 155   1          Gotoxy(FM_COL_R+1,FM_ROW_LOGO_EN,BYTE_DISPLAY);
+ 156   1      #if(_LOGO_EN)
+                     if(GET_LOGO_EN())
+                      Textout(sFacOn);
+                         else
+                      Textout(sFacOff);
+              #else
+ 162   1              Textout(sFac_DISABLE);
+ 163   1      #endif
+ 164   1             FMItemState(1);         // clear select state
+ 165   1      }
+ 166          void OUTPUT_EMC(void)
+ 167          {
+ 168   1          OSDLine(FM_ROW_EMC, FM_COL_R+1, 5, 0x00, BYTE_DISPLAY);
+ 169   1          Gotoxy(FM_COL_R+1,FM_ROW_EMC,BYTE_DISPLAY);
+ 170   1             if(GET_EMC_EN())
+ 171   1              Textout(sFacOn);
+ 172   1                 else
+ 173   1              Textout(sFacOff);
+ 174   1      
+ 175   1             FMItemState(1);         // clear select state
+ 176   1      }
+ 177          
+C51 COMPILER V8.16   LCD_OSDFAC                                                            04/05/2012 11:15:30 PAGE 4   
+
+ 178          //-----------------------------------------------------------
+ 179          void FMOutputBurnInState()
+ 180          {
+ 181   1          OSDLine(FM_ROW_BURIN_IN, FM_COL_R+1, 5, 0x00, BYTE_DISPLAY);
+ 182   1          Gotoxy(FM_COL_R+1,FM_ROW_BURIN_IN,BYTE_DISPLAY);
+ 183   1          if(GET_BURNIN_STATE() == BURNIN_ON)   
+ 184   1              {
+ 185   2              Textout(sFacOn);
+ 186   2              CScalerSetBit(_VDISP_CTRL_28, 0xff, _BIT5);
+ 187   2              //CAdjustBackgroundColor(0,0,0xff);     
+ 188   2              if (_ACTIVE_STATE == ucCurrState)
+ 189   2      #if(RunLED==RedLED)                     
+                              CPowerLedRed(); 
+              #elif(RunLED==GreenLED)                 
+ 192   2                      CPowerLedGreen(); 
+ 193   2      #elif(RunLED==OrangeLED)                        
+                              CPowerLedOrange(); 
+              #elif(RunLED==BlackLED)                 
+                              CPowerLedBlack(); 
+              #endif  
+ 198   2             else
+ 199   2      #if(NosignalStateLED==RedLED)                   
+ 200   2                      CPowerLedRed(); 
+ 201   2      #elif(NosignalStateLED==GreenLED)                       
+                              CPowerLedGreen(); 
+              #elif(NosignalStateLED==OrangeLED)                      
+                              CPowerLedOrange(); 
+              #elif(NosignalStateLED==BlackLED)                       
+                              CPowerLedBlack(); 
+              #endif
+ 208   2              }
+ 209   1          else 
+ 210   1              {
+ 211   2              Textout(sFacOff);
+ 212   2              CAdjustBackgroundColor(0x00, 0x00, ((_GET_INPUT_SOURCE()) ? ((_GET_BLUE_BACKGROUND()) ? 0xff : 0x0
+             -0) : 0x00));   
+ 213   2              }
+ 214   1      }
+ 215          //-----------------------------------------------------------
+ 216          void FMOutputAllData()
+ 217          {
+ 218   1          BYTE i;
+ 219   1          
+ 220   1          //output adc data
+ 221   1          OUTPUT_OFFSET_R();
+ 222   1          OUTPUT_OFFSET_G();
+ 223   1          OUTPUT_OFFSET_B();
+ 224   1          OUTPUT_GAIN_R();
+ 225   1          OUTPUT_GAIN_G();
+ 226   1          OUTPUT_GAIN_B();
+ 227   1              
+ 228   1          for(i=0;i<(FM_ROW_USER-FM_ROW_ADC_OFFSET-1);i++)
+ 229   1          {
+ 230   2              SET_COLOR_TEMP_TYPE(i);
+ 231   2              CEepromLoadColorTempData();
+ 232   2              
+ 233   2              Gotoxy(FM_COL_R,4 + i,BYTE_DISPLAY);
+ 234   2              CShowNumber(stColorTempData.ColorTemp[_RED], 0);
+ 235   2              Gotoxy(FM_COL_G,4 + i,BYTE_DISPLAY);
+ 236   2              CShowNumber(stColorTempData.ColorTemp[_GREEN], 0);
+ 237   2              Gotoxy(FM_COL_B,4 + i,BYTE_DISPLAY);
+ 238   2              CShowNumber(stColorTempData.ColorTemp[_BLUE], 0);
+C51 COMPILER V8.16   LCD_OSDFAC                                                            04/05/2012 11:15:30 PAGE 5   
+
+ 239   2          }
+ 240   1          OUTPUT_BIRGHT();
+ 241   1          OUTPUT_CONTRAST();
+ 242   1          FMOutputBurnInState();
+ 243   1          OUTPUT_LOGO();
+ 244   1          OUTPUT_EMC( );
+ 245   1      }
+ 246          //-----------------------------------------------------------
+ 247          BYTE FMAINState(BYTE ucOsdState)    
+ 248          {
+ 249   1              switch(ucOsdState)
+ 250   1                      {
+ 251   2                    case FAC_RESET:                 return FM_ROW_RESET;
+ 252   2                    case FAC_ADC_OFFSET:       return FM_ROW_ADC_OFFSET;
+ 253   2                    case FAC_ADC_GAIN:          return FM_ROW_ADC_GAIN;
+ 254   2                    case FAC_9300K:                 return FM_ROW_9300K;
+ 255   2                    case FAC_6500K:                 return FM_ROW_6500K;
+ 256   2                    case FAC_USER:                  return FM_ROW_USER;
+ 257   2                    case FAC_BRIGHTNESS:       return FM_ROW_BRIGHTNESS;
+ 258   2                    case FAC_CONTRAST:           return FM_ROW_CONTRAST;
+ 259   2                    case FAC_BURIN_IN:             return FM_ROW_BURIN_IN;
+ 260   2                    case FAC_OSD_LANGUAGE:      return FM_ROW_OSD_LANGUAGE;
+ 261   2                    case FAC_POWER_SET:            return FM_ROW_POWER_SET;
+ 262   2                    case FAC_LOGO_EN:               return FM_ROW_LOGO_EN;
+ 263   2                    case FAC_EMC:               return FM_ROW_EMC;
+ 264   2                    case FAC_EXIT:                      return FM_ROW_EXIT;
+ 265   2                      }
+ 266   1      }
+ 267          //-----------------------------------------------------------
+ 268          void FMItemState(BYTE state)     // 1 : select state
+ 269          {
+ 270   1          BYTE y;
+ 271   1          BYTE color;
+ 272   1          
+ 273   1          y = FMAINState(ucOsdState)  ;
+ 274   1          
+ 275   1          if(state)    color = 0x74;
+ 276   1          else         color = 0x71;
+ 277   1          OSDLine(y, 0, FM_COL_R, color, BYTE_COLOR);
+ 278   1      }
+ 279          //-----------------------------------------------------------
+ 280          void FMMainProc()
+ 281          {
+ 282   1          switch(ucKeyMessage)
+ 283   1          {
+ 284   2          case VK_F_LEFT:        FMMainMenu(_INC);       break;
+ 285   2          case VK_F_RIGHT:        FMMainMenu(_DEC);       break;
+ 286   2          case VK_F_UP:        FMMainLR(1);        break;
+ 287   2          case VK_F_DOWN:       FMMainLR(0);        break;
+ 288   2         }
+ 289   1      }
+ 290          //-----------------------------------------------------------
+ 291          void FMMainMenu(BYTE ucMode)
+ 292          {
+ 293   1          FMItemState(0);         // clear select state
+ 294   1          
+ 295   1          // Enter Sub Item
+ 296   1          switch(ucOsdState)
+ 297   1          {
+ 298   2          case FAC_RESET:
+ 299   2              DoReset();
+ 300   2              ucOsdState = FAC_RESET;
+C51 COMPILER V8.16   LCD_OSDFAC                                                            04/05/2012 11:15:30 PAGE 6   
+
+ 301   2              FMOutputAllData();
+ 302   2              FMItemState(1);
+ 303   2               SET_FAC_STATE(1);
+ 304   2               SET_BURNIN_STATE(BURNIN_OFF);
+ 305   2               ucOsdEventMsg=_BurnInRun_Out;
+ 306   2               SET_NOSIGNAL_INFO(1);
+ 307   2           ucOsdEventMsg = _SAVE_EE_SYSTEMDATA_MSG;
+ 308   2              break;
+ 309   2              
+ 310   2          case FAC_ADC_OFFSET:
+ 311   2                if(ucMode)    
+ 312   2                      {
+ 313   3                      ucOsdState = FAC_OFFSET_R;
+ 314   3                      SUBITEM_STATE1(COL(FM_COL_R),ROW(FM_ROW_ADC_OFFSET),3);
+ 315   3                      }
+ 316   2                else
+ 317   2                      {
+ 318   3                      ucOsdState = FAC_OFFSET_B;
+ 319   3                      SUBITEM_STATE1(COL(FM_COL_B),ROW(FM_ROW_ADC_OFFSET),3);
+ 320   3                      }
+ 321   2              break;
+ 322   2              
+ 323   2          case FAC_ADC_GAIN:
+ 324   2                if(ucMode)    
+ 325   2                      {
+ 326   3                    ucOsdState = FAC_GAIN_R;
+ 327   3                    SUBITEM_STATE1(COL(FM_COL_R),ROW(FM_ROW_ADC_GAIN),3);
+ 328   3                      }
+ 329   2                else
+ 330   2                      {
+ 331   3                      ucOsdState = FAC_GAIN_B;
+ 332   3                      SUBITEM_STATE1(COL(FM_COL_B),ROW(FM_ROW_ADC_GAIN),3);
+ 333   3                      }
+ 334   2             break;
+ 335   2              
+ 336   2          case FAC_9300K:
+ 337   2                if(ucMode)    
+ 338   2                      {
+ 339   3                      FMLoadColorTmp();
+ 340   3                      ucOsdState = FAC_9300_R;
+ 341   3                      SUBITEM_STATE1(COL(FM_COL_R),ROW(FM_ROW_9300K),3);
+ 342   3                      }
+ 343   2                else
+ 344   2                      {
+ 345   3                      FMLoadColorTmp();
+ 346   3                      ucOsdState = FAC_9300_B;
+ 347   3                      SUBITEM_STATE1(COL(FM_COL_B),ROW(FM_ROW_9300K),3);
+ 348   3                      }
+ 349   2              break;
+ 350   2              
+ 351   2          case FAC_6500K:
+ 352   2                if(ucMode)    
+ 353   2                      {
+ 354   3                      FMLoadColorTmp();
+ 355   3                      ucOsdState = FAC_6500_R;
+ 356   3                      SUBITEM_STATE1(COL(FM_COL_R),ROW(FM_ROW_6500K),3);
+ 357   3                      }
+ 358   2                else
+ 359   2                      {
+ 360   3                      FMLoadColorTmp();
+ 361   3                      ucOsdState = FAC_6500_B;
+ 362   3                      SUBITEM_STATE1(COL(FM_COL_B),ROW(FM_ROW_6500K),3);
+C51 COMPILER V8.16   LCD_OSDFAC                                                            04/05/2012 11:15:30 PAGE 7   
+
+ 363   3                      }
+ 364   2              break;
+ 365   2                      
+ 366   2          case FAC_USER:
+ 367   2                if(ucMode)    
+ 368   2                      {
+ 369   3                      FMLoadColorTmp();
+ 370   3                      ucOsdState = FAC_USER_R;
+ 371   3                      SUBITEM_STATE1(COL(FM_COL_R),ROW(FM_ROW_USER),3);
+ 372   3                      }
+ 373   2                else
+ 374   2                      {
+ 375   3                      FMLoadColorTmp();
+ 376   3                      ucOsdState = FAC_USER_B;
+ 377   3                      SUBITEM_STATE1(COL(FM_COL_B),ROW(FM_ROW_USER),3);
+ 378   3                      }
+ 379   2              break;
+ 380   2              
+ 381   2          case FAC_BRIGHTNESS:
+ 382   2          stConBriData.Brightness = ValueInRangeChange(0,255,stConBriData.Brightness,ucMode,0);
+ 383   2          OUTPUT_BIRGHT();
+ 384   2          ucOsdEventMsg = _SAVE_EE_BriConHueSat_MSG;
+ 385   2             FMItemState(1);         // clear select state
+ 386   2              break;
+ 387   2              
+ 388   2          case FAC_CONTRAST:
+ 389   2          stConBriData.Contrast = ValueInRangeChange(0,255,stConBriData.Contrast,ucMode,0);
+ 390   2          OUTPUT_CONTRAST();
+ 391   2          ucOsdEventMsg = _SAVE_EE_BriConHueSat_MSG;
+ 392   2             FMItemState(1);         // clear select state
+ 393   2              break;
+ 394   2      
+ 395   2          case FAC_BURIN_IN:
+ 396   2          if(GET_BURNIN_STATE() == BURNIN_ON)
+ 397   2              {
+ 398   3              SET_BURNIN_STATE(BURNIN_OFF);
+ 399   3               ucOsdEventMsg=_BurnInRun_Out;
+ 400   3              }
+ 401   2          else 
+ 402   2              {
+ 403   3              SET_BURNIN_STATE(BURNIN_ON);
+ 404   3              }
+ 405   2          FMOutputBurnInState();
+ 406   2             FMItemState(1);         // clear select state
+ 407   2           ucOsdEventMsg = _SAVE_EE_SYSTEMDATA_MSG;
+ 408   2              break;
+ 409   2             
+ 410   2          case FAC_OSD_LANGUAGE:
+ 411   2              OSDClear(FM_ROW_OSD_LANGUAGE, 1, 0, FAC_COL_WIDTH, 0x8C, BYTE_ATTRIB);     // Set as 1bit
+ 412   2              OSDClear(FM_ROW_OSD_LANGUAGE, 1, 0, FAC_COL_WIDTH, 0x00, BYTE_DISPLAY);    // Clear Display
+ 413   2              OSDClear(FM_ROW_OSD_LANGUAGE, 1, FM_COL_R,FAC_COL_WIDTH-FM_COL_R, 0x7B,  BYTE_COLOR);
+ 414   2      
+ 415   2             if(ucMode)
+ 416   2              _SET_FAC_OSD_LANGUAGE(GetPrevLanguage(_GET_FAC_OSD_LANGUAGE()));
+ 417   2              else
+ 418   2              _SET_FAC_OSD_LANGUAGE(GetNextLanguage(_GET_FAC_OSD_LANGUAGE()));
+ 419   2              SET_LANGUAGE(_GET_FAC_OSD_LANGUAGE());
+ 420   2              LoadLanguageFont();
+ 421   2              Gotoxy(COL(1) ,ROW(FM_ROW_OSD_LANGUAGE),BYTE_DISPLAY);
+ 422   2              Textout(sFacOsdLanguage);   
+ 423   2              Gotoxy(COL(FM_COL_R+1) ,ROW(FM_ROW_OSD_LANGUAGE),BYTE_DISPLAY);
+ 424   2              Textout((BYTE *)sLangName[_GET_FAC_OSD_LANGUAGE()]); 
+C51 COMPILER V8.16   LCD_OSDFAC                                                            04/05/2012 11:15:30 PAGE 8   
+
+ 425   2              CEepromSaveOsdUserData();
+ 426   2             FMItemState(1);         // clear select state
+ 427   2              break;
+ 428   2      
+ 429   2          case FAC_POWER_SET:
+ 430   2          FMItemState(1);         // clear select state
+ 431   2                 _SET_FAC_POWER_SET(ValueInRangeChange(0, 2, _GET_FAC_POWER_SET(), 1, 1));
+ 432   2                      Gotoxy(COL(FM_COL_R+1) ,ROW(FM_ROW_POWER_SET),BYTE_DISPLAY);
+ 433   2              switch(_GET_FAC_POWER_SET())
+ 434   2              {
+ 435   3                    case 0:        Textout(sFacPowerDown);   break;       
+ 436   3                    case 1:        Textout(sFacPowerUp);   break;       
+ 437   3                    case 2:        Textout(sFacPowerSave);   break;     
+ 438   3                      }
+ 439   2               CEepromSaveOsdUserData();
+ 440   2            break;
+ 441   2      
+ 442   2          case FAC_LOGO_EN:
+ 443   2             if(GET_LOGO_EN())
+ 444   2              {
+ 445   3              CLR_LOGO_EN();
+ 446   3              }
+ 447   2          else 
+ 448   2              {
+ 449   3              SET_LOGO_EN( );
+ 450   3              }
+ 451   2               OUTPUT_LOGO( );
+ 452   2           ucOsdEventMsg = _SAVE_EE_SYSTEMDATA_MSG;
+ 453   2             ucKeyMessage = _NONE_KEY_MESSAGE;
+ 454   2                 break;
+ 455   2          case FAC_EMC:
+ 456   2             if(GET_EMC_EN())
+ 457   2              {
+ 458   3              CLR_EMC_EN();
+ 459   3                  CScalerSetBit(_SPREAD_SPECTRUM_B7, ~_BIT2, _BIT2);
+ 460   3                  CScalerSetBit(_SPREAD_SPECTRUM_B7, 0x0f, (_DCLK_SPREAD_RANGE << 4) & 0xf0);
+ 461   3                  CScalerSetBit(_SPREAD_SPECTRUM_B7, ~_BIT2, _BIT2);
+ 462   3                  CScalerSetBit(_SPREAD_SPECTRUM_B7, 0x0f, (_DCLK_SPREAD_RANGE << 4) & 0xf0);
+ 463   3              }
+ 464   2          else 
+ 465   2              {
+ 466   3                  CScalerSetBit(_SPREAD_SPECTRUM_B7, ~_BIT2, _BIT2);
+ 467   3                  CScalerSetBit(_SPREAD_SPECTRUM_B7, 0xff, 0xff);
+ 468   3                  CScalerSetBit(_SPREAD_SPECTRUM_B7, ~_BIT2, _BIT2);
+ 469   3                  CScalerSetBit(_SPREAD_SPECTRUM_B7, 0xff, 0xff);
+ 470   3              SET_EMC_EN( );
+ 471   3              }
+ 472   2               OUTPUT_EMC( );
+ 473   2           ucOsdEventMsg = _SAVE_EE_SYSTEMDATA_MSG;
+ 474   2             ucKeyMessage = _NONE_KEY_MESSAGE;
+ 475   2                 break;
+ 476   2          case FAC_EXIT:
+ 477   2              ucOsdState = _MENU_NONE;
+ 478   2              SET_FAC_STATE(0);
+ 479   2              COsdFxDisableOsd();       // Clear OSD
+ 480   2              if(GET_BURNIN_STATE()==BURNIN_ON)               
+ 481   2              SET_NOSIGNAL_INFO(1);
+ 482   2              else
+ 483   2                      {
+ 484   3              SET_NOSIGNAL_INFO(0);
+ 485   3             SET_OSD_READYFORDISPLAY();                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
+             -                                
+C51 COMPILER V8.16   LCD_OSDFAC                                                            04/05/2012 11:15:30 PAGE 9   
+
+ 486   3              }
+ 487   2               CEepromSaveOsdUserData();
+ 488   2             ucKeyMessage = _NONE_KEY_MESSAGE;
+ 489   2                 break;
+ 490   2          }
+ 491   1      }
+ 492          BYTE FMAINStateOut(BYTE uctemp)    
+ 493          {
+ 494   1              switch(uctemp)
+ 495   1                      {
+ 496   2                    case FM_ROW_RESET:                 return FAC_RESET;
+ 497   2                    case FM_ROW_ADC_OFFSET:       return FAC_ADC_OFFSET;
+ 498   2                    case FM_ROW_ADC_GAIN:          return FAC_ADC_GAIN;
+ 499   2                    case FM_ROW_9300K:                 return FAC_9300K;
+ 500   2                    case FM_ROW_6500K:                 return FAC_6500K;
+ 501   2                    case FM_ROW_USER:                  return FAC_USER;
+ 502   2                    case FM_ROW_BRIGHTNESS:       return FAC_BRIGHTNESS;
+ 503   2                    case FM_ROW_CONTRAST:           return FAC_CONTRAST;
+ 504   2                    case FM_ROW_BURIN_IN:             return FAC_BURIN_IN;
+ 505   2                    case FM_ROW_OSD_LANGUAGE:      return FAC_OSD_LANGUAGE;
+ 506   2                    case FM_ROW_POWER_SET:            return FAC_POWER_SET;
+ 507   2                    case FM_ROW_LOGO_EN:               return FAC_LOGO_EN;
+ 508   2                    case FM_ROW_EMC:               return FAC_EMC;
+ 509   2                    case FM_ROW_EXIT:                      return FAC_EXIT;
+ 510   2                      }
+ 511   1      }
+ 512          
+ 513          //-----------------------------------------------------------
+ 514          void FMMainLR(BYTE LR)
+ 515          {
+ 516   1      BYTE   ucNumberMode=0;
+ 517   1      BYTE   ucSearchMode=0;
+ 518   1       BYTE uctemp=FMAINState(ucOsdState);
+ 519   1          // Before select item change clear select
+ 520   1              FMItemState(0);
+ 521   1                      uctemp = ValueInRangeChange(FM_ROW_RESET, FM_ROW_EXIT, uctemp, LR, 1);
+ 522   1              ucOsdState=FMAINStateOut(uctemp);
+ 523   1              //after select item change draw selec
+ 524   1              FMItemState(1);
+ 525   1            FMLoadColorTmp();
+ 526   1      }
+ 527          
+ 528          //-----------------------------------------------------------
+ 529          void FMLoadColorTmp()
+ 530          {
+ 531   1          switch(ucOsdState)
+ 532   1          {
+ 533   2          case FAC_9300K:
+ 534   2              SET_COLOR_TEMP_TYPE(_CT_9300);
+ 535   2              CEepromLoadColorTempData();
+ 536   2              CAdjustContrast();
+ 537   2              break;
+ 538   2              
+ 539   2          case FAC_6500K:
+ 540   2              SET_COLOR_TEMP_TYPE(_CT_6500);
+ 541   2              CEepromLoadColorTempData();
+ 542   2              CAdjustContrast();
+ 543   2              break;
+ 544   2              
+ 545   2              
+ 546   2          case FAC_USER:
+ 547   2              SET_COLOR_TEMP_TYPE(_CT_USER);
+C51 COMPILER V8.16   LCD_OSDFAC                                                            04/05/2012 11:15:30 PAGE 10  
+
+ 548   2              CEepromLoadColorTempData();
+ 549   2              CAdjustContrast();
+ 550   2              break;         
+ 551   2          }
+ 552   1      }
+ 553          
+ 554          //-----------------------------------------------------------
+ 555          void FMColorProc()
+ 556          {
+ 557   1          switch(ucKeyMessage)
+ 558   1          {
+ 559   2          case VK_F_DOWN :        FMColorAdjLR(_INC);       break;
+ 560   2          case VK_F_UP:        FMColorAdjLR(_DEC);       break;
+ 561   2          case VK_F_LEFT:        FMColorLR(1);        break;
+ 562   2          case VK_F_RIGHT:       FMColorLR(0);        break;
+ 563   2          }
+ 564   1          
+ 565   1      }
+ 566          
+ 567          //-----------------------------------------------------------
+ 568          //-----------------------------------------------------------
+ 569          void FMColorLR(BYTE LR)
+ 570          {
+ 571   1               CLR_KEYREPEATENABLE(); 
+ 572   1          switch(ucOsdState)
+ 573   1          {
+ 574   2          case FAC_OFFSET_R:
+ 575   2          case FAC_OFFSET_G:
+ 576   2          case FAC_OFFSET_B:
+ 577   2              FMColorState(FM_ROW_ADC_OFFSET,FAC_OFFSET_R,FM_STATE_CLR);
+ 578   2              ucOsdState = ValueInRangeChange(FAC_ADC_OFFSET,FAC_OFFSET_B,ucOsdState,LR,1);
+ 579   2              FMColorState(FM_ROW_ADC_OFFSET,FAC_OFFSET_R,FM_STATE_SELECT);
+ 580   2               if(ucOsdState==FAC_ADC_OFFSET)
+ 581   2               OSDLine(FM_ROW_ADC_OFFSET, 0, FM_COL_R, 0x74, BYTE_COLOR);
+ 582   2              break;
+ 583   2              
+ 584   2          case FAC_GAIN_R:
+ 585   2          case FAC_GAIN_G:
+ 586   2          case FAC_GAIN_B:
+ 587   2              FMColorState(FM_ROW_ADC_GAIN,FAC_GAIN_R,FM_STATE_CLR);
+ 588   2              ucOsdState = ValueInRangeChange(FAC_ADC_GAIN,FAC_GAIN_B,ucOsdState,LR,1);
+ 589   2              FMColorState(FM_ROW_ADC_GAIN,FAC_GAIN_R,FM_STATE_SELECT);
+ 590   2               if(ucOsdState==FAC_ADC_GAIN)
+ 591   2               OSDLine(FM_ROW_ADC_GAIN, 0, FM_COL_R, 0x74, BYTE_COLOR);
+ 592   2              break;
+ 593   2              
+ 594   2          case FAC_9300_R:
+ 595   2          case FAC_9300_G:
+ 596   2          case FAC_9300_B:
+ 597   2              FMColorState(FM_ROW_9300K,FAC_9300_R,FM_STATE_CLR);
+ 598   2              ucOsdState = ValueInRangeChange(FAC_9300K,FAC_9300_B,ucOsdState,LR,1);
+ 599   2              FMColorState(FM_ROW_9300K,FAC_9300_R,FM_STATE_SELECT);
+ 600   2               if(ucOsdState==FAC_9300K)
+ 601   2               OSDLine(FM_ROW_9300K, 0, FM_COL_R, 0x74, BYTE_COLOR);
+ 602   2              break;
+ 603   2              
+ 604   2          case FAC_6500_R:
+ 605   2          case FAC_6500_G:
+ 606   2          case FAC_6500_B:
+ 607   2              FMColorState(FM_ROW_6500K,FAC_6500_R,FM_STATE_CLR);
+ 608   2              ucOsdState = ValueInRangeChange(FAC_6500K,FAC_6500_B,ucOsdState,LR,1);
+ 609   2              FMColorState(FM_ROW_6500K,FAC_6500_R,FM_STATE_SELECT);
+C51 COMPILER V8.16   LCD_OSDFAC                                                            04/05/2012 11:15:30 PAGE 11  
+
+ 610   2               if(ucOsdState==FAC_6500K)
+ 611   2               OSDLine(FM_ROW_6500K, 0, FM_COL_R, 0x74, BYTE_COLOR);
+ 612   2              break;
+ 613   2                      
+ 614   2          case FAC_USER_R:
+ 615   2          case FAC_USER_G:
+ 616   2          case FAC_USER_B:
+ 617   2              FMColorState(FM_ROW_USER,FAC_USER_R,FM_STATE_CLR);
+ 618   2              ucOsdState = ValueInRangeChange(FAC_USER,FAC_USER_B,ucOsdState,LR,1);
+ 619   2              FMColorState(FM_ROW_USER,FAC_USER_R,FM_STATE_SELECT);
+ 620   2               if(ucOsdState==FAC_USER)
+ 621   2               OSDLine(FM_ROW_USER, 0, FM_COL_R, 0x74, BYTE_COLOR);
+ 622   2              break;
+ 623   2          }
+ 624   1      }
+ 625          
+ 626          //-----------------------------------------------------------
+ 627          void FMColorState(BYTE y, BYTE Def_R, BYTE state)       // 0 : Clear   1 : Select  2 : Adjust
+ 628          {
+ 629   1          BYTE x = (ucOsdState - Def_R) * 4 + FM_COL_R;
+ 630   1          BYTE len;
+ 631   1          
+ 632   1          if(ucOsdState - Def_R == 3)   // return item
+ 633   1              len = 6;
+ 634   1          else len = 3;
+ 635   1          if(state == 0)
+ 636   1              CLR_SUBITEM(x,y,len);
+ 637   1          else if(state == 1)
+ 638   1              SUBITEM_STATE1(x,y,len);
+ 639   1          else 
+ 640   1              SUBITEM_STATE2(x,y,len);
+ 641   1        }
+ 642          //-----------------------------------------------------------
+ 643          //-----------------------------------------------------------
+ 644          void FMColorAdjLR(BYTE LR)
+ 645          {
+ 646   1          // Change Value Only
+ 647   1          switch(ucOsdState)
+ 648   1          {
+ 649   2          case FAC_OFFSET_R:
+ 650   2               SET_KEYREPEATENABLE(); 
+ 651   2              stAdcData.AdcOffset[_RED] = ValueInRangeChange(0,255,stAdcData.AdcOffset[_RED],LR,0);
+ 652   2              CAdjustAdcOffset();
+ 653   2              ucOsdEventMsg = _SAVE_EE_ADCDATA_MSG;
+ 654   2              break;
+ 655   2              
+ 656   2          case FAC_OFFSET_G:
+ 657   2               SET_KEYREPEATENABLE(); 
+ 658   2              stAdcData.AdcOffset[_GREEN] = ValueInRangeChange(0,255,stAdcData.AdcOffset[_GREEN],LR,0);
+ 659   2              CAdjustAdcOffset();
+ 660   2              ucOsdEventMsg = _SAVE_EE_ADCDATA_MSG;
+ 661   2              break;
+ 662   2              
+ 663   2          case FAC_OFFSET_B:
+ 664   2               SET_KEYREPEATENABLE(); 
+ 665   2              stAdcData.AdcOffset[_BLUE] = ValueInRangeChange(0,255,stAdcData.AdcOffset[_BLUE],LR,0);
+ 666   2              CAdjustAdcOffset();
+ 667   2              ucOsdEventMsg = _SAVE_EE_ADCDATA_MSG;
+ 668   2              break;
+ 669   2              
+ 670   2          case FAC_GAIN_R:
+ 671   2               SET_KEYREPEATENABLE(); 
+C51 COMPILER V8.16   LCD_OSDFAC                                                            04/05/2012 11:15:30 PAGE 12  
+
+ 672   2              stAdcData.AdcGain[_RED] = ValueInRangeChange(0,255,stAdcData.AdcGain[_RED],LR,0);
+ 673   2              CAdjustAdcGain();
+ 674   2              ucOsdEventMsg = _SAVE_EE_ADCDATA_MSG;
+ 675   2              break;
+ 676   2              
+ 677   2          case FAC_GAIN_G:
+ 678   2               SET_KEYREPEATENABLE(); 
+ 679   2              stAdcData.AdcGain[_GREEN] = ValueInRangeChange(0,255,stAdcData.AdcGain[_GREEN],LR,0);
+ 680   2              CAdjustAdcGain();
+ 681   2              ucOsdEventMsg = _SAVE_EE_ADCDATA_MSG;
+ 682   2              break;
+ 683   2              
+ 684   2          case FAC_GAIN_B:
+ 685   2               SET_KEYREPEATENABLE(); 
+ 686   2              stAdcData.AdcGain[_BLUE] = ValueInRangeChange(0,255,stAdcData.AdcGain[_BLUE],LR,0);
+ 687   2              CAdjustAdcGain();
+ 688   2              ucOsdEventMsg = _SAVE_EE_ADCDATA_MSG;
+ 689   2              break;
+ 690   2              
+ 691   2          case FAC_9300_R:
+ 692   2          case FAC_6500_R:
+ 693   2          case FAC_USER_R:
+ 694   2               SET_KEYREPEATENABLE(); 
+ 695   2              stColorTempData.ColorTemp[_RED] = ValueInRangeChange(0,255,stColorTempData.ColorTemp[_RED],LR,0);
+ 696   2              CAdjustContrast();
+ 697   2              ucOsdEventMsg = _SAVE_EE_COLORPROC1_MSG;
+ 698   2              break;
+ 699   2              
+ 700   2          case FAC_9300_G:
+ 701   2          case FAC_6500_G:
+ 702   2          case FAC_USER_G:
+ 703   2               SET_KEYREPEATENABLE(); 
+ 704   2              stColorTempData.ColorTemp[_GREEN] = ValueInRangeChange(0,255,stColorTempData.ColorTemp[_GREEN],LR,
+             -0);
+ 705   2              CAdjustContrast();
+ 706   2              ucOsdEventMsg = _SAVE_EE_COLORPROC1_MSG;
+ 707   2              break;
+ 708   2              
+ 709   2          case FAC_9300_B:
+ 710   2          case FAC_6500_B:
+ 711   2          case FAC_USER_B:
+ 712   2               SET_KEYREPEATENABLE(); 
+ 713   2              stColorTempData.ColorTemp[_BLUE] = ValueInRangeChange(0,255,stColorTempData.ColorTemp[_BLUE],LR,0)
+             -;
+ 714   2              CAdjustContrast();
+ 715   2              ucOsdEventMsg = _SAVE_EE_COLORPROC1_MSG;
+ 716   2              break;
+ 717   2          }
+ 718   1          
+ 719   1          // Draw Curr Data
+ 720   1          switch(ucOsdState)
+ 721   1          {
+ 722   2          case FAC_OFFSET_R:    OUTPUT_OFFSET_R();    break;
+ 723   2          case FAC_OFFSET_G:    OUTPUT_OFFSET_G();    break;
+ 724   2          case FAC_OFFSET_B:    OUTPUT_OFFSET_B();    break;
+ 725   2          case FAC_GAIN_R:      OUTPUT_GAIN_R();      break;
+ 726   2          case FAC_GAIN_G:      OUTPUT_GAIN_G();      break;
+ 727   2          case FAC_GAIN_B:      OUTPUT_GAIN_B();      break;
+ 728   2          case FAC_9300_R:      OUTPUT_9300_R();      break;
+ 729   2          case FAC_9300_G:      OUTPUT_9300_G();      break;
+ 730   2          case FAC_9300_B:      OUTPUT_9300_B();      break;
+ 731   2          case FAC_6500_R:      OUTPUT_6500_R();      break;
+C51 COMPILER V8.16   LCD_OSDFAC                                                            04/05/2012 11:15:30 PAGE 13  
+
+ 732   2          case FAC_6500_G:      OUTPUT_6500_G();      break;
+ 733   2          case FAC_6500_B:      OUTPUT_6500_B();      break;
+ 734   2          case FAC_USER_R:      OUTPUT_USER_R();      break;
+ 735   2          case FAC_USER_G:      OUTPUT_USER_G();      break;
+ 736   2          case FAC_USER_B:      OUTPUT_USER_B();      break;
+ 737   2          }
+ 738   1      }
+ 739          //-----------------------------------------------------------
+ 740          #endif        //#if(FACTORY_MENU_EN)
+ 741          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   3542    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----      14
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
