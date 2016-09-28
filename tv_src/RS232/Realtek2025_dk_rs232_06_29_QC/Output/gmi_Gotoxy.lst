@@ -1,0 +1,51 @@
+C51 COMPILER V8.16   GMI_GOTOXY                                                            04/05/2012 11:15:34 PAGE 1   
+
+
+C51 COMPILER V8.16, COMPILATION OF MODULE GMI_GOTOXY
+OBJECT MODULE PLACED IN .\Output\gmi_Gotoxy.obj
+COMPILER INVOKED BY: D:\安装文件\keil\C51\BIN\C51.EXE Lib\gmi_Gotoxy.C OPTIMIZE(9,SIZE) BROWSE DEFINE(CMOS_CHIP_TYPE=PCB
+                    -_2025LV13) PRINT(.\Output\gmi_Gotoxy.lst) OBJECT(.\Output\gmi_Gotoxy.obj)
+
+line level    source
+
+   1          ////////////////////////////////////////////////////////////////////////////
+   2          //         Copyright of Vector Co.,Ltd.                                   //
+   3          //                                                                        //
+   4          //                                                                        //
+   5          //                           Gotoxy function                              //
+   6          //   Ver: 0.00                                                            //
+   7          //   Creat file time: 2006.7.31                                           //
+   8          //   End modify time: 2006.7.31                                           //
+   9          //   For RTD2523B/RTD2553V/RTD2525L                                       //
+  10          ////////////////////////////////////////////////////////////////////////////
+  11          
+  12          #include "Header\Include.h"
+  13          
+  14          
+  15          //-------------------------------------------------------------
+  16          void Gotoxy(BYTE x, BYTE y, BYTE TheByte)
+  17          {
+  18   1           WORD iAddress = FONT_SELECT_ADDRESS + (y * ucCol_Count) + x;
+  19   1      
+  20   1      
+  21   1           CScalerSendAddr(_OSD_ADDR_MSB_90, _WRITE, _AUTOINC);
+  22   1           CScalerSendByte((BYTE)(((iAddress >> 8 ) & 0x0f) | TheByte));
+  23   1           CScalerSendByte((BYTE)(iAddress & 0xff));
+  24   1           CScalerSendWriteStop();
+  25   1      }
+  26          
+  27          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     71    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       3
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
