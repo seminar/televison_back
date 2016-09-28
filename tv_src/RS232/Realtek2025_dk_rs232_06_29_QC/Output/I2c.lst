@@ -1,0 +1,358 @@
+C51 COMPILER V8.16   I2C                                                                   04/05/2012 11:15:22 PAGE 1   
+
+
+C51 COMPILER V8.16, COMPILATION OF MODULE I2C
+OBJECT MODULE PLACED IN .\Output\I2c.obj
+COMPILER INVOKED BY: D:\安装文件\keil\C51\BIN\C51.EXE Code\I2c.c OPTIMIZE(9,SIZE) BROWSE DEFINE(CMOS_CHIP_TYPE=PCB_2025L
+                    -V13) PRINT(.\Output\I2c.lst) OBJECT(.\Output\I2c.obj)
+
+line level    source
+
+   1          //----------------------------------------------------------------------------------------------------
+   2          // ID Code      : I2c.c No.0000
+   3          // Update Note  : 
+   4          //
+   5          //----------------------------------------------------------------------------------------------------
+   6          
+   7          #define __I2C__
+   8          
+   9          #include "Header\Include.h"
+  10          
+  11          
+  12          //----------------------------------------------------------------------------------------------------
+  13          // I2C communication basic function
+  14          //----------------------------------------------------------------------------------------------------
+  15          void SETI2CSDA(void)
+  16          {
+  17   1          bI2CSDA = _TRUE;
+  18   1      }
+  19          
+  20          void CLRI2CSDA(void)
+  21          {
+  22   1          bI2CSDA = _FALSE;
+  23   1      }
+  24          
+  25          void SETI2CSCL(void)
+  26          {
+  27   1          bI2CSCL = _TRUE;
+  28   1      }
+  29          
+  30          void CLRI2CSCL(void)
+  31          {
+  32   1          bI2CSCL = _FALSE;
+  33   1      }
+  34          
+  35          #if(_MCU_TYPE == _RTD_2120)
+  36          
+  37          void Delay3us(void)
+  38          {
+  39   1          _nop_();
+  40   1          _nop_();
+  41   1          _nop_();
+  42   1      
+  43   1      }
+  44          
+  45          
+  46          void Delay5us(void)
+  47          {
+  48   1          _nop_();
+  49   1          _nop_();
+  50   1          _nop_();
+  51   1          _nop_();
+  52   1          _nop_();
+  53   1          _nop_();
+  54   1          _nop_();
+C51 COMPILER V8.16   I2C                                                                   04/05/2012 11:15:22 PAGE 2   
+
+  55   1          _nop_();
+  56   1          _nop_();
+  57   1          _nop_();
+  58   1          _nop_();
+  59   1          _nop_();
+  60   1          _nop_();
+  61   1          _nop_();
+  62   1          _nop_();
+  63   1          _nop_();
+  64   1          _nop_();
+  65   1          _nop_();
+  66   1      }
+  67          //add by chenlinfu for IIC 80K
+  68          void Delay6us(void)
+  69          {
+  70   1          _nop_();
+  71   1          _nop_();
+  72   1          _nop_();
+  73   1          _nop_();
+  74   1          _nop_();
+  75   1          _nop_();
+  76   1          _nop_();
+  77   1          _nop_();
+  78   1          _nop_();
+  79   1          _nop_();
+  80   1          _nop_();
+  81   1          _nop_();
+  82   1          _nop_();
+  83   1          _nop_();
+  84   1          _nop_();
+  85   1          _nop_();
+  86   1          _nop_();
+  87   1          _nop_();
+  88   1              _nop_();
+  89   1          _nop_();
+  90   1          _nop_();
+  91   1          _nop_();
+  92   1      
+  93   1      }
+  94          //end
+  95          #else
+              
+              void Delay5us(void)
+              {
+                  _nop_();
+                  _nop_();
+                  _nop_();
+                  _nop_();
+                  _nop_();
+                  _nop_();
+              }
+              
+              #endif
+ 108          
+ 109          BYTE CI2cStart(BYTE ucDeviceAddr)
+ 110          {
+ 111   1          SETI2CSCL();
+ 112   1       //   Delay5us();
+ 113   1              Delay6us();
+ 114   1          while(!(CHECKI2CSCL()));
+ 115   1          SETI2CSDA();
+ 116   1          CLRI2CSDA();
+C51 COMPILER V8.16   I2C                                                                   04/05/2012 11:15:22 PAGE 3   
+
+ 117   1      //    Delay5us();
+ 118   1              Delay6us();
+ 119   1          CLRI2CSCL();
+ 120   1      
+ 121   1          return CI2cSendByte(ucDeviceAddr);
+ 122   1      }
+ 123          
+ 124          void CI2cStop(void)
+ 125          {
+ 126   1          CLRI2CSDA();
+ 127   1          SETI2CSCL();
+ 128   1       //   Delay5us();
+ 129   1              Delay6us();
+ 130   1          SETI2CSDA();
+ 131   1      }
+ 132          
+ 133          BYTE CI2cGetAck(void)
+ 134          {
+ 135   1          BYTE ack;
+ 136   1      
+ 137   1          SETI2CSDA();
+ 138   1          SETI2CSCL();
+ 139   1      //    Delay5us();
+ 140   1              Delay6us();
+ 141   1          ack = CHECKI2CSDA();
+ 142   1          CLRI2CSCL();
+ 143   1          SETI2CSDA();
+ 144   1      
+ 145   1          return ack;
+ 146   1      }
+ 147          
+ 148          void CI2cSendAck(void)
+ 149          {
+ 150   1          CLRI2CSDA();
+ 151   1          SETI2CSCL();
+ 152   1      //    Delay5us();
+ 153   1              Delay6us();
+ 154   1          CLRI2CSCL();
+ 155   1      }
+ 156          
+ 157          void CI2cSendNoAck(void)
+ 158          {
+ 159   1          SETI2CSDA();
+ 160   1          SETI2CSCL();
+ 161   1      //    Delay5us();
+ 162   1              Delay6us();
+ 163   1          CLRI2CSCL();
+ 164   1      }
+ 165          
+ 166          BYTE CI2cSendByte(BYTE ucValue)
+ 167          {
+ 168   1          BYTE cnt;
+ 169   1      
+ 170   1          for(cnt=0;cnt<8;cnt++)
+ 171   1          {
+ 172   2              if((bit)(ucValue & 0x80))
+ 173   2                  SETI2CSDA();
+ 174   2              else
+ 175   2                  CLRI2CSDA();
+ 176   2      
+ 177   2              SETI2CSCL();
+ 178   2      //        Delay5us();
+C51 COMPILER V8.16   I2C                                                                   04/05/2012 11:15:22 PAGE 4   
+
+ 179   2                      Delay6us();
+ 180   2              CLRI2CSCL();
+ 181   2      
+ 182   2              ucValue = ucValue << 1;
+ 183   2          }
+ 184   1      
+ 185   1          if(CI2cGetAck())
+ 186   1          {
+ 187   2              CI2cStop();
+ 188   2              return _I2C_BUSY;
+ 189   2          }
+ 190   1          else
+ 191   1          {
+ 192   2              return _I2C_OK;
+ 193   2          }
+ 194   1      }
+ 195          
+ 196          BYTE CI2cGetByte(void)
+ 197          {
+ 198   1          BYTE cnt, value;
+ 199   1      
+ 200   1          value = 0;
+ 201   1      
+ 202   1          SETI2CSDA();
+ 203   1      
+ 204   1          for(cnt=0;cnt<8;cnt++)
+ 205   1          {
+ 206   2              SETI2CSCL();
+ 207   2      //        Delay5us();
+ 208   2                      Delay6us();
+ 209   2              
+ 210   2              value = (value << 1) | CHECKI2CSDA();
+ 211   2      
+ 212   2              CLRI2CSCL();
+ 213   2          }
+ 214   1      
+ 215   1          return value;
+ 216   1      }
+ 217          
+ 218          bit CI2cWriteStart(BYTE ucDeviceAddr, BYTE ucStartAddr)
+ 219          {
+ 220   1          BYTE timeoutcnt, control;
+ 221   1      
+ 222   1          timeoutcnt  = _I2C_TIMEOUT_LIMIT;
+ 223   1      
+ 224   1          control     = ucDeviceAddr | _I2C_WR;
+ 225   1      
+ 226   1          while(CI2cStart(control) != _I2C_OK)
+ 227   1          {
+ 228   2              timeoutcnt--;
+ 229   2              
+ 230   2              if(!timeoutcnt)
+ 231   2                  return _FAIL;
+ 232   2      
+ 233   2          }
+ 234   1      
+ 235   1          if(CI2cSendByte(ucStartAddr) != _I2C_OK)
+ 236   1              return _FAIL;
+ 237   1      
+ 238   1          return _SUCCESS;
+ 239   1      
+ 240   1      }
+C51 COMPILER V8.16   I2C                                                                   04/05/2012 11:15:22 PAGE 5   
+
+ 241          
+ 242          //--------------------------------------------------
+ 243          // Description  : Read data from the selected device by I2C protocol
+ 244          // Input Value  : ucDeviceAddr  --> Device address
+ 245          //                ucStartAddr   --> Start address of selected device
+ 246          //                usLength      --> Numbers of data we want to read
+ 247          //                pReadArray    --> Result array
+ 248          // Output Value : Reading result (Fail/Success)
+ 249          //--------------------------------------------------
+ 250          bit CI2cRead(BYTE ucDeviceAddr, BYTE ucStartAddr, WORD usLength, BYTE *pReadArray)
+ 251          {
+ 252   1          BYTE control;
+ 253   1      
+ 254   1          if(usLength == 0)
+ 255   1              return _FAIL;
+ 256   1      
+ 257   1          if(CI2cWriteStart(ucDeviceAddr, ucStartAddr) == _FAIL)
+ 258   1              return _FAIL;
+ 259   1      
+ 260   1          control = ucDeviceAddr | _I2C_RD;
+ 261   1      
+ 262   1          if(CI2cStart(control) != _I2C_OK)
+ 263   1              return _FAIL;
+ 264   1      
+ 265   1          while(--usLength)
+ 266   1          {
+ 267   2              *pReadArray++ = CI2cGetByte();
+ 268   2              CI2cSendAck();
+ 269   2          }
+ 270   1      
+ 271   1          *pReadArray++ = CI2cGetByte();
+ 272   1      
+ 273   1          CI2cSendNoAck();
+ 274   1          CI2cStop();
+ 275   1      
+ 276   1          return _SUCCESS;
+ 277   1      }
+ 278          
+ 279          //--------------------------------------------------
+ 280          // Description  : Write data to the selected device by I2C protocol
+ 281          // Input Value  : ucDeviceAddr  --> Device address
+ 282          //                ucStartAddr   --> Start address of selected device
+ 283          //                usLength      --> Numbers of data we want to write
+ 284          //                pWriteArray   --> Writing data array
+ 285          // Output Value : Write result (Fail/Success)
+ 286          //--------------------------------------------------
+ 287          bit CI2cWrite(BYTE ucDeviceAddr, BYTE ucStartAddr, WORD usLength, BYTE *pWriteArray)
+ 288          {
+ 289   1          BYTE control;
+ 290   1      
+ 291   1          if(usLength == 0)
+ 292   1              return _FAIL;
+ 293   1      
+ 294   1          while(usLength > 0)
+ 295   1          {
+ 296   2              if(CI2cWriteStart(ucDeviceAddr, ucStartAddr) == _FAIL)
+ 297   2                  return _FAIL;
+ 298   2      
+ 299   2              control = _I2C_WRITE_SIZE - (ucStartAddr & 0x0f);
+ 300   2      
+ 301   2              if(usLength > control)
+ 302   2              {
+C51 COMPILER V8.16   I2C                                                                   04/05/2012 11:15:22 PAGE 6   
+
+ 303   3                  usLength -= control;
+ 304   3                  if(ucStartAddr >= 0xf0)
+ 305   3                      ucDeviceAddr += 2;
+ 306   3                  ucStartAddr += control;
+ 307   3              }
+ 308   2              else
+ 309   2              {
+ 310   3                  control = usLength;
+ 311   3                  usLength = 0;
+ 312   3              }
+ 313   2      
+ 314   2              while(control--)
+ 315   2              {
+ 316   3                  if(CI2cSendByte(*pWriteArray++) != _I2C_OK)
+ 317   3                      return _FAIL;
+ 318   3              }
+ 319   2      
+ 320   2              CI2cStop();
+ 321   2          }
+ 322   1      
+ 323   1          return _SUCCESS;
+ 324   1      }                    
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    449    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----      17
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
