@@ -1,0 +1,1 @@
+"Lib\gmi_SetOSDRamAddress.C" OPTIMIZE (9,SIZE) BROWSE DEFINE (CMOS_CHIP_TYPE="PCB_2025LV13") PRINT(.\Output\gmi_SetOSDRamAddress.lst) OBJECT(.\Output\gmi_SetOSDRamAddress.obj)
