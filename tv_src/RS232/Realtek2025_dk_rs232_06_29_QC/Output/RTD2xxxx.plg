@@ -1,0 +1,293 @@
+<html>
+<body>
+<pre>
+<h1>礦ision3 Build Log</h1>
+<h2>Project:</h2>
+D:\Realtek\RS232公版_QC\Realtek2025_dk_rs232_06_29_QC\RTD2025LV13.uv2
+Project File Date:  06/29/2011
+
+<h2>Output:</h2>
+Build target 'RTD2025LV13'
+compiling Key.c...
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?CSWITCHTOI2C?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_PROSSMCUIRHANDLE?RS232
+Program Size: data=206.3 xdata=17189 code=64640
+creating hex file from ".\Output\RTD2xxxx"...
+User command #1: Output\CreateGff.exe RTD2025LV13.Bin rtd2xxxx.hex RTDScalarExtend.bin
+Create BIN V1.0
+Copyright by GMI.Craate file:D:\Realtek\RS232公版_QC\Realtek2025_dk_rs232_06_29_QC\Output\RTD2025LV13.Bin.Size:1435f
+".\Output\RTD2xxxx" - 0 Error(s), 2 Warning(s).
+Build target 'RTD2025LV13'
+compiling Key.c...
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?CSWITCHTOI2C?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_PROSSMCUIRHANDLE?RS232
+Program Size: data=206.3 xdata=17189 code=64640
+creating hex file from ".\Output\RTD2xxxx"...
+User command #1: Output\CreateGff.exe RTD2025LV13.Bin rtd2xxxx.hex RTDScalarExtend.bin
+Create BIN V1.0
+Copyright by GMI.Craate file:D:\Realtek\RS232公版_QC\Realtek2025_dk_rs232_06_29_QC\Output\RTD2025LV13.Bin.Size:1435f
+".\Output\RTD2xxxx" - 0 Error(s), 2 Warning(s).
+Build target 'RTD2025LV13'
+compiling Key.c...
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?CSWITCHTOI2C?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_PROSSMCUIRHANDLE?RS232
+Program Size: data=206.3 xdata=17189 code=64640
+creating hex file from ".\Output\RTD2xxxx"...
+User command #1: Output\CreateGff.exe RTD2025LV13.Bin rtd2xxxx.hex RTDScalarExtend.bin
+Create BIN V1.0
+Copyright by GMI.Craate file:D:\Realtek\RS232公版_QC\Realtek2025_dk_rs232_06_29_QC\Output\RTD2025LV13.Bin.Size:1435f
+".\Output\RTD2xxxx" - 0 Error(s), 2 Warning(s).
+Build target 'RTD2025LV13'
+compiling Key.c...
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?CSWITCHTOI2C?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_PROSSMCUIRHANDLE?RS232
+Program Size: data=206.3 xdata=17189 code=64640
+creating hex file from ".\Output\RTD2xxxx"...
+User command #1: Output\CreateGff.exe RTD2025LV13.Bin rtd2xxxx.hex RTDScalarExtend.bin
+Create BIN V1.0
+Copyright by GMI.Craate file:D:\Realtek\RS232公版_QC\Realtek2025_dk_rs232_06_29_QC\Output\RTD2025LV13.Bin.Size:1435f
+".\Output\RTD2xxxx" - 0 Error(s), 2 Warning(s).
+Build target 'RTD2025LV13'
+compiling Key.c...
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?CSWITCHTOI2C?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_PROSSMCUIRHANDLE?RS232
+Program Size: data=206.3 xdata=17189 code=64640
+creating hex file from ".\Output\RTD2xxxx"...
+User command #1: Output\CreateGff.exe RTD2025LV13.Bin rtd2xxxx.hex RTDScalarExtend.bin
+Create BIN V1.0
+Copyright by GMI.Craate file:D:\Realtek\RS232公版_QC\Realtek2025_dk_rs232_06_29_QC\Output\RTD2025LV13.Bin.Size:1435f
+".\Output\RTD2xxxx" - 0 Error(s), 2 Warning(s).
+Build target 'RTD2025LV13'
+compiling Key.c...
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?CSWITCHTOI2C?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_PROSSMCUIRHANDLE?RS232
+Program Size: data=206.3 xdata=17189 code=64640
+creating hex file from ".\Output\RTD2xxxx"...
+User command #1: Output\CreateGff.exe RTD2025LV13.Bin rtd2xxxx.hex RTDScalarExtend.bin
+Create BIN V1.0
+Copyright by GMI.Craate file:D:\Realtek\RS232公版_QC\Realtek2025_dk_rs232_06_29_QC\Output\RTD2025LV13.Bin.Size:1435f
+".\Output\RTD2xxxx" - 0 Error(s), 2 Warning(s).
+Build target 'RTD2025LV13'
+compiling Key.c...
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?CSWITCHTOI2C?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_PROSSMCUIRHANDLE?RS232
+Program Size: data=206.3 xdata=17189 code=64640
+creating hex file from ".\Output\RTD2xxxx"...
+User command #1: Output\CreateGff.exe RTD2025LV13.Bin rtd2xxxx.hex RTDScalarExtend.bin
+Create BIN V1.0
+Copyright by GMI.Craate file:D:\Realtek\RS232公版_QC\Realtek2025_dk_rs232_06_29_QC\Output\RTD2025LV13.Bin.Size:1435f
+".\Output\RTD2xxxx" - 0 Error(s), 2 Warning(s).
+Build target 'RTD2025LV13'
+compiling Key.c...
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?CSWITCHTOI2C?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_PROSSMCUIRHANDLE?RS232
+Program Size: data=206.3 xdata=17189 code=64640
+creating hex file from ".\Output\RTD2xxxx"...
+User command #1: Output\CreateGff.exe RTD2025LV13.Bin rtd2xxxx.hex RTDScalarExtend.bin
+Create BIN V1.0
+Copyright by GMI.Craate file:D:\Realtek\RS232公版_QC\Realtek2025_dk_rs232_06_29_QC\Output\RTD2025LV13.Bin.Size:1435f
+".\Output\RTD2xxxx" - 0 Error(s), 2 Warning(s).
+Build target 'RTD2025LV13'
+compiling Key.c...
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?CSWITCHTOI2C?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_PROSSMCUIRHANDLE?RS232
+Program Size: data=206.3 xdata=17189 code=64640
+creating hex file from ".\Output\RTD2xxxx"...
+User command #1: Output\CreateGff.exe RTD2025LV13.Bin rtd2xxxx.hex RTDScalarExtend.bin
+Create BIN V1.0
+Copyright by GMI.Craate file:D:\Realtek\RS232公版_QC\Realtek2025_dk_rs232_06_29_QC\Output\RTD2025LV13.Bin.Size:1435f
+".\Output\RTD2xxxx" - 0 Error(s), 2 Warning(s).
+Build target 'RTD2025LV13'
+compiling Key.c...
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?CSWITCHTOI2C?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_PROSSMCUIRHANDLE?RS232
+Program Size: data=206.3 xdata=17189 code=64640
+creating hex file from ".\Output\RTD2xxxx"...
+User command #1: Output\CreateGff.exe RTD2025LV13.Bin rtd2xxxx.hex RTDScalarExtend.bin
+Create BIN V1.0
+Copyright by GMI.Craate file:D:\Realtek\RS232公版_QC\Realtek2025_dk_rs232_06_29_QC\Output\RTD2025LV13.Bin.Size:1435f
+".\Output\RTD2xxxx" - 0 Error(s), 2 Warning(s).
+Build target 'RTD2025LV13'
+compiling Key.c...
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?CSWITCHTOI2C?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_PROSSMCUIRHANDLE?RS232
+Program Size: data=206.3 xdata=17189 code=64640
+creating hex file from ".\Output\RTD2xxxx"...
+User command #1: Output\CreateGff.exe RTD2025LV13.Bin rtd2xxxx.hex RTDScalarExtend.bin
+Create BIN V1.0
+Copyright by GMI.Craate file:D:\Realtek\RS232公版_QC\Realtek2025_dk_rs232_06_29_QC\Output\RTD2025LV13.Bin.Size:1435f
+".\Output\RTD2xxxx" - 0 Error(s), 2 Warning(s).
+Build target 'RTD2025LV13'
+compiling Key.c...
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?CSWITCHTOI2C?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_PROSSMCUIRHANDLE?RS232
+Program Size: data=206.3 xdata=17189 code=64640
+creating hex file from ".\Output\RTD2xxxx"...
+User command #1: Output\CreateGff.exe RTD2025LV13.Bin rtd2xxxx.hex RTDScalarExtend.bin
+Create BIN V1.0
+Copyright by GMI.Craate file:D:\Realtek\RS232公版_QC\Realtek2025_dk_rs232_06_29_QC\Output\RTD2025LV13.Bin.Size:1435f
+".\Output\RTD2xxxx" - 0 Error(s), 2 Warning(s).
+Build target 'RTD2025LV13'
+compiling Key.c...
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?CSWITCHTOI2C?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_PROSSMCUIRHANDLE?RS232
+Program Size: data=206.3 xdata=17189 code=64640
+creating hex file from ".\Output\RTD2xxxx"...
+User command #1: Output\CreateGff.exe RTD2025LV13.Bin rtd2xxxx.hex RTDScalarExtend.bin
+Create BIN V1.0
+Copyright by GMI.Craate file:D:\Realtek\RS232公版_QC\Realtek2025_dk_rs232_06_29_QC\Output\RTD2025LV13.Bin.Size:1435f
+".\Output\RTD2xxxx" - 0 Error(s), 2 Warning(s).
+Build target 'RTD2025LV13'
+compiling Key.c...
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?CSWITCHTOI2C?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_PROSSMCUIRHANDLE?RS232
+Program Size: data=206.3 xdata=17189 code=64640
+creating hex file from ".\Output\RTD2xxxx"...
+User command #1: Output\CreateGff.exe RTD2025LV13.Bin rtd2xxxx.hex RTDScalarExtend.bin
+Create BIN V1.0
+Copyright by GMI.Craate file:D:\Realtek\RS232公版_QC\Realtek2025_dk_rs232_06_29_QC\Output\RTD2025LV13.Bin.Size:1435f
+".\Output\RTD2xxxx" - 0 Error(s), 2 Warning(s).
+Build target 'RTD2025LV13'
+compiling Key.c...
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?CSWITCHTOI2C?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_PROSSMCUIRHANDLE?RS232
+Program Size: data=206.3 xdata=17189 code=64640
+creating hex file from ".\Output\RTD2xxxx"...
+User command #1: Output\CreateGff.exe RTD2025LV13.Bin rtd2xxxx.hex RTDScalarExtend.bin
+Create BIN V1.0
+Copyright by GMI.Craate file:D:\Realtek\RS232公版_QC\Realtek2025_dk_rs232_06_29_QC\Output\RTD2025LV13.Bin.Size:1435f
+".\Output\RTD2xxxx" - 0 Error(s), 2 Warning(s).
+Build target 'RTD2025LV13'
+compiling Key.c...
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?CSWITCHTOI2C?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_PROSSMCUIRHANDLE?RS232
+Program Size: data=206.3 xdata=17189 code=64640
+creating hex file from ".\Output\RTD2xxxx"...
+User command #1: Output\CreateGff.exe RTD2025LV13.Bin rtd2xxxx.hex RTDScalarExtend.bin
+Create BIN V1.0
+Copyright by GMI.Craate file:D:\Realtek\RS232公版_QC\Realtek2025_dk_rs232_06_29_QC\Output\RTD2025LV13.Bin.Size:1435f
+".\Output\RTD2xxxx" - 0 Error(s), 2 Warning(s).
+Build target 'RTD2025LV13'
+compiling Key.c...
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?CSWITCHTOI2C?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_PROSSMCUIRHANDLE?RS232
+Program Size: data=206.3 xdata=17189 code=64640
+creating hex file from ".\Output\RTD2xxxx"...
+User command #1: Output\CreateGff.exe RTD2025LV13.Bin rtd2xxxx.hex RTDScalarExtend.bin
+Create BIN V1.0
+Copyright by GMI.Craate file:D:\Realtek\RS232公版_QC\Realtek2025_dk_rs232_06_29_QC\Output\RTD2025LV13.Bin.Size:1435f
+".\Output\RTD2xxxx" - 0 Error(s), 2 Warning(s).
+Build target 'RTD2025LV13'
+compiling Key.c...
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?CSWITCHTOI2C?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_PROSSMCUIRHANDLE?RS232
+Program Size: data=206.3 xdata=17189 code=64663
+creating hex file from ".\Output\RTD2xxxx"...
+User command #1: Output\CreateGff.exe RTD2025LV13.Bin rtd2xxxx.hex RTDScalarExtend.bin
+Create BIN V1.0
+Copyright by GMI.Craate file:D:\Realtek\RS232公版_QC\Realtek2025_dk_rs232_06_29_QC\Output\RTD2025LV13.Bin.Size:1435f
+".\Output\RTD2xxxx" - 0 Error(s), 2 Warning(s).
+Build target 'RTD2025LV13'
+compiling Key.c...
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?CSWITCHTOI2C?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_PROSSMCUIRHANDLE?RS232
+Program Size: data=206.3 xdata=17189 code=64663
+creating hex file from ".\Output\RTD2xxxx"...
+User command #1: Output\CreateGff.exe RTD2025LV13.Bin rtd2xxxx.hex RTDScalarExtend.bin
+Create BIN V1.0
+Copyright by GMI.Craate file:D:\Realtek\RS232公版_QC\Realtek2025_dk_rs232_06_29_QC\Output\RTD2025LV13.Bin.Size:1435f
+".\Output\RTD2xxxx" - 0 Error(s), 2 Warning(s).
+Build target 'RTD2025LV13'
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?CSWITCHTOI2C?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_PROSSMCUIRHANDLE?RS232
+Program Size: data=206.3 xdata=17189 code=64663
+creating hex file from ".\Output\RTD2xxxx"...
+User command #1: Output\CreateGff.exe RTD2025LV13.Bin rtd2xxxx.hex RTDScalarExtend.bin
+Create BIN V1.0
+Copyright by GMI.Craate file:D:\Realtek\RS232公版_QC\Realtek2025_dk_rs232_06_29_QC\Output\RTD2025LV13.Bin.Size:1435f
+".\Output\RTD2xxxx" - 0 Error(s), 2 Warning(s).
+Build target 'RTD2025LV13'
+compiling Key.c...
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?CSWITCHTOI2C?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_PROSSMCUIRHANDLE?RS232
+Program Size: data=206.3 xdata=17189 code=64699
+creating hex file from ".\Output\RTD2xxxx"...
+User command #1: Output\CreateGff.exe RTD2025LV13.Bin rtd2xxxx.hex RTDScalarExtend.bin
+Create BIN V1.0
+Copyright by GMI.Craate file:D:\Realtek\RS232公版_QC\Realtek2025_dk_rs232_06_29_QC\Output\RTD2025LV13.Bin.Size:1435f
+".\Output\RTD2xxxx" - 0 Error(s), 2 Warning(s).
+Build target 'RTD2025LV13'
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?CSWITCHTOI2C?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_PROSSMCUIRHANDLE?RS232
+Program Size: data=206.3 xdata=17189 code=64699
+creating hex file from ".\Output\RTD2xxxx"...
+User command #1: Output\CreateGff.exe RTD2025LV13.Bin rtd2xxxx.hex RTDScalarExtend.bin
+Create BIN V1.0
+Copyright by GMI.Craate file:D:\Realtek\RS232公版_QC\Realtek2025_dk_rs232_06_29_QC\Output\RTD2025LV13.Bin.Size:1435f
+".\Output\RTD2xxxx" - 0 Error(s), 2 Warning(s).
