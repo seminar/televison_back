@@ -1,0 +1,69 @@
+C51 COMPILER V8.16   GMI_SETOSDRAMADDRESS                                                  04/05/2012 11:15:37 PAGE 1   
+
+
+C51 COMPILER V8.16, COMPILATION OF MODULE GMI_SETOSDRAMADDRESS
+OBJECT MODULE PLACED IN .\Output\gmi_SetOSDRamAddress.obj
+COMPILER INVOKED BY: D:\安装文件\keil\C51\BIN\C51.EXE Lib\gmi_SetOSDRamAddress.C OPTIMIZE(9,SIZE) BROWSE DEFINE(CMOS_CHI
+                    -P_TYPE=PCB_2025LV13) PRINT(.\Output\gmi_SetOSDRamAddress.lst) OBJECT(.\Output\gmi_SetOSDRamAddress.obj)
+
+line level    source
+
+   1          ////////////////////////////////////////////////////////////////////////////
+   2          //         Copyright of Vector Co.,Ltd.                                   //
+   3          //                                                                        //
+   4          //                                                                        //
+   5          //                   SetOSDRamAddress function                            //
+   6          //   Ver: 0.00                                                            //
+   7          //   Creat file time: 2006.7.31                                           //
+   8          //   End modify time: 2006.7.31                                           //
+   9          //   For RTD2523B/RTD2553V/RTD2525L                                       //
+  10          ////////////////////////////////////////////////////////////////////////////
+  11          
+  12          #include "Header\Include.h"
+  13          
+  14          
+  15          //-------------------------------------------------------------
+  16          //                                                           //
+  17          //                       OSD function                        //
+  18          //                                                           //
+  19          //-------------------------------------------------------------
+  20          void SetOSDRamAddress(BYTE Row_Count, BYTE Col_Count, WORD iFntBaseAddr)
+  21          {
+  22   1           WORD iFontSelectAddress;
+  23   1           
+  24   1      
+  25   1           ucRow_Count = Row_Count;
+  26   1           ucCol_Count = Col_Count;
+  27   1      
+  28   1           iFontSelectAddress = FONT_SELECT_ADDRESS;
+  29   1           iFontBaseAddress = iFntBaseAddr;
+  30   1      
+  31   1           CScalerSendAddr(_OSD_ADDR_MSB_90, _WRITE, _AUTOINC);
+  32   1           CScalerSendByte(0xc0);
+  33   1           CScalerSendByte(0x04);
+  34   1           CScalerSendWriteStop();
+  35   1      
+  36   1           CScalerSendAddr(_OSD_DATA_PORT_92, _WRITE, _NON_AUTOINC);
+  37   1           CScalerSendByte(iFontSelectAddress & 0xff);
+  38   1           CScalerSendByte(((iFontSelectAddress >> 4) & 0xf0) | (iFontBaseAddress & 0x0f));
+  39   1           CScalerSendByte(((iFontBaseAddress >> 4) & 0xff));
+  40   1           CScalerSendWriteStop();
+  41   1      }      
+  42                               
+  43          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    115    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       2
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+C51 COMPILER V8.16   GMI_SETOSDRAMADDRESS                                                  04/05/2012 11:15:37 PAGE 2   
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
