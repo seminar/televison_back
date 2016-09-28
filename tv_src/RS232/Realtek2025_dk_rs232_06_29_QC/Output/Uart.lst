@@ -1,0 +1,723 @@
+C51 COMPILER V8.16   UART                                                                  04/05/2012 11:37:17 PAGE 1   
+
+
+C51 COMPILER V8.16, COMPILATION OF MODULE UART
+OBJECT MODULE PLACED IN .\Output\Uart.obj
+COMPILER INVOKED BY: D:\安装文件\keil\C51\BIN\C51.EXE Code\Uart.c OPTIMIZE(9,SIZE) BROWSE DEFINE(CMOS_CHIP_TYPE=PCB_2025
+                    -LV13) PRINT(.\Output\Uart.lst) OBJECT(.\Output\Uart.obj)
+
+line level    source
+
+   1          //----------------------------------------------------------------------------------------------------
+   2          // ID Code      : Video.c No.0001
+   3          // Update Note  : 
+   4          //
+   5          //----------------------------------------------------------------------------------------------------
+   6          
+   7          #define __UART__
+   8          
+   9          #include "Header\Include.h"
+  10          #include "Rs232\Rs232.h"
+  11          #if(_RS232)
+  12          extern   void ProssMCU2DVDkeyHandle(BYTE Keycode);
+  13          bit fInUartMode = 0;
+  14          
+  15          bit fUartStart = 0;
+  16          bit  fUartRxCmdSuccess = 0;
+  17          bit  fUartDebugLoop = 0;
+  18          
+  19          BYTE xdata ucUartRxIndex = 1;
+  20          BYTE xdata ucUartRxCount = 0;
+  21          BYTE xdata pUartData[9];
+  22          
+  23          BYTE code tEnterDebugMode[] = {0x01,0x02,0x03,0x04};
+  24          BYTE code tExitDebugMode[] = {0x04,0x03,0x02,0x01};
+  25          bit  SetPanellightState=0;
+  26          bit fInitCmdlength = 0;
+  27          BYTE code tOSDmenuCMD[] = {0xF0,0x55,0xFF};
+  28          BYTE code tOSDPowerCMD[] = {0x00,0x1f,0x01};
+  29          
+  30          //----------------------------------------------------------------------------
+  31          void CUartInit(void)
+  32          {
+  33   1              WORD usTemp = 0xFFFF - (UINT32)24000 * 1000 / 38400 / 32;
+  34   1              // Initialize SBuf to zero
+  35   1              SBUF = 0x00;
+  36   1      
+  37   1              // Set to 8051 UART mode 1, refer to Page 2-43
+  38   1              SCON = 0x50;
+  39   1      
+  40   1              // Set the baudrate refer to Timer2, Page 2-37
+  41   1              T2CON = 0x34;
+  42   1      
+  43   1              //      Timer2's value is 65536 - (crystal / baud * 32)), Page 2-43
+  44   1              RCAP2L = LOBYTE(usTemp);
+  45   1              RCAP2H = HIBYTE(usTemp);
+  46   1              //RCAP2L = 0xd9;                // 19200                        
+  47   1              //RCAP2H = 0xff;                
+  48   1              //RCAP2L = 0xf9;                // 115200                       
+  49   1              //RCAP2H = 0xff;        
+  50   1              //RCAP2L = 0xD4;        //0FFh , 0D4h   //19200
+  51   1              //RCAP2H = 0xFF;        //0FFh , 0D4h   //19200
+  52   1      
+  53   1      #if(_ACPOWERON_RS232)
+  54   1              CTimerActiveTimerEvent(SEC(1), CSwitchToUart);
+C51 COMPILER V8.16   UART                                                                  04/05/2012 11:37:17 PAGE 2   
+
+  55   1      #endif
+  56   1      }
+  57          //----------------------------------------------------------------------------
+  58          void CSwitchToUart(void)
+  59          {
+  60   1              BYTE i;
+  61   1              bit fTest = 0;
+  62   1      
+  63   1             MCU_PIN_SHARE1_FF01 = MCU_PINSHARE_FF01_DEF & (~_BIT0);
+  64   1              
+  65   1              //MCU_PIN_SHARE_CTRL00_FF96 |= 0xF8;
+  66   1              ES = 1; // Enable UART's interrupt
+  67   1              PS = 1; // Change UART's interrupt to high priority
+  68   1      
+  69   1              fInUartMode = 1;
+  70   1      
+  71   1          DebugPrintf("Swtich to Uart mode.\n",0x00);
+  72   1      
+  73   1          for(i=0;i<10;i++)
+  74   1          {
+  75   2      //              bLED1 = fTest;
+  76   2                      fTest = ~fTest;
+  77   2                      CTimerDelayXms(20);             
+  78   2          }
+  79   1          
+  80   1      }
+  81          //----------------------------------------------------------------------------
+  82          void CSwitchToI2C(void)
+  83          {
+  84   1              BYTE i;
+  85   1              bit fTest = 0;
+  86   1              
+  87   1          DebugPrintf("Swtich to IIC mode.\n",0x00);
+  88   1           MCU_PIN_SHARE1_FF01 = MCU_PINSHARE_FF01_DEF | _BIT0;
+  89   1              //MCU_PIN_SHARE_CTRL00_FF96 &= 0x07;
+  90   1              ES = 0; // Enable UART's interrupt
+  91   1              PS = 0; // Change UART's interrupt to high priority     
+  92   1              fInUartMode = 0;
+  93   1      
+  94   1          for(i=0;i<10;i++)
+  95   1          {
+  96   2      //              bLED2 = fTest;
+  97   2                      fTest = ~fTest;
+  98   2                      CTimerDelayXms(20);             
+  99   2          }   
+ 100   1      }
+ 101          
+ 102          //----------------------------------------------------------------------------
+ 103          void DebugPrintf(const BYTE code* pstr,BYTE value)
+ 104          {
+ 105   1              BYTE i;
+ 106   1              char *p = pstr;
+ 107   1      
+ 108   1              for (i =0x00; *p != '\0'; i++)
+ 109   1          {
+ 110   2                      if(*p == '\n')
+ 111   2                      {
+ 112   3                              CUartPutCharToScr('\r');
+ 113   3                              CUartPutCharToScr(*p);
+ 114   3              }
+ 115   2              else if(*p == '%')
+ 116   2                      {
+C51 COMPILER V8.16   UART                                                                  04/05/2012 11:37:17 PAGE 3   
+
+ 117   3                              switch(*(p+1))
+ 118   3                              {
+ 119   4                                      case 'd':
+ 120   4                                              i++;
+ 121   4                                              p++;
+ 122   4                                              CUartPutToScr(value,1);
+ 123   4                                              break;
+ 124   4                                      case 'x':
+ 125   4                                              i++;
+ 126   4                                              p++;
+ 127   4                                              CUartPutToScr(value,2);
+ 128   4                                              break;
+ 129   4                                      case 'c':
+ 130   4                                              i++;
+ 131   4                                              p++;
+ 132   4                                              CUartPutCharToScr(value);
+ 133   4                                              break;  
+ 134   4                                      default:
+ 135   4                                              CUartPutCharToScr(*p);
+ 136   4                                              break;
+ 137   4                              }
+ 138   3              }
+ 139   2                      else
+ 140   2                      {
+ 141   3                              CUartPutCharToScr(*p);
+ 142   3                      }
+ 143   2                      p++;
+ 144   2          }
+ 145   1      }
+ 146          //----------------------------------------------------------------------------
+ 147          void CUartPutToScr(const BYTE ch,const BYTE mode)
+ 148          {
+ 149   1              BYTE NO1[3];
+ 150   1              BYTE i,time;
+ 151   1      
+ 152   1              if(mode == 1) 
+ 153   1              {       //dec
+ 154   2                      NO1[2] = ch / 100;
+ 155   2                      NO1[1] = (ch % 100) / 10;
+ 156   2                      NO1[0] = (ch % 100) % 10;
+ 157   2                      
+ 158   2                      if (NO1[2])                                     time = 3;
+ 159   2                      else if (NO1[1])                        time = 2;
+ 160   2                      else                                            time = 1;
+ 161   2      
+ 162   2                      for (i = 0; i < time; i++) 
+ 163   2                      {
+ 164   3                              CUartPutCharToScr(NO1[time - i - 1] + '0');
+ 165   3                      }
+ 166   2              }
+ 167   1              else if (mode == 2) 
+ 168   1              {       //hex
+ 169   2                      NO1[1] = (ch & 0x0F);
+ 170   2                      NO1[0] = ((ch >> 4) & 0x0F);
+ 171   2                      for (i = 0; i < 2; i++) 
+ 172   2                      {
+ 173   3      
+ 174   3                              if (NO1[i] > 9)
+ 175   3                                      time = NO1[i] - 10 + 'A';
+ 176   3                              else
+ 177   3                                      time = NO1[i] + '0';            // transfer UART
+ 178   3                              CUartPutCharToScr(time);
+C51 COMPILER V8.16   UART                                                                  04/05/2012 11:37:17 PAGE 4   
+
+ 179   3                      }
+ 180   2              }
+ 181   1      
+ 182   1      }
+ 183          //----------------------------------------------------------------------------
+ 184          void CUartPutCharToScr(BYTE ch)
+ 185          {
+ 186   1              ES = 0;
+ 187   1      
+ 188   1              TI = 0;
+ 189   1              SBUF = ch;                      // transfer UART
+ 190   1              while (!TI);            // wait buffer completing.
+ 191   1              
+ 192   1              ES = 1;
+ 193   1      }
+ 194          //----------------------------------------------------------------------------
+ 195          
+ 196          
+ 197          void CUartHandler(void)
+ 198          {
+ 199   1              do
+ 200   1              {               
+ 201   2                      if (!fUartRxCmdSuccess)
+ 202   2                              continue;
+ 203   2      
+ 204   2                      fUartRxCmdSuccess = 0;
+ 205   2      
+ 206   2                      switch (pUartData[0])
+ 207   2                      {       
+ 208   3                              case UartCMD_DebugModeExit:
+ 209   3                                      UartCMDDebugModeExit();
+ 210   3                                      break;
+ 211   3                              case UartCMD_DebugModeEnter:
+ 212   3                                      UartCMDDebugModeEnter();
+ 213   3                                      break;
+ 214   3                              
+ 215   3                              case UartCMD_CScalerRead:
+ 216   3                                      UartCMDScalerRead();
+ 217   3                                      break;
+ 218   3      
+ 219   3                              case UartCMD_I2CRead:
+ 220   3                                      break;
+ 221   3      
+ 222   3                              case UartCMD_CScalerWrite:
+ 223   3                                      UartCMDScalerWrite();
+ 224   3                                      break;
+ 225   3                           case UartCMD_RS232Control:
+ 226   3                                      UartCMDRS232Control();
+ 227   3                                      break;
+ 228   3                              case UartCMD_I2CWrite:
+ 229   3                                      break;
+ 230   3      
+ 231   3                      }
+ 232   2      
+ 233   2              }
+ 234   1              while(fUartDebugLoop);
+ 235   1      
+ 236   1      }
+ 237          //----------------------------------------------------------------------------
+ 238          void UartCMDDebugModeExit(void)
+ 239          {
+ 240   1              BYTE i;
+C51 COMPILER V8.16   UART                                                                  04/05/2012 11:37:17 PAGE 5   
+
+ 241   1              for(i=0;i<4;i++)
+ 242   1              {
+ 243   2                      if(pUartData[i + 1] != tExitDebugMode[i])
+ 244   2                              return;
+ 245   2              }
+ 246   1      
+ 247   1              CUartPutCharToScr(0x11);
+ 248   1              fUartDebugLoop = 0;
+ 249   1      }
+ 250          //----------------------------------------------------------------------------
+ 251          void UartCMDDebugModeEnter(void)
+ 252          {
+ 253   1              BYTE i;
+ 254   1              for(i=0;i<4;i++)
+ 255   1              {
+ 256   2                      if(pUartData[i + 1] != tEnterDebugMode[i])
+ 257   2                              return;
+ 258   2              }
+ 259   1      
+ 260   1              CUartPutCharToScr(0x10);
+ 261   1              fUartDebugLoop = 1;
+ 262   1      }
+ 263          //----------------------------------------------------------------------------
+ 264          void UartCMDScalerRead(void)
+ 265          {
+ 266   1              BYTE i;
+ 267   1      
+ 268   1              if (!pUartData[3])
+ 269   1                      CScalerRead(pUartData[1], pUartData[2], pData, _AUTOINC);
+ 270   1              else
+ 271   1                      CScalerRead(pUartData[1], pUartData[2], pData, _NON_AUTOINC);
+ 272   1      
+ 273   1              CUartPutCharToScr(pUartData[2]);
+ 274   1              for(i=0;i<pUartData[2];i++)
+ 275   1                      CUartPutCharToScr(pData[i]);
+ 276   1      
+ 277   1      }
+ 278          //----------------------------------------------------------------------------
+ 279          void UartCMDScalerWrite(void)
+ 280          {
+ 281   1              CScalerSetByte(pUartData[1], pUartData[2]);
+ 282   1              CUartPutCharToScr(0x30);        // willy 050810 for sync RS232
+ 283   1      }
+ 284          //----------------------------------------------------------------------------
+ 285          void UartCMDRS232Control(void) 
+ 286          {
+ 287   1              BYTE i;
+ 288   1      
+ 289   1       if(fInitCmdlength)
+ 290   1       {
+ 291   2              for(i=0;i<3;i++)
+ 292   2              {
+ 293   3                      if(pUartData[i + 1] != tOSDmenuCMD[i])
+ 294   3                              return;
+ 295   3              }
+ 296   2              /*
+ 297   2            switch (pUartData[4])
+ 298   2                      {       
+ 299   2                              case UartCMD_MENU:
+ 300   2                                      
+ 301   2                                if(pUartData[5] != 0x2B)
+ 302   2                                        return;
+C51 COMPILER V8.16   UART                                                                  04/05/2012 11:37:17 PAGE 6   
+
+ 303   2                               else
+ 304   2                             ucKeyMessage = _MENU_KEY_MESSAGE;
+ 305   2                                               
+ 306   2                           // DebugPrintf("_MENU_KEY_MESSAGE.\n",0x01);
+ 307   2                                      break;
+ 308   2      
+ 309   2                              case UartCMD_VOLUMELEFT:
+ 310   2                                      
+ 311   2                               if(pUartData[5] != 0x68)
+ 312   2                                        return;
+ 313   2                               else
+ 314   2                             ucKeyMessage = _LEFT_KEY_MESSAGE;
+ 315   2                                                       
+ 316   2                                      break;
+ 317   2      
+ 318   2                              case UartCMD_VOLUMERIGHT:
+ 319   2                                      
+ 320   2                               if(pUartData[5] != 0x60)
+ 321   2                                        return;
+ 322   2                               else
+ 323   2                              ucKeyMessage = _RIGHT_KEY_MESSAGE;
+ 324   2                                                       
+ 325   2                                      break;          
+ 326   2      
+ 327   2                              case UartCMD_DOWN:
+ 328   2                                      
+ 329   2                               if(pUartData[5] != 0x27)
+ 330   2                                        return;
+ 331   2                               else
+ 332   2                             ucKeyMessage = _DOWN_KEY_MESSAGE;
+ 333   2                                                       
+ 334   2                                      break;
+ 335   2      
+ 336   2                              case UartCMD_UP:
+ 337   2      
+ 338   2                               if(pUartData[5] != 0x6D)
+ 339   2                                        return;
+ 340   2                               else
+ 341   2                             ucKeyMessage = _UP_KEY_MESSAGE;
+ 342   2                                                       
+ 343   2                             //DebugPrintf("_UP_KEY_MESSAGE.\n",0x00);
+ 344   2                                      break;                  
+ 345   2      
+ 346   2                              case UartCMD_MUTE:
+ 347   2      
+ 348   2                               if(pUartData[5] != 0x20)
+ 349   2                                        return;
+ 350   2                               else                             
+ 351   2                             ucKeyMessage = _MUTE_KEY_MESSAGE;
+ 352   2                                                       
+ 353   2                                      break;          
+ 354   2      
+ 355   2                              case UartCMD_OK:
+ 356   2      
+ 357   2                               if(pUartData[5] != 0x64)
+ 358   2                                        return;
+ 359   2                               else
+ 360   2                             ucKeyMessage = _ENTER_KEY_MESSAGE;
+ 361   2                                                       
+ 362   2                                      break;
+ 363   2      
+ 364   2                              case UartCMD_SOURCE:
+C51 COMPILER V8.16   UART                                                                  04/05/2012 11:37:17 PAGE 7   
+
+ 365   2      
+ 366   2                               if(pUartData[5] != 0x3C)
+ 367   2                                        return;
+ 368   2                               else
+ 369   2                             ucKeyMessage = _INPUT_KEY_MESSAGE;
+ 370   2                                                       
+ 371   2                                      break;
+ 372   2      
+ 373   2                              case UartCMD_EXIT:
+ 374   2      
+ 375   2                               if(pUartData[5] != 0x23)
+ 376   2                                        return;
+ 377   2                               else
+ 378   2                             ucKeyMessage = _EXIT_KEY_MESSAGE;
+ 379   2                                                       
+ 380   2                                      break;
+ 381   2      
+ 382   2                              case UartCMD_CHINC:
+ 383   2      
+ 384   2                               if(pUartData[5] != 0x7F)
+ 385   2                                        return;
+ 386   2                               else
+ 387   2                             ucKeyMessage = _IR_CHINC_KEY_MESSAGE;
+ 388   2                                                       
+ 389   2                                      break;
+ 390   2      
+ 391   2                              case UartCMD_CHDEC:
+ 392   2      
+ 393   2                               if(pUartData[5] != 0x71)
+ 394   2                                        return;
+ 395   2                               else
+ 396   2                             ucKeyMessage = _IR_CHDEC_KEY_MESSAGE;
+ 397   2                                                       
+ 398   2                                      break;
+ 399   2      
+ 400   2                              case UartCMD_VOLINC:
+ 401   2      
+ 402   2                               if(pUartData[5] != 0x7C)
+ 403   2                                        return;
+ 404   2                               else
+ 405   2                             ucKeyMessage = _IR_VOLINC_KEY_MESSAGE;
+ 406   2                                                       
+ 407   2                                      break;
+ 408   2      
+ 409   2                              case UartCMD_VOLDEC:
+ 410   2      
+ 411   2                               if(pUartData[5] != 0x79)
+ 412   2                                        return;
+ 413   2                               else
+ 414   2                             ucKeyMessage = _IR_VOLDEC_KEY_MESSAGE;
+ 415   2                                                       
+ 416   2                                      break;
+ 417   2      
+ 418   2                              case UartCMD_SLEEP:
+ 419   2      
+ 420   2                               if(pUartData[5] != 0x3F)
+ 421   2                                        return;
+ 422   2                               else
+ 423   2                             ucKeyMessage = IR_SLEEP_KEY_MESSAGE;
+ 424   2                                                       
+ 425   2                                      break;
+ 426   2                          case UartCMD_AV:
+C51 COMPILER V8.16   UART                                                                  04/05/2012 11:37:17 PAGE 8   
+
+ 427   2                               if(pUartData[5] != 0xCD)
+ 428   2                                        return;
+ 429   2                               else
+ 430   2                             ucKeyMessage = _IR_AVTYPE_KEY_MESSAGE;
+ 431   2                                                       
+ 432   2                                      break;             
+ 433   2      
+ 434   2                              case UartCMD_VGA:
+ 435   2      
+ 436   2                               if(pUartData[5] != 0xE7)
+ 437   2                                        return;
+ 438   2                               else
+ 439   2                             ucKeyMessage = _IR_VGATYPE_KEY_MESSAGE;
+ 440   2                                                       
+ 441   2                                      break;
+ 442   2                       case UartCMD_HDMI:
+ 443   2      
+ 444   2                               if(pUartData[5] != 0xE9)
+ 445   2                                        return;
+ 446   2                               else
+ 447   2                             ucKeyMessage = _IR_HDMITYPE_KEY_MESSAGE;
+ 448   2                                                       
+ 449   2                                      break;  
+ 450   2      
+ 451   2                       case UartCMD_TV:
+ 452   2      
+ 453   2                               if(pUartData[5] != 0xE5)
+ 454   2                                        return;
+ 455   2                               else
+ 456   2                             ucKeyMessage = _IR_TVTYPE_KEY_MESSAGE;
+ 457   2                                                       
+ 458   2                                      break;  
+ 459   2      
+ 460   2                       case UartCMD_DTV:
+ 461   2      
+ 462   2                               if(pUartData[5] != 0xE6)
+ 463   2                                        return;
+ 464   2                               else
+ 465   2                             ucKeyMessage = _IR_DTVTYPE_KEY_MESSAGE;
+ 466   2                                                       
+ 467   2                                      break;  
+ 468   2                      
+ 469   2                              case UartCMD_POWERON:
+ 470   2      
+ 471   2                               if(pUartData[5] != 0x28)
+ 472   2                                        return;
+ 473   2                               else
+ 474   2                             ucKeyMessage = _POWER_KEY_MESSAGE;
+ 475   2                                                       
+ 476   2                                      break;
+ 477   2      //=================================================
+ 478   2      // 下面是数字键
+ 479   2      //=================================================
+ 480   2      
+ 481   2                              case UartCMD_NUM1:
+ 482   2      
+ 483   2                               if(pUartData[5] != 0x6A)
+ 484   2                                        return;
+ 485   2                               else
+ 486   2                             ucKeyMessage = _NUM1_KEY_MESSAGE;
+ 487   2                                                       
+ 488   2                                      break;
+C51 COMPILER V8.16   UART                                                                  04/05/2012 11:37:17 PAGE 9   
+
+ 489   2      
+ 490   2                              case UartCMD_NUM2:
+ 491   2      
+ 492   2                               if(pUartData[5] != 0x66)
+ 493   2                                        return;
+ 494   2                               else
+ 495   2                             ucKeyMessage = _NUM2_KEY_MESSAGE;
+ 496   2                                                       
+ 497   2                                      break;
+ 498   2      
+ 499   2                              case UartCMD_NUM3:
+ 500   2      
+ 501   2                               if(pUartData[5] != 0x62)
+ 502   2                                        return;
+ 503   2                               else
+ 504   2                             ucKeyMessage = _NUM3_KEY_MESSAGE;
+ 505   2                                                       
+ 506   2                                      break;
+ 507   2      
+ 508   2                              case UartCMD_NUM4:
+ 509   2      
+ 510   2                               if(pUartData[5] != 0x29)
+ 511   2                                        return;
+ 512   2                               else
+ 513   2                             ucKeyMessage = _NUM4_KEY_MESSAGE;
+ 514   2                                                       
+ 515   2                                      break;
+ 516   2      
+ 517   2                              case UartCMD_NUM5:
+ 518   2      
+ 519   2                               if(pUartData[5] != 0x25)
+ 520   2                                        return;
+ 521   2                               else
+ 522   2                             ucKeyMessage = _NUM5_KEY_MESSAGE;
+ 523   2                                                       
+ 524   2                                      break;
+ 525   2      
+ 526   2                              case UartCMD_NUM6:
+ 527   2      
+ 528   2                               if(pUartData[5] != 0x21)
+ 529   2                                        return;
+ 530   2                               else
+ 531   2                             ucKeyMessage = _NUM6_KEY_MESSAGE;
+ 532   2                                                       
+ 533   2                                      break;
+ 534   2      
+ 535   2                              case UartCMD_NUM7:
+ 536   2      
+ 537   2                               if(pUartData[5] != 0x69)
+ 538   2                                        return;
+ 539   2                               else
+ 540   2                             ucKeyMessage = _NUM7_KEY_MESSAGE;
+ 541   2                                                       
+ 542   2                                      break;
+ 543   2      
+ 544   2                              case UartCMD_NUM8:
+ 545   2      
+ 546   2                               if(pUartData[5] != 0x65)
+ 547   2                                        return;
+ 548   2                               else
+ 549   2                             ucKeyMessage = _NUM8_KEY_MESSAGE;
+ 550   2                                                       
+C51 COMPILER V8.16   UART                                                                  04/05/2012 11:37:17 PAGE 10  
+
+ 551   2                                      break;
+ 552   2      
+ 553   2                              case UartCMD_NUM9:
+ 554   2      
+ 555   2                               if(pUartData[5] != 0x61)
+ 556   2                                        return;
+ 557   2                               else
+ 558   2                             ucKeyMessage = _NUM9_KEY_MESSAGE;
+ 559   2                                                       
+ 560   2                                      break;
+ 561   2      
+ 562   2      
+ 563   2                              case UartCMD_NUM0:
+ 564   2      
+ 565   2                               if(pUartData[5] != 0x26)
+ 566   2                                        return;
+ 567   2                               else
+ 568   2                             ucKeyMessage = _NUM0_KEY_MESSAGE;
+ 569   2                                                       
+ 570   2                                      break;
+ 571   2      
+ 572   2       
+ 573   2           case UartCMD_USB:
+ 574   2      
+ 575   2                               if(pUartData[5] != 0xFE)
+ 576   2                                        return;
+ 577   2                               else
+ 578   2                             ucKeyMessage = _USB_KEY_MESSAGE;
+ 579   2                                                       
+ 580   2                                      break;
+ 581   2      
+ 582   2           case UartCMD_DVD:
+ 583   2      
+ 584   2                               if(pUartData[5] != 0xF9)
+ 585   2                                        return;
+ 586   2                               else
+ 587   2                             ucKeyMessage = _DVD_KEY_MESSAGE;
+ 588   2                                                       
+ 589   2                                      break;
+ 590   2      
+ 591   2      
+ 592   2      
+ 593   2                          
+ 594   2              }
+ 595   2      */
+ 596   2      
+ 597   2      
+ 598   2                  if(pUartData[5] != ~pUartData[4])
+ 599   2                      {
+ 600   3                             DebugPrintf("if.\n",0x00);
+ 601   3      
+ 602   3                                        return;
+ 603   3                      }                 
+ 604   2                 else
+ 605   2                 {
+ 606   3      
+ 607   3                             DebugPrintf("else.\n",0x00);
+ 608   3      
+ 609   3                           ProssMCUTXHandle(pUartData[4]);
+ 610   3                 }
+ 611   2      
+ 612   2      
+C51 COMPILER V8.16   UART                                                                  04/05/2012 11:37:17 PAGE 11  
+
+ 613   2                      
+ 614   2                      }
+ 615   1        else
+ 616   1              {
+ 617   2      
+ 618   2                      for(i=0;i<3;i++)
+ 619   2                      {
+ 620   3                              if(pUartData[i + 1] != tOSDPowerCMD[i])
+ 621   3                                      return;
+ 622   3                      }
+ 623   2      
+ 624   2               switch (pUartData[4])
+ 625   2               {
+ 626   3                                       case UartCMD_POWERON:
+ 627   3                                                      
+ 628   3                                        if(pUartData[5] != 0x20)
+ 629   3                                                return;
+ 630   3                                       else
+ 631   3                                             {   
+ 632   4      
+ 633   4                                                      ucKeyMessage = _POWER_KEY_MESSAGE;
+ 634   4                                                      //DebugPrintf("_POWER_STATUS_ON_MESSAGE.\n",0x01);
+ 635   4      
+ 636   4                                              }
+ 637   3                                                                       
+ 638   3                                                      break;
+ 639   3      
+ 640   3      
+ 641   3                                       case UartCMD_POWEROFF:
+ 642   3                                                      
+ 643   3                                        if(pUartData[5] != 0x21)
+ 644   3                                                return;
+ 645   3                                           else
+ 646   3      
+ 647   3                                                  ucKeyMessage = _POWER_KEY_MESSAGE ;
+ 648   3      
+ 649   3      
+ 650   3                                               
+ 651   3                                                   break;
+ 652   3                                      
+ 653   3                     }
+ 654   2      
+ 655   2                
+ 656   2      
+ 657   2                 
+ 658   2                   ProssMCUTXHandlePOWER(ucKeyMessage);
+ 659   2              /*      ProssMCU2DVDkeyHandle(ucKeyMessage);    
+ 660   2                    CUartPutCharToScr(0xbb);
+ 661   2                      CUartPutCharToScr(0x00);
+ 662   2                      CUartPutCharToScr(0x1f);
+ 663   2                      CUartPutCharToScr(0x01);
+ 664   2                     CUartPutCharToScr(pUartData[4]);
+ 665   2                     CUartPutCharToScr(~pUartData[4]);
+ 666   2      
+ 667   2      */
+ 668   2      
+ 669   2                                
+ 670   2            }
+ 671   1      
+ 672   1              //CUartPutCharToScr(0x30);      
+ 673   1      
+ 674   1      }
+C51 COMPILER V8.16   UART                                                                  04/05/2012 11:37:17 PAGE 12  
+
+ 675          #endif
+ 676          
+ 677          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    748    ----
+   CONSTANT SIZE    =     69    ----
+   XDATA SIZE       =     11    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----      15
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      6       2
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
