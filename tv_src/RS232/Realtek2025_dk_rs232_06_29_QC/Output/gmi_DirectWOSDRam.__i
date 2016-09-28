@@ -1,0 +1,1 @@
+"Lib\gmi_DirectWOSDRam.C" OPTIMIZE (9,SIZE) BROWSE DEFINE (CMOS_CHIP_TYPE="PCB_2025LV13") PRINT(.\Output\gmi_DirectWOSDRam.lst) OBJECT(.\Output\gmi_DirectWOSDRam.obj)
