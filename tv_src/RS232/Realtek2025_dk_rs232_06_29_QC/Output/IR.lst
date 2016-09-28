@@ -1,0 +1,338 @@
+C51 COMPILER V8.16   IR                                                                    04/05/2012 11:15:29 PAGE 1   
+
+
+C51 COMPILER V8.16, COMPILATION OF MODULE IR
+OBJECT MODULE PLACED IN .\Output\IR.obj
+COMPILER INVOKED BY: D:\安装文件\keil\C51\BIN\C51.EXE IR\IR.C OPTIMIZE(9,SIZE) BROWSE DEFINE(CMOS_CHIP_TYPE=PCB_2025LV13
+                    -) PRINT(.\Output\IR.lst) OBJECT(.\Output\IR.obj)
+
+line level    source
+
+   1          #include "Header\Include.h"
+   2          
+   3          #if(_IR_ENABLE)   
+   4          BYTE ucDetectIR_Cmd = 0;
+   5          #if _UARTIR
+   6          BYTE uchh;
+   7          BYTE ucll;
+   8          #endif 
+   9          #define _NEW_IR_DELAY      1
+  10          //------------------------------------------------------------------------------
+  11          //
+  12          //                            IR Function
+  13          //
+  14          //------------------------------------------------------------------------------
+  15          #if(0)   // Realtek standard IR
+              void Detect_IR(void)
+              {
+                  BYTE ucIR_Seq    = 0xff;
+                  BYTE ucTemp = 0;
+                  BYTE ucIR_State = 0;
+                  BYTE ucIR_Cmd[1];
+               
+                  while(1)
+                  {
+                      if (ucIR_State)
+                      {
+                          if (bIR_GPIO)
+                          {
+                              ucIR_Seq    = (ucIR_Seq << 1) | 0x01;
+                              if ((0xff == ucIR_Seq) && (ucIR_State & 0xfe))
+                              {
+                                  ucIR_State  = 0;    // Command timeout; Back to idle state
+                                  ((unsigned int *)ucIR_Cmd)[0]   = 0;
+                                  break; // Add
+                              }
+                          }
+                          else
+                          {
+                              if (1 < ucIR_State)
+                              {
+                  
+                                  if (ucIR_Seq & 0x01)
+                                  {
+                                      ((unsigned int *)ucIR_Cmd)[0]   = (((unsigned int *)ucIR_Cmd)[0] << 1)
+                                                                      | (0x07 != (ucIR_Seq & 0x07) ? 1 : 0);
+                                      if (23 == ++ucIR_State && CUSTOM_CODE != ((unsigned int *)ucIR_Cmd)[0])
+                                      {
+                                          ucIR_State  = 0;    // Customer code error; Back to idle state
+                                          ((unsigned int *)ucIR_Cmd)[0]   = 0;
+                                          break;  // Add
+                                      }
+                                      else if (39 == ucIR_State)
+                                      {
+                                          ucIR_State  = 0;    // Command complete; Back to idle state
+C51 COMPILER V8.16   IR                                                                    04/05/2012 11:15:29 PAGE 2   
+
+                                          break; // Add
+                                      }
+                                  }
+                                  else if (0x00 == (ucIR_Seq & 0xfe))
+                                  {
+                                      ucIR_State  = 0;    // Command crashed; Back to idle state
+                                      ((unsigned int *)ucIR_Cmd)[0]   = 0;
+                                      break;// Add
+                                  }
+                              }
+                              else                        // ucIR_State is 1
+                              {
+                                  if (0xff == ucIR_Seq)
+                                  {
+                                      ucIR_State  = 0x07; // Start to decode new command and clear old command
+                                      ((unsigned int *)ucIR_Cmd)[0]   = 0;
+                                  }
+                                  else
+                                  {
+                                      ucIR_State  = 0;    // Fire repeat command and reset to idle
+                                      break; // Add
+                                  }
+                              }
+                              ucIR_Seq    = ucIR_Seq << 1;
+                          }
+                      }
+                      else
+                      {
+                          if (bIR_GPIO)
+                          {
+                              ucTemp ++;
+                              if (ucTemp > 10) // Timeout break
+                              {
+                                  ucTemp = 0;
+                                  break;
+                              }
+                          }
+              
+                          ucIR_Seq    = (ucIR_Seq << 1) | bIR_GPIO;
+                          if (0x07 == ucIR_Seq)   ucIR_State  = 1;    // Leader code detected,IR data start
+                      }
+                  
+                      gmi_IR_Delay();
+                  }
+                         
+                  ucDetectIR_Cmd = (1 < ucIR_State) ? 0 : ucIR_Cmd[0];
+              }
+              
+              
+              #else 
+ 105          
+ 106          
+ 107          #if(_NEW_IR_DELAY)
+ 108          void gmi_Delay_65us1(void)
+ 109          {
+ 110   1          Delay5us();
+ 111   1          Delay5us();
+ 112   1          Delay5us();
+ 113   1          Delay5us();
+ 114   1          Delay5us();
+ 115   1          Delay5us();
+ 116   1          Delay5us();
+C51 COMPILER V8.16   IR                                                                    04/05/2012 11:15:29 PAGE 3   
+
+ 117   1          Delay5us();
+ 118   1          Delay5us();
+ 119   1          Delay5us();
+ 120   1          Delay5us();
+ 121   1          Delay5us();
+ 122   1          Delay5us();
+ 123   1      }
+ 124          
+ 125          void IR_Delay(void)
+ 126          {
+ 127   1      #if(_REMOTE_CONTROLLER == IR_CHUNGHOP_RMH02)
+              
+                    gmi_IR_Delay();
+              #else
+ 131   1      
+ 132   1              gmi_Delay_65us1();
+ 133   1              gmi_Delay_65us1();
+ 134   1              gmi_Delay_65us1();
+ 135   1              gmi_Delay_65us1();
+ 136   1              gmi_Delay_65us1();
+ 137   1              gmi_Delay_65us1();
+ 138   1              Delay5us();
+ 139   1              Delay5us();
+ 140   1            //  gmi_Delay_65us1();
+ 141   1            //  gmi_Delay_65us1();
+ 142   1             // gmi_Delay_65us1();
+ 143   1           //   gmi_Delay_65us1();
+ 144   1            //  gmi_Delay_65us1();
+ 145   1           //   gmi_Delay_65us1();
+ 146   1      
+ 147   1      #endif
+ 148   1      
+ 149   1      }    
+ 150          #endif
+ 151          
+ 152          #define DETECT_TIMEOUT_COUNT         100// 70    // Detect IR timeout count  70*375us = 26250us = 26.250ms
+ 153          #define DETECTED_ERROR_IR_COMMAND     220   // Detect error
+ 154          #define DETECTED_IR_COMMAND_COMPLETE  230   // Detect complete
+ 155          #define LEVEL_HIGH_TO_LEVEL_LOW       0x02  // HIGH->Low
+ 156          #define LEVEL_LOW_TO_LEVEL_HIGH       0x01  // Low->HIGH
+ 157          #define LEVEL_LOW_LOW                 0x00  // Low->Low
+ 158          #define LEVEL_HIGH_HIGH               0x03  // High->High
+ 159          #define START_LOW_COUNT               16    // IR start low level number
+ 160          #define START_HIGH_COUNT              8     // IR start high level number
+ 161          #define REPEAT_HIGHT_COUNT            4
+ 162          #define COUNT_IR_DATA_1               3     // If high level < 2,IR data is 1     1*375us~2*275us
+ 163          //-------------------------------------------------------------------------------
+ 164          // IR msg: step 1: bL_Start                 (incept IR start low level)
+ 165          //         step 2: ?bL_Start = 1 -> bH_Start(incept IR start high level)
+ 166          //         step 3: ?bL_Start = 1  ?bH_Start = 1  -> rIRData(incept ir data)
+ 167          void Detect_IR(void)
+ 168          {        
+ 169   1          static BYTE rIRData        = 0; // Readed IR data
+ 170   1      
+ 171   1          BYTE IRStatus     = 0; // IR GPIO state
+ 172   1          BYTE CountWave    = 0; // IR level count    
+ 173   1          BYTE rIRDataCount = 0; // Read IR data count
+ 174   1          bit  bL_Start     = 0; // IR start low level sign    1: Detected low level
+ 175   1          bit  bH_Start     = 0; // IR start high level sign   1: Detected high level
+ 176   1          bit  bRH_Start    = 0; // Repeat command start
+ 177   1      //    ucDetectIR_Cmd    = 0;
+ 178   1          
+C51 COMPILER V8.16   IR                                                                    04/05/2012 11:15:29 PAGE 4   
+
+ 179   1          while(DETECT_TIMEOUT_COUNT > CountWave)
+ 180   1          {
+ 181   2              IRStatus = (IRStatus << 1) | bIR_GPIO;  // Save IR prot current level
+ 182   2              
+ 183   2              switch(IRStatus & 0x03)
+ 184   2              {
+ 185   3              case LEVEL_LOW_TO_LEVEL_HIGH:   // Low->HIGH
+ 186   3                  if(CountWave > START_LOW_COUNT)
+ 187   3                     bL_Start = 1;
+ 188   3      
+ 189   3                  CountWave = 0;
+ 190   3                  break;
+ 191   3      
+ 192   3              case LEVEL_HIGH_TO_LEVEL_LOW:   // HIGH->LOW
+ 193   3                  if(!bL_Start)                                                     // Error
+ 194   3                     CountWave=0;
+ 195   3                  else if(CountWave > START_HIGH_COUNT)                             // IR data begin 
+ 196   3                  {
+ 197   4                      bH_Start = 1;
+ 198   4                      CountWave = 0;
+ 199   4                  }
+ 200   3                  else if(CountWave > REPEAT_HIGHT_COUNT && rIRDataCount == 0)      // IR Repeat
+ 201   3                  {
+ 202   4                      bRH_Start = 1;
+ 203   4                                       SET_KEYREPEATENABLE();
+ 204   4                      CountWave = DETECTED_IR_COMMAND_COMPLETE;
+ 205   4                  }                                                                
+ 206   3                  else if(bH_Start && bL_Start)                                    // Get IR Data 
+ 207   3                  {
+ 208   4                      if (rIRDataCount < 24)
+ 209   4                          rIRData = (rIRData << 1) | ((CountWave < COUNT_IR_DATA_1) ? 0x01 : 0x00);
+ 210   4      
+ 211   4                      rIRDataCount++;
+ 212   4                      CountWave = 0;
+ 213   4                      
+ 214   4                      switch(rIRDataCount)  // Check detect code
+ 215   4                      {
+ 216   5                      case 8:    // Custom code high 8bit
+ 217   5      #if(IR_Test_EN== _ON)    
+                                    CUSTOM_CODE_STATE_H=rIRData;
+              #else
+ 220   5      
+ 221   5                             #ifdef _UARTIR
+ 222   5                              uchh=rIRData;
+ 223   5                                #endif                   
+ 224   5                                if (rIRData != (CUSTOM_CODE >> 8)) // Custom code high 8bit error
+ 225   5                              CountWave = DETECTED_ERROR_IR_COMMAND;
+ 226   5      #endif
+ 227   5                          break;
+ 228   5                          
+ 229   5                      case 16:    // Custom code low 8bit
+ 230   5      #if(IR_Test_EN== _ON)    
+                                    CUSTOM_CODE_STATE_L=rIRData;
+              #else
+ 233   5                         #ifdef _UARTIR
+ 234   5                         ucll=rIRData;
+ 235   5                          #endif 
+ 236   5                              if (rIRData != (CUSTOM_CODE & 0xff)) // Custom code low 8bit error
+ 237   5                              CountWave = DETECTED_ERROR_IR_COMMAND;
+ 238   5      #endif
+ 239   5                          break;
+ 240   5                          
+C51 COMPILER V8.16   IR                                                                    04/05/2012 11:15:29 PAGE 5   
+
+ 241   5                      case 24:    // Detected IR command data
+ 242   5      #if(IR_Test_EN== _ON)    
+                                  ucDetectIR_Cmd = rIRData;
+                                      CMD_DATA_INFO=rIRData;          
+              #else
+ 246   5                          ucDetectIR_Cmd = rIRData;
+ 247   5      #endif
+ 248   5                          break;       
+ 249   5                                       
+ 250   5                      case 32:    // Detected IR command complete
+ 251   5                          CountWave = DETECTED_IR_COMMAND_COMPLETE;
+ 252   5                          break;
+ 253   5                      }  // end switch(rIRDataCount)
+ 254   4                  }  
+ 255   3                  break;
+ 256   3      
+ 257   3              case LEVEL_LOW_LOW:
+ 258   3              case LEVEL_HIGH_HIGH:
+ 259   3                  CountWave++;
+ 260   3                  break;
+ 261   3              }
+ 262   2              if(CountWave == DETECTED_ERROR_IR_COMMAND) // Detected ir code error 
+ 263   2                 ucDetectIR_Cmd = 0;
+ 264   2      
+ 265   2      #if(_NEW_IR_DELAY)
+ 266   2              IR_Delay();
+ 267   2      #else
+                      gmi_IR_Delay();
+              #endif
+ 270   2          }
+ 271   1      
+ 272   1      #if(IR_Test_EN== _ON)    
+                         ucDetectIR_Cmd = 0;
+              
+                #else
+ 276   1          // 0711 add for IR key repeat
+ 277   1      //--------------------------------------------------------------------------------------
+ 278   1                      
+ 279   1      
+ 280   1      
+ 281   1      
+ 282   1      //------------------------------------------------------------------------------------
+ 283   1          if(bRH_Start && GET_KEYREPEATENABLE())
+ 284   1          {
+ 285   2               ucDetectIR_Cmd = rIRData;               // Repeat ir key value
+ 286   2      
+ 287   2          }
+ 288   1      
+ 289   1          #endif
+ 290   1      }
+ 291          #endif
+ 292          
+ 293          //----------------------------  IR function end  ----------------------------------------
+ 294          
+ 295          
+ 296          void Int0_IR_Proc(void) interrupt 0 
+ 297          {
+ 298   1          gmi_CStopIR();
+ 299   1      
+ 300   1          Detect_IR(); // Detect IR code
+ 301   1          
+ 302   1          gmi_CStartIR(); 
+C51 COMPILER V8.16   IR                                                                    04/05/2012 11:15:29 PAGE 6   
+
+ 303   1      }
+ 304          #endif
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    361    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      4       3
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----       3
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
