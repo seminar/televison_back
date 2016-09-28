@@ -1,0 +1,569 @@
+C51 COMPILER V8.16   FUNC                                                                  04/05/2012 11:15:29 PAGE 1   
+
+
+C51 COMPILER V8.16, COMPILATION OF MODULE FUNC
+OBJECT MODULE PLACED IN .\Output\Func.obj
+COMPILER INVOKED BY: D:\安装文件\keil\C51\BIN\C51.EXE Func\Func.c OPTIMIZE(9,SIZE) BROWSE DEFINE(CMOS_CHIP_TYPE=PCB_2025
+                    -LV13) PRINT(.\Output\Func.lst) OBJECT(.\Output\Func.obj)
+
+line level    source
+
+   1          #define __FUNCC__
+   2          
+   3          #include "Header\Include.h"
+   4          
+   5          #if((_VIDEO_CHIP == _VDC_TB1334) && (_SCALER_TYPE == _RTD2023L || _SCALER_TYPE == _RTD2525L || _SCALER_TYP
+             -E == _RTD2547D))
+   6          extern void gmi_ChangeInputToVGA(void);
+   7          #endif
+   8          
+   9          //---------------------------------------------
+  10          #if(VOLUME_CTRL_TYPE == _SOUND_PWM)
+  11          //---------------------------------------------
+  12          void MUTE_ON()
+  13          {                                    
+  14   1          // Set Mute
+  15   1          if(_VOLUME_INV)         CSetPWM(bVOLUME_PWM,0xff);
+  16   1          else                    CSetPWM(bVOLUME_PWM,0x00);
+  17   1      
+  18   1          bMUTE = _MUTE_ON;
+  19   1      }
+  20          
+  21          //---------------------------------------------
+  22          void MUTE_OFF(void)
+  23          {
+  24   1          bMUTE = _MUTE_OFF;
+  25   1      }
+  26          /*
+  27          //---------------------------------------------
+  28          WORD code VOL_PWE[]=
+  29          {
+  30          1,
+  31          2,      
+  32          8,
+  33          13,
+  34          17,
+  35          22,
+  36          27,
+  37          30,
+  38          33,
+  39          36,
+  40          
+  41          39,
+  42          41,     
+  43          43,
+  44          45,
+  45          46,
+  46          48,
+  47          50,
+  48          52,
+  49          54,
+  50          56,
+  51          
+  52          57,
+  53          58,     
+C51 COMPILER V8.16   FUNC                                                                  04/05/2012 11:15:29 PAGE 2   
+
+  54          59,
+  55          60,
+  56          61,
+  57          62,
+  58          63,
+  59          64,
+  60          65,
+  61          65,
+  62          
+  63          67,
+  64          68,
+  65          69,
+  66          70,
+  67          74,
+  68          77,
+  69          80,
+  70          83,
+  71          86,
+  72          89,
+  73          
+  74          92,
+  75          96,
+  76          107,
+  77          111,
+  78          114,
+  79          118,
+  80          122,
+  81          126,
+  82          130,
+  83          134,
+  84          
+  85          
+  86          138,//50,
+  87          120+18,//50,
+  88          120+18,//50,
+  89          122+18,//50,
+  90          122+18,//50,
+  91          122+18,//50,
+  92          124+18,//50,
+  93          124+18,//50,
+  94          124+18,//50,
+  95          126+18,//50,
+  96          
+  97          126+18,//50,
+  98          126+18,//50,
+  99          128+18,//50,
+ 100          128+18,//50,
+ 101          128+18,//50,
+ 102          131+18,//50,
+ 103          131+18,//50,
+ 104          134+18,//50,
+ 105          134+18,//50,
+ 106          134+18,//50,
+ 107          
+ 108          137+18,
+ 109          137+18,
+ 110          137+18,
+ 111          139+18,
+ 112          139+18,
+ 113          139+18,
+ 114          141+18,
+ 115          141+18,
+C51 COMPILER V8.16   FUNC                                                                  04/05/2012 11:15:29 PAGE 3   
+
+ 116          141+18,
+ 117          144+18,
+ 118          
+ 119          144+18,
+ 120          144+18,
+ 121          144+18,
+ 122          145+18,
+ 123          145+18,
+ 124          145+18,
+ 125          145+18,
+ 126          146+18,
+ 127          146+18,
+ 128          146+18,
+ 129          
+ 130          147+18,
+ 131          147+18,
+ 132          147+18,
+ 133          148+18,
+ 134          148+18,
+ 135          167,
+ 136          167,
+ 137          167,
+ 138          168,
+ 139          168,
+ 140          
+ 141          168,
+ 142          
+ 143          };
+ 144          */
+ 145          #define CPWM_volume_1       184
+ 146          #define CPWM_volume_25      160
+ 147          #define CPWM_volume_75       80
+ 148          #define CPWM_volume_100     35
+ 149          #define CPWM_TV_volume_100     28
+ 150          
+ 151          
+ 152          void CSetVolume()
+ 153          {
+ 154   1          WORD iVolume;
+ 155   1      
+ 156   1          if((stOsdUserData.Volume == 0) || (GET_MUTE_STATE() == STATE_MUTEON))
+ 157   1          {
+ 158   2               if(_VOLUME_INV)         CSetPWM(bVOLUME_PWM,0xff);
+ 159   2               else                    CSetPWM(bVOLUME_PWM,0x00);
+ 160   2               return;
+ 161   2          }
+ 162   1              
+ 163   1                 
+ 164   1               if(_GET_INPUT_SOURCE()==_SOURCE_VIDEO_TV)
+ 165   1                      {
+ 166   2                      if(stOsdUserData.Volume<=25)
+ 167   2                              {
+ 168   3                             iVolume = (25*CPWM_volume_1 +(CPWM_volume_25-CPWM_volume_1)*(stOsdUserData.Volume))/25 ;
+ 169   3                              }
+ 170   2                      else
+ 171   2                              {
+ 172   3                              if(stOsdUserData.Volume<=75)
+ 173   3                                     iVolume = (50*CPWM_volume_25 +(CPWM_volume_75-CPWM_volume_25)*(stOsdUserData.Volume-25))/
+             -50 ;
+ 174   3                              else
+ 175   3                                     iVolume = (25*CPWM_volume_75 +(CPWM_TV_volume_100-CPWM_volume_75)*(stOsdUserData.Volume-7
+             -5))/25 ;
+C51 COMPILER V8.16   FUNC                                                                  04/05/2012 11:15:29 PAGE 4   
+
+ 176   3                              }
+ 177   2                      }                
+ 178   1               else
+ 179   1                      {
+ 180   2                      if(stOsdUserData.Volume<=25)
+ 181   2                              {
+ 182   3                             iVolume = (25*CPWM_volume_1 +(CPWM_volume_25-CPWM_volume_1)*(stOsdUserData.Volume))/25 ;
+ 183   3                              }
+ 184   2                      else
+ 185   2                              {
+ 186   3                              if(stOsdUserData.Volume<=75)
+ 187   3                                     iVolume = (50*CPWM_volume_25 +(CPWM_volume_75-CPWM_volume_25)*(stOsdUserData.Volume-25))/
+             -50 ;
+ 188   3                              else
+ 189   3                                     iVolume = (25*CPWM_volume_75 +(CPWM_volume_100-CPWM_volume_75)*(stOsdUserData.Volume-75))
+             -/25 ;
+ 190   3                              }
+ 191   2                      }
+ 192   1               
+ 193   1          CSetPWM(bVOLUME_PWM,iVolume);
+ 194   1      }
+ 195          //---------------------------------------------
+ 196          #endif    // #if(VOLUME_CTRL_TYPE == _SOUND_PWM)
+ 197          
+ 198          #if(VOLUME_CTRL_TYPE == _SOUND_SC7313)
+              //---------------------------------------------
+              void MUTE_ON()
+              {
+                  CSetSc7313Volume(0);
+                  CSc7313MuteOn();
+              }
+              
+              //---------------------------------------------
+              void MUTE_OFF(void)
+              {
+                  bMUTE = _MUTE_OFF;
+              }
+              //---------------------------------------------
+              void CSetVolume()
+              {
+                   if((GET_MUTE_STATE() == STATE_MUTEON) || (stOsdUserData.Volume == 0))
+                   {
+                       MUTE_ON();
+                       return;
+                   }
+                  
+                   CSetSc7313Volume(stOsdUserData.Volume);
+              
+                   if (bMUTE)
+                       MUTE_OFF();
+              }
+              
+              //---------------------------------------------
+              #endif          //#if(VOLUME_CTRL_TYPE == _SOUND_SC7313)
+ 228          
+ 229          //---------------------------------------------
+ 230          
+ 231          void CInitSoundChannel()
+ 232          {
+ 233   1           MUTE_ON();
+ 234   1      
+ 235   1           switch(_GET_INPUT_SOURCE())
+C51 COMPILER V8.16   FUNC                                                                  04/05/2012 11:15:29 PAGE 5   
+
+ 236   1           {
+ 237   2      #if(_VGA_SUPPORT)
+ 238   2               case _SOURCE_VGA:
+ 239   2         #if(VOLUME_CTRL_TYPE == _SOUND_SC7313)
+                           CSelect7313SoundChannel(0x01);
+                 #elif(VOLUME_CTRL_TYPE == _SOUND_PWM)  
+ 242   2                   _AUDIO_A = 1;
+ 243   2                   _AUDIO_B = 0;                      
+ 244   2         #endif
+ 245   2                   break;
+ 246   2                           
+ 247   2               case _SOURCE_HDMI:
+ 248   2               case _SOURCE_DVI:              
+ 249   2         #if(VOLUME_CTRL_TYPE == _SOUND_SC7313)
+                           CSelect7313SoundChannel(0x01);
+                 #elif(VOLUME_CTRL_TYPE == _SOUND_PWM)  
+ 252   2                   _AUDIO_A = 0;
+ 253   2                   _AUDIO_B = 1;                      
+ 254   2         #endif
+ 255   2                   break;
+ 256   2      #endif
+ 257   2      
+ 258   2      #if(_VIDEO_SUPPORT)
+ 259   2               case _SOURCE_VIDEO_AV:
+ 260   2               case _SOURCE_VIDEO_SV:        
+ 261   2         #if(VOLUME_CTRL_TYPE == _SOUND_SC7313)
+                           CSelect7313SoundChannel(0x02);
+                 #elif(VOLUME_CTRL_TYPE == _SOUND_PWM)  
+ 264   2                   _AUDIO_A = 0;
+ 265   2                   _AUDIO_B = 0;                      
+ 266   2         #endif
+ 267   2                   break;
+ 268   2      #endif
+ 269   2        
+ 270   2               case _SOURCE_VIDEO_YUV:
+ 271   2         #if(VOLUME_CTRL_TYPE == _SOUND_SC7313)
+                           CSelect7313SoundChannel(0x03);  // Only for PT2314
+                 #elif(VOLUME_CTRL_TYPE == _SOUND_PWM)  
+ 274   2                //   _AUDIO_A = 0;
+ 275   2                  // _AUDIO_B = 0;                      
+ 276   2         #endif
+ 277   2              break;
+ 278   2      
+ 279   2      #if(_VIDEO_TV_SUPPORT)
+ 280   2               case _SOURCE_VIDEO_TV:        
+ 281   2         #if(VOLUME_CTRL_TYPE == _SOUND_SC7313)
+                           CSelect7313SoundChannel(0x00);
+                 #elif(VOLUME_CTRL_TYPE == _SOUND_PWM)  
+ 284   2                   _AUDIO_A = 0;
+ 285   2                   _AUDIO_B = 1;                      
+ 286   2         #endif
+ 287   2                   break;
+ 288   2      #endif
+ 289   2      
+ 290   2      #if(_VIDEO_SCART_SUPPORT)
+                      case _SOURCE_VIDEO_SCART:
+                 #if(VOLUME_CTRL_TYPE == _SOUND_SC7313)
+                           CSelect7313SoundChannel(0x00);
+                 #elif(VOLUME_CTRL_TYPE == _SOUND_PWM)  
+                           _AUDIO_A = 1;
+                           _AUDIO_B = 0;                      
+                 #endif
+C51 COMPILER V8.16   FUNC                                                                  04/05/2012 11:15:29 PAGE 6   
+
+                          break;                  
+              #endif 
+ 300   2      
+ 301   2      #if(DVD_EN)
+ 302   2               case _SOURCE_VIDEO_DVD:        
+ 303   2        
+ 304   2                   _AUDIO_A = 1;
+ 305   2                   _AUDIO_B = 1;                      
+ 306   2                  break;                  
+ 307   2      #endif 
+ 308   2           }
+ 309   1      }
+ 310          
+ 311          WORD code ucSourceMask = (_VGA_SUPPORT_EN << _SOURCE_VGA)                 | 
+ 312                                   (_TMDS_SUPPORT << _SOURCE_DVI)                |
+ 313                                   (_HDMI_SUPPORT << _SOURCE_HDMI)               |
+ 314                                   (_VIDEO_AV_SUPPORT_EN << _SOURCE_VIDEO_AV)       |
+ 315                                   (_VIDEO_SV_SUPPORT_EN << _SOURCE_VIDEO_SV)       |
+ 316          #if(DVD_EN)                         
+ 317                                   (1 << _SOURCE_VIDEO_DVD) |
+ 318          #else
+                                       (0 << _SOURCE_VIDEO_DVD) |
+              #endif
+ 321                                   (_VIDEO_TV_SUPPORT_EN << _SOURCE_VIDEO_TV)       |
+ 322                                   (_VIDEO_SCART_SUPPORT << _SOURCE_VIDEO_SCART) |
+ 323                                   (_YPBPR_SUPPORT << _SOURCE_YPBPR);
+ 324          
+ 325          void ChangeSource(void)//BYTE ucCurrentSource)
+ 326          {
+ 327   1           bit bSourceChange = 0;
+ 328   1           WORD i;
+ 329   1           WORD ucMask = ucSourceMask >> (_GET_INPUT_SOURCE() + 1);
+ 330   1      
+ 331   1           //Find next source   
+ 332   1           for(i = _GET_INPUT_SOURCE() + 1; i < _INPUT_PORT_MAX; i++)
+ 333   1           {
+ 334   2               if(ucMask & 0x01)
+ 335   2               {
+ 336   3                   _SET_INPUT_SOURCE(i);
+ 337   3                   bSourceChange = 1;
+ 338   3                   break;
+ 339   3               }
+ 340   2               ucMask >>= 1;
+ 341   2           }
+ 342   1      
+ 343   1           if (0 == bSourceChange) // Source not change
+ 344   1           {
+ 345   2               ucMask = ucSourceMask;
+ 346   2               for(i = 0; i < _GET_INPUT_SOURCE(); i++)
+ 347   2               {
+ 348   3                   if(ucMask & 0x01)     
+ 349   3                   {         
+ 350   4                       _SET_INPUT_SOURCE(i);
+ 351   4                       bSourceChange = 1;
+ 352   4                       break;
+ 353   4                   }
+ 354   3                   ucMask >>= 1;
+ 355   3               }
+ 356   2           }
+ 357   1               
+ 358   1      #if(_CHANGE_SOURCE_BACKGROUCD_COLOR == _BLUE_COLOR)
+                          CAdjustBackgroundColor(0x00, 0x00, 0xff);
+C51 COMPILER V8.16   FUNC                                                                  04/05/2012 11:15:29 PAGE 7   
+
+              #else
+ 361   1                  CAdjustBackgroundColor(0x00, 0x00, 0x00);
+ 362   1      #endif
+ 363   1                  CScalerSetBit(_VDISP_CTRL_28, ~(_BIT5 | _BIT3), (_BIT5)); // Set normal display
+ 364   1                  MUTE_ON();
+ 365   1      
+ 366   1      #if(_CHANGE_SOURCE_METHOD == _CHANGE_SOURCE_METHOD_1)
+                   CInitInputSource();
+              #endif
+ 369   1      }
+ 370          //---------------------------------------------
+ 371          void CInitInputSource()
+ 372          {
+ 373   1      #if(_VIDEO_SUPPORT == _ON)  // Only use for video8
+ 374   1      
+ 375   1        #if(_VIDEO_TV_SUPPORT)
+ 376   1      //    TUNER_PWR_OFF();
+ 377   1        #endif
+ 378   1              #if(DVD_EN)
+ 379   1              bDVD_PWR_OFF() ;
+ 380   1              #endif
+ 381   1      #if(_VIDEO_SUPPORT && _VIDEO_CHIP == _VDC_TB1334)
+ 382   1          gmi_CI2CWriteVDCByte(0x0D, 0x02);
+ 383   1          VideoDecAddress = 0;  // Only select 0,for TB1334 source AV/SV
+ 384   1      #endif
+ 385   1      
+ 386   1      
+ 387   1          switch(_GET_INPUT_SOURCE()) 
+ 388   1          {
+ 389   2          case _SOURCE_VGA:
+ 390   2              #if(DVD_EN)
+ 391   2              bDVD_PWR_OFF() ;
+ 392   2              #endif
+ 393   2      #if((_VIDEO_CHIP == _VDC_TB1334) && (_SCALER_TYPE == _RTD2023L || _SCALER_TYPE == _RTD2525L || _SCALER_TYP
+             -E == _RTD2547D))
+ 394   2        #if(_SCALER_TYPE == _RTD2547D)
+                      CScalerSetBit(_IPH_ACT_WID_H_16, ~(_BIT6 | _BIT5 | _BIT4), ((_ADC_INPUT_SWAP_RG << 6) | (_ADC_INPU
+             -T_SWAP_RB << 5) | (_ADC_INPUT_SWAP_GB << 4)));
+                #else
+ 397   2              CScalerSetBit(_IPH_ACT_WID_H_0B, ~(_BIT6 | _BIT5 | _BIT4), ((_ADC_INPUT_SWAP_RG << 6) | (_ADC_INPU
+             -T_SWAP_RB << 5) | (_ADC_INPUT_SWAP_GB << 4)));
+ 398   2        #endif
+ 399   2      
+ 400   2              gmi_ChangeInputToVGA();
+ 401   2      #endif
+ 402   2              break;
+ 403   2      
+ 404   2      #if(_SCALER_TYPE == _RTD2547D)
+                  case _SOURCE_YPBPR:
+                  #if(_VIDEO_CHIP == _VDC_TB1334)
+                      CScalerSetBit(_IPH_ACT_WID_H_16, ~(_BIT6 | _BIT5 | _BIT4), ((_ADC_INPUT_SWAP_RG << 6) | (_ADC_INPU
+             -T_SWAP_RB << 5) | (_ADC_INPUT_SWAP_GB << 4)));
+                      gmi_ChangeInputToVGA();
+                  #endif
+              
+                      break;
+              #endif
+ 413   2      
+ 414   2          case _SOURCE_VIDEO_AV:
+ 415   2              #if(DVD_EN)
+ 416   2              bDVD_PWR_OFF() ;
+ 417   2              #endif
+C51 COMPILER V8.16   FUNC                                                                  04/05/2012 11:15:29 PAGE 8   
+
+ 418   2              if (bVideoON)
+ 419   2              {
+ 420   3                  gmi_CSelectInputChannel(_AV_CHANNEL, _NONE_INPUT); // Select input channel AV
+ 421   3      #if(_VIDEO_SUPPORT && _VIDEO_CHIP == _VDC_TB1334)
+ 422   3        //          CTimerDelayXms(50);  
+ 423   3      #endif
+ 424   3              }
+ 425   2              break;
+ 426   2      
+ 427   2          case _SOURCE_VIDEO_SV:
+ 428   2              #if(DVD_EN)
+ 429   2              bDVD_PWR_OFF() ;
+ 430   2              #endif
+ 431   2              if (bVideoON)
+ 432   2                  gmi_CSelectInputChannel(_SV_CHANNEL, _NONE_INPUT); // Select input channel SV
+ 433   2              break;
+ 434   2      
+ 435   2      #if(_VIDEO_YUV_SUPPORT)
+                  case _SOURCE_VIDEO_YUV:
+                      #if(DVD_EN)
+                      bDVD_PWR_OFF() ;
+                      #endif
+                      if (bVideoON)
+                      {
+                #if(_VIDEO_CHIP == _VDC_RTD2612)
+                  #if(_UART_TEST_MODE)
+                          gmi_CSelectInputChannel(_AV_CHANNEL, _NONE_INPUT); // Select input channel AV
+                  #else
+                      
+                          gmi_CSelectInputChannel(_YCBCR_CHANNEL_Y_CR, _YCBCR_CHANNEL_CB); // Select input channel SV
+                  #endif
+                #elif(_VIDEO_CHIP == _VDC_TB1334)
+                          gmi_CSelectInputChannel(_YCBCR_CHANNEL, _NONE_INPUT); // Select input channel AV
+                #endif   
+                      }
+                      break;
+              #endif
+ 455   2      
+ 456   2      #if(_VIDEO_TV_SUPPORT)
+ 457   2          case _SOURCE_VIDEO_TV:
+ 458   2              #if(DVD_EN)
+ 459   2              bDVD_PWR_OFF() ;
+ 460   2              #endif
+ 461   2       #if(_VIDEO_CHIP == _VDC_TB1334)
+ 462   2              VideoDecAddress = 1; // Only select 1,for TB1334 source TV
+ 463   2       #endif
+ 464   2          CTimerDelayXms(50);
+ 465   2          CScalerSetBit(_SYNC_INVERT_48, ~(_BIT6 | _BIT1), (_BIT4 | _BIT2));
+ 466   2          CTimerDelayXms(50);
+ 467   2          CScalerSetBit(_SYNC_CTRL_49, ~_BIT6, 0x00);
+ 468   2              CInitTV();             
+ 469   2              if (bVideoON)
+ 470   2                  gmi_CSelectInputChannel(_TV_CHANNEL, _NONE_INPUT); // Select input channel TV
+ 471   2              break;
+ 472   2      #endif
+ 473   2      
+ 474   2      #if(_VIDEO_SCART_SUPPORT)
+                  case _SOURCE_VIDEO_SCART:
+                      #if(DVD_EN)
+                      bDVD_PWR_OFF() ;
+                      #endif
+                      if (bVideoON)
+C51 COMPILER V8.16   FUNC                                                                  04/05/2012 11:15:29 PAGE 9   
+
+                          gmi_CSelectInputChannel(_SCART_CHANNEL, _NONE_INPUT); // Select input channel TV
+                      break;                  
+              #endif 
+ 483   2      #if(DVD_EN)
+ 484   2          case _SOURCE_VIDEO_DVD:
+ 485   2               bDVD_PWR_ON();
+ 486   2              gmi_CSelectInputChannel(_DVD_CHANNEL,_NONE_INPUT); // Select input channel DVD
+ 487   2              break;
+ 488   2      #endif
+ 489   2      
+ 490   2      #if(_HDMI_SUPPORT == _ON)
+                  case _SOURCE_HDMI:
+                      CScalerSetByte(_YUV2RGB_CTRL_9C, 0x00);
+                      break;
+              #endif
+ 495   2          }       
+ 496   1      
+ 497   1      #if(_VIDEO_TV_SUPPORT)
+ 498   1          ucVideoNoModeTime = 253;
+ 499   1      #endif
+ 500   1      
+ 501   1      #if(_AUTO_POWER_DOWN && _VIDEO_TV_SUPPORT)
+ 502   1       #if(_CHANGE_SOURCE_STORE_A_P_T == _DISABLE)
+                  ucMinuteCount       = 0;
+                  ucAutoPowerDownTime = _GET_POWER_DOWN_TIME() * 15;
+                  if (0 == ucAutoPowerDownTime) // Auto power down time off
+                  {
+                      ucAutoPowerDownTime = 0xff;
+                  }
+               #endif   // end #if(_CHANGE_SOURCE_STORE_A_P_T == _DISABLE)
+ 510   1      #endif    //#if(_AUTO_POWER_DOWN && _VIDEO_TV_SUPPORT)
+ 511   1      #endif    //#if(_VIDEO_SUPPORT == _ON)  // Only use for video8
+ 512   1          
+ 513   1          CInitSoundChannel();
+ 514   1      
+ 515   1         CEepromLoadBriConData();
+ 516   1         CEepromLoadAdcData();
+ 517   1      CEepromLoadColorTempData();
+ 518   1              }
+ 519          //---------------------------------------------
+ 520          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    554    ----
+   CONSTANT SIZE    =      2    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       2
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----       1
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
