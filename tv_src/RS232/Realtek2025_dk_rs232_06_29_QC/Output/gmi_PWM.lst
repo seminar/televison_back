@@ -1,0 +1,83 @@
+C51 COMPILER V8.16   GMI_PWM                                                               04/05/2012 11:15:36 PAGE 1   
+
+
+C51 COMPILER V8.16, COMPILATION OF MODULE GMI_PWM
+OBJECT MODULE PLACED IN .\Output\gmi_PWM.obj
+COMPILER INVOKED BY: D:\安装文件\keil\C51\BIN\C51.EXE Lib\gmi_PWM.c OPTIMIZE(9,SIZE) BROWSE DEFINE(CMOS_CHIP_TYPE=PCB_20
+                    -25LV13) PRINT(.\Output\gmi_PWM.lst) OBJECT(.\Output\gmi_PWM.obj)
+
+line level    source
+
+   1          
+   2          #include "Header\Include.h"
+   3          
+   4          
+   5          //------------------------------------------------------------
+   6          //                MCU DAC function
+   7          //------------------------------------------------------------
+   8          void CSetMCUPWM(BYTE PWMId, BYTE Value)
+   9          {
+  10   1          BYTE xdata *p;
+  11   1      
+  12   1      
+  13   1      #if(_MCU_TYPE == _MYSON_MTV512)
+              
+                  p = 0xF20 + PWMId;
+              
+              #elif(_MCU_TYPE == _RTD_2120)
+  18   1          
+  19   1          p = 0xFF32 + PWMId;
+  20   1      
+  21   1      #endif
+  22   1      
+  23   1          *p = Value;
+  24   1      }
+  25          
+  26          //-------------------------------------------------
+  27          void CSetPWM(BYTE PWMId, BYTE Value)
+  28          {
+  29   1      
+  30   1           switch(PWMId)
+  31   1           {
+  32   2               case _SCALAR_PWM0:             // Scalar PWM
+  33   2               case _SCALAR_PWM1:
+  34   2               case _SCALAR_PWM2:
+  35   2                   pData[0] = PWMId << 6;     // PWM ID
+  36   2                   pData[1] = 0x01;
+  37   2                   pData[2] = Value;
+  38   2                   CScalerWrite(_OSD_ADDR_MSB_90,3,pData,_AUTOINC);
+  39   2                   break;
+  40   2      
+  41   2      #if(_MCU_TYPE == _MYSON_MTV512 || _MCU_TYPE == _RTD_2120)
+  42   2               case _MCU_PWM0:
+  43   2               case _MCU_PWM1:
+  44   2               case _MCU_PWM2:
+  45   2                    CSetMCUPWM(PWMId - _MCU_PWM0,Value);
+  46   2                    break;
+  47   2      
+  48   2               case _MCU_PWM3:
+  49   2               case _MCU_PWM4:
+  50   2               case _MCU_PWM5:
+  51   2                    CSetMCUPWM(PWMId - _MCU_PWM3,Value);
+  52   2                    break;
+  53   2      #endif
+  54   2           }
+C51 COMPILER V8.16   GMI_PWM                                                               04/05/2012 11:15:36 PAGE 2   
+
+  55   1      }
+  56          //-------------------------------------------------
+  57          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     83    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       2
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
